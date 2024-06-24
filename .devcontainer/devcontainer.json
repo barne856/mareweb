@@ -1,0 +1,39 @@
+{
+	"name": "C++ WebGPU",
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+	"features": {
+		"ghcr.io/devcontainers/features/git:1": {},
+		"ghcr.io/adamlm/devcontainer-features/cmake": {
+      "version": "3.29.5"
+    }
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"llvm-vs-code-extensions.vscode-clangd",
+				"xaver.clang-format",
+				"GitHub.copilot",
+				"GitHub.copilot-chat",
+				"ms-vscode.cmake-tools"
+			]
+		}
+	},
+  "mounts": [
+    "source=mare-web-build,target=${containerWorkspaceFolder}/build,type=volume"
+  ],
+	"runArgs": [
+		"--gpus", // enable GPU support
+		"all", // enable all GPUs
+		"--add-host", // enable X11 forwarding
+		"host.docker.internal:host-gateway" // enable X11 forwarding
+	],
+	"remoteEnv": {
+		"DISPLAY": "host.docker.internal:0" // enable X11 forwarding
+	},
+	// make vscode user own the workspace and all mounts
+	"postCreateCommand": "sudo chown -R vscode:vscode ${containerWorkspaceFolder}",
+	// prevent git dubious ownership
+	"postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}"
+}

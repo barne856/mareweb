@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <webgpu/webgpu_cpp.h>
 #include <cstring>
+#include <iostream>
 
 #if defined(SDL_PLATFORM_WIN32)
 #include <windows.h>
@@ -101,12 +102,6 @@ void GetDevice(void (*callback)(wgpu::Device)) {
       reinterpret_cast<void *>(callback));
 }
 
-void resizeCallback(int width, int height) {
-  printf("Resized to width: %d, height: %d\n", width, height);
-}
-
-void clickCallback(int x, int y) { printf("Clicked at x: %d, y: %d\n", x, y); }
-
 const char shaderCode[] = R"(
     @vertex fn vertexMain(@builtin(vertex_index) i : u32) ->
       @builtin(position) vec4f {
@@ -181,7 +176,7 @@ void mainLoop() {
 }
 
 void Start() {
-  SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "x11,wayland");
+  SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "x11,wayland,windows");
   SDL_SetMainReady();
   // Initialize SDL
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
