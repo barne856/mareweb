@@ -5,10 +5,13 @@
 #include <cmath>
 #include <stdexcept>
 #include <webgpu/webgpu_cpp.h>
-#ifdef _WIN32
+#include <cstring>
+
+#if defined(SDL_PLATFORM_WIN32)
 #include <windows.h>
-#elif defined(__linux__)
+#elif defined(SDL_PLATFORM_LINUX)
 #include <X11/Xlib.h>
+#include <wayland-client.h>
 #endif
 
 wgpu::Surface SDL_GetWGPUSurface(wgpu::Instance instance, SDL_Window *window) {
@@ -19,7 +22,7 @@ wgpu::Surface SDL_GetWGPUSurface(wgpu::Instance instance, SDL_Window *window) {
 
     wgpu::SurfaceDescriptor surfaceDescriptor = {};
 
-#ifdef _WIN32
+#if defined(SDL_PLATFORM_WIN32)
     HWND hwnd = static_cast<HWND>(SDL_GetProperty(propertiesID, SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL));
     HINSTANCE hinstance = static_cast<HINSTANCE>(SDL_GetProperty(propertiesID, SDL_PROP_WINDOW_WIN32_INSTANCE_POINTER, NULL));
     if (hwnd && hinstance) {
@@ -30,16 +33,32 @@ wgpu::Surface SDL_GetWGPUSurface(wgpu::Instance instance, SDL_Window *window) {
     } else {
         throw std::runtime_error("Failed to get Win32 window properties");
     }
-#elif defined(__linux__)
-    Display* display = static_cast<Display*>(SDL_GetProperty(propertiesID, SDL_PROP_WINDOW_X11_DISPLAY_POINTER, NULL));
-    Window x11Window = static_cast<Window>(SDL_GetNumberProperty(propertiesID, SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0));
-    if (display && x11Window != 0) {
-        wgpu::SurfaceDescriptorFromXlibWindow windowDesc{};
-        windowDesc.display = display;
-        windowDesc.window = x11Window;
-        surfaceDescriptor.nextInChain = &windowDesc;
+#elif defined(SDL_PLATFORM_LINUX)
+    const char* videoDriver = SDL_GetCurrentVideoDriver();
+    if (std::strcmp(videoDriver, "x11") == 0) {
+        Display* display = static_cast<Display*>(SDL_GetProperty(propertiesID, SDL_PROP_WINDOW_X11_DISPLAY_POINTER, NULL));
+        Window x11Window = static_cast<Window>(SDL_GetNumberProperty(propertiesID, SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0));
+        if (display && x11Window != 0) {
+            wgpu::SurfaceDescriptorFromXlibWindow windowDesc{};
+            windowDesc.display = display;
+            windowDesc.window = x11Window;
+            surfaceDescriptor.nextInChain = &windowDesc;
+        } else {
+            throw std::runtime_error("Failed to get X11 window properties");
+        }
+    } else if (std::strcmp(videoDriver, "wayland") == 0) {
+        struct wl_display* display = static_cast<struct wl_display*>(SDL_GetProperty(propertiesID, SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER, NULL));
+        struct wl_surface* surface = static_cast<struct wl_surface*>(SDL_GetProperty(propertiesID, SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, NULL));
+        if (display && surface) {
+            wgpu::SurfaceDescriptorFromWaylandSurface windowDesc{};
+            windowDesc.display = display;
+            windowDesc.surface = surface;
+            surfaceDescriptor.nextInChain = &windowDesc;
+        } else {
+            throw std::runtime_error("Failed to get Wayland window properties");
+        }
     } else {
-        throw std::runtime_error("Failed to get X11 window properties");
+        throw std::runtime_error("Unsupported video driver on Linux");
     }
 #else
     throw std::runtime_error("Unsupported platform");
@@ -138,7 +157,7 @@ void mainLoop() {
 
   wgpu::CommandEncoder encoder = device.CreateCommandEncoder();
   wgpu::TextureView backbuffer = swapChain.GetCurrentTextureView();
-  wgpu::Color clearColor = {0.0f, 0.0f, std::sinf(time), 1.0f};
+  wgpu::Color clearColor = {std::sin(time+1.0), std::cos(time), std::sin(time), 1.0f};
   wgpu::RenderPassColorAttachment colorAttachment = {
       .view = backbuffer,
       .resolveTarget = nullptr,
@@ -162,6 +181,7 @@ void mainLoop() {
 }
 
 void Start() {
+  SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "x11,wayland");
   SDL_SetMainReady();
   // Initialize SDL
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
