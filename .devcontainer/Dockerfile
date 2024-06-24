@@ -15,6 +15,7 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     # C++ tools
     clang \
     clang-format \
+    clang-tidy \
     clangd \
     libc++-dev \
     libc++abi-dev \

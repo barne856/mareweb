@@ -6,8 +6,8 @@
 	"features": {
 		"ghcr.io/devcontainers/features/git:1": {},
 		"ghcr.io/adamlm/devcontainer-features/cmake": {
-      "version": "3.29.5"
-    }
+			"version": "3.29.5"
+		}
 	},
 	"customizations": {
 		"vscode": {
@@ -16,13 +16,30 @@
 				"xaver.clang-format",
 				"GitHub.copilot",
 				"GitHub.copilot-chat",
-				"ms-vscode.cmake-tools"
-			]
+				"ms-vscode.cmake-tools",
+				"CS128.cs128-clang-tidy"
+			],
+			"settings": {
+				"clang-tidy.buildPath": "./build",
+				"clang-tidy.compilerArgs": [
+					"-I/usr/lib/llvm-14/include/c++/v1"
+				],
+				"clang-tidy.checks": [
+					"-*",
+					"bugprone-*",
+					"cppcoreguidelines-*",
+					"modernize-*",
+					"performance-*",
+					"readability-*",
+					"clang-analyzer-*",
+					"misc-*"
+				]
+			}
 		}
 	},
-  "mounts": [
-    "source=mare-web-build,target=${containerWorkspaceFolder}/build,type=volume"
-  ],
+	"mounts": [
+		"source=mare-web-build,target=${containerWorkspaceFolder}/build,type=volume"
+	],
 	"runArgs": [
 		"--gpus", // enable GPU support
 		"all", // enable all GPUs
