@@ -13,28 +13,10 @@
 		"vscode": {
 			"extensions": [
 				"llvm-vs-code-extensions.vscode-clangd",
-				"xaver.clang-format",
 				"GitHub.copilot",
 				"GitHub.copilot-chat",
-				"ms-vscode.cmake-tools",
-				"CS128.cs128-clang-tidy"
-			],
-			"settings": {
-				"clang-tidy.buildPath": "./build",
-				"clang-tidy.compilerArgs": [
-					"-I/usr/lib/llvm-14/include/c++/v1"
-				],
-				"clang-tidy.checks": [
-					"-*",
-					"bugprone-*",
-					"cppcoreguidelines-*",
-					"modernize-*",
-					"performance-*",
-					"readability-*",
-					"clang-analyzer-*",
-					"misc-*"
-				]
-			}
+				"ms-vscode.cmake-tools"
+			]
 		}
 	},
 	"mounts": [

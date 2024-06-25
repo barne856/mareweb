@@ -1,0 +1,14 @@
+Diagnostics:
+  ClangTidy:
+    Add: [
+      bugprone-*,
+      cppcoreguidelines-*,
+      modernize-*,
+      performance-*,
+      readability-*,
+      clang-analyzer-*,
+      misc-*
+    ]
+
+Index:
+  Background: Build
