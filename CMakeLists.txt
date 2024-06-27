@@ -86,6 +86,8 @@ FetchContent_MakeAvailable(SDL_image)
 # Create executable
 add_executable(DawnApp src/main.cpp)
 
+include_directories(include)
+
 # Link against Dawn and SDL libraries
 target_link_libraries(DawnApp PRIVATE webgpu_cpp webgpu_dawn SDL3::SDL3 SDL3_image::SDL3_image)
 
