@@ -41,4 +41,5 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     mesa-utils \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# ENV __GLX_VENDOR_LIBRARY_NAME=nvidia
+# set XDG_RUNTIME_DIR environment variable
+ENV XDG_RUNTIME_DIR=/tmp

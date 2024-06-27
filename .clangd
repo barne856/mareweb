@@ -7,8 +7,10 @@ Diagnostics:
       performance-*,
       readability-*,
       clang-analyzer-*,
-      misc-*
+      misc-*,
+      clang-analyzer-*
     ]
+    Remove: bugprone-easily-swappable-parameters
 
 Index:
   Background: Build
