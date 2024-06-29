@@ -44,8 +44,9 @@ void Application::run() {
   while (!m_quit) {
     handleEvents();
     for (auto &renderer : m_renderers) {
+      renderer->beginFrame();
       renderer->render();
-      renderer->present();
+      renderer->endFrame();
     }
   }
 }

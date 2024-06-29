@@ -22,12 +22,13 @@ public:
         const char* fragmentShaderSource = R"(
             @fragment
             fn main() -> @location(0) vec4<f32> {
-                return vec4<f32>(1.0, 0.0, 0.0, 1.0);
+                return vec4<f32>(1.0, 0.1, 0.05, 1.0);
             }
         )";
 
         m_mesh = createMesh(vertices);
         m_material = createMaterial(vertexShaderSource, fragmentShaderSource);
+        setClearColor({0.05f, 0.05f, 0.05f, 1.0f});
     }
 
     ~TriangleRenderer() override = default;  // The default destructor will clean up m_mesh and m_material

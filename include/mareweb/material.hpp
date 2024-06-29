@@ -10,7 +10,7 @@ namespace mareweb {
 
 class Material {
 public:
-    Material(wgpu::Device& device, const std::string& vertexShaderSource, const std::string& fragmentShaderSource);
+    Material(wgpu::Device& device, const std::string& vertexShaderSource, const std::string& fragmentShaderSource, wgpu::TextureFormat surfaceFormat);
 
     void bind(wgpu::RenderPassEncoder& passEncoder) const;
 

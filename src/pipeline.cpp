@@ -3,7 +3,7 @@
 
 namespace mareweb {
 
-Pipeline::Pipeline(wgpu::Device& device, const Shader& vertexShader, const Shader& fragmentShader)
+Pipeline::Pipeline(wgpu::Device& device, const Shader& vertexShader, const Shader& fragmentShader, wgpu::TextureFormat surfaceFormat)
     : m_device(device) {
     
     // Describe vertex buffer layout
@@ -24,9 +24,9 @@ Pipeline::Pipeline(wgpu::Device& device, const Shader& vertexShader, const Shade
     layoutDesc.bindGroupLayouts = nullptr;
     wgpu::PipelineLayout pipelineLayout = device.CreatePipelineLayout(&layoutDesc);
 
-    // Describe color target state
+    // Update the color target state
     wgpu::ColorTargetState colorTarget{};
-    colorTarget.format = wgpu::TextureFormat::BGRA8Unorm;
+    colorTarget.format = surfaceFormat;
     colorTarget.writeMask = wgpu::ColorWriteMask::All;
 
     wgpu::FragmentState fragmentState{};

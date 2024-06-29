@@ -22,6 +22,9 @@ public:
   std::unique_ptr<Mesh> createMesh(const std::vector<float> &vertices, const std::vector<uint32_t> &indices = {});
   std::unique_ptr<Material> createMaterial(const std::string &vertexShaderSource,
                                            const std::string &fragmentShaderSource);
+  void setClearColor(const wgpu::Color &clearColor) { m_clearColor = clearColor; }
+  void beginFrame();
+  void endFrame();
   void drawMesh(const Mesh &mesh, const Material &material);
 
   SDL_Window *getWindow() const { return m_window; }
@@ -32,6 +35,11 @@ protected:
   SDL_Window *m_window;
   wgpu::Device m_device;
   wgpu::Surface m_surface;
+  wgpu::TextureFormat m_surfaceFormat;
+  wgpu::CommandEncoder m_commandEncoder;
+  wgpu::RenderPassEncoder m_renderPass;
+  wgpu::TextureView m_currentTextureView;
+  wgpu::Color m_clearColor{0.0f, 0.0f, 0.0f, 1.0f};
 
 private:
   void configureSurface();

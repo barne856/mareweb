@@ -5,6 +5,9 @@ namespace mareweb {
 
 Renderer::Renderer(wgpu::Device &device, wgpu::Surface surface, SDL_Window *window, uint32_t width, uint32_t height)
     : m_device(device), m_surface(surface), m_window(window), m_width(width), m_height(height) {
+  wgpu::SurfaceCapabilities capabilities{};
+  m_surface.GetCapabilities(m_device.GetAdapter(), &capabilities);
+  m_surfaceFormat = *capabilities.formats;
   configureSurface();
 }
 
@@ -28,43 +31,45 @@ std::unique_ptr<Mesh> Renderer::createMesh(const std::vector<float> &vertices, c
 
 std::unique_ptr<Material> Renderer::createMaterial(const std::string &vertexShaderSource,
                                                    const std::string &fragmentShaderSource) {
-  return std::make_unique<Material>(m_device, vertexShaderSource, fragmentShaderSource);
+  return std::make_unique<Material>(m_device, vertexShaderSource, fragmentShaderSource, m_surfaceFormat);
 }
 
-void Renderer::drawMesh(const Mesh &mesh, const Material &material) {
-  wgpu::SurfaceTexture surfaceTexture{};
-  m_surface.GetCurrentTexture(&surfaceTexture);
-  wgpu::TextureView view = surfaceTexture.texture.CreateView();
+void Renderer::beginFrame() {
+    wgpu::SurfaceTexture surfaceTexture{};
+    m_surface.GetCurrentTexture(&surfaceTexture);
+    m_currentTextureView = surfaceTexture.texture.CreateView();
 
-  wgpu::CommandEncoder encoder = m_device.CreateCommandEncoder();
+    m_commandEncoder = m_device.CreateCommandEncoder();
 
-  wgpu::RenderPassColorAttachment colorAttachment{};
-  colorAttachment.view = view;
-  colorAttachment.loadOp = wgpu::LoadOp::Clear;
-  colorAttachment.storeOp = wgpu::StoreOp::Store;
-  colorAttachment.clearValue = {0.1f, 0.1f, 0.1f, 1.0f};
+    wgpu::RenderPassColorAttachment colorAttachment{};
+    colorAttachment.view = m_currentTextureView;
+    colorAttachment.loadOp = wgpu::LoadOp::Clear;
+    colorAttachment.storeOp = wgpu::StoreOp::Store;
+    colorAttachment.clearValue = m_clearColor;
 
-  wgpu::RenderPassDescriptor renderPassDescriptor{};
-  renderPassDescriptor.colorAttachmentCount = 1;
-  renderPassDescriptor.colorAttachments = &colorAttachment;
+    wgpu::RenderPassDescriptor renderPassDescriptor{};
+    renderPassDescriptor.colorAttachmentCount = 1;
+    renderPassDescriptor.colorAttachments = &colorAttachment;
 
-  wgpu::RenderPassEncoder pass = encoder.BeginRenderPass(&renderPassDescriptor);
-  material.bind(pass);
-  mesh.draw(pass);
-  pass.End();
+    m_renderPass = m_commandEncoder.BeginRenderPass(&renderPassDescriptor);
+}
 
-  wgpu::CommandBuffer commands = encoder.Finish();
-  m_device.GetQueue().Submit(1, &commands);
+void Renderer::endFrame() {
+    m_renderPass.End();
+    wgpu::CommandBuffer commands = m_commandEncoder.Finish();
+    m_device.GetQueue().Submit(1, &commands);
+    m_surface.Present();
+}
+
+void Renderer::drawMesh(const Mesh& mesh, const Material& material) {
+    material.bind(m_renderPass);
+    mesh.draw(m_renderPass);
 }
 
 void Renderer::configureSurface() {
-  wgpu::SurfaceCapabilities capabilities{};
-  m_surface.GetCapabilities(m_device.GetAdapter(), &capabilities);
-  wgpu::TextureFormat format = *capabilities.formats;
-
   wgpu::SurfaceConfiguration config{};
   config.device = m_device;
-  config.format = format;
+  config.format = m_surfaceFormat;
   config.usage = wgpu::TextureUsage::RenderAttachment;
   config.alphaMode = wgpu::CompositeAlphaMode::Auto;
   config.viewFormatCount = 0;
