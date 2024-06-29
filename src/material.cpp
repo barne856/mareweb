@@ -3,7 +3,7 @@
 
 namespace mareweb {
 
-Material::Material(wgpu::Device& device, const std::string& vertexShaderSource, const std::string& fragmentShaderSource, wgpu::TextureFormat surfaceFormat)
+Material::Material(wgpu::Device& device, const std::string& vertexShaderSource, const std::string& fragmentShaderSource, wgpu::TextureFormat surfaceFormat, uint32_t sampleCount)
     : m_device(device) {
     
     // Create vertex shader
@@ -19,7 +19,7 @@ Material::Material(wgpu::Device& device, const std::string& vertexShaderSource, 
     }
 
     // Create pipeline
-    m_pipeline = std::make_unique<Pipeline>(device, *m_vertexShader, *m_fragmentShader, surfaceFormat);
+    m_pipeline = std::make_unique<Pipeline>(device, *m_vertexShader, *m_fragmentShader, surfaceFormat, sampleCount);
     if (!m_pipeline) {
         throw std::runtime_error("Failed to create pipeline");
     }

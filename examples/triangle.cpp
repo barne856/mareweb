@@ -1,5 +1,6 @@
 #include "mareweb/application.hpp"
 #include "mareweb/renderer.hpp"
+#include <iostream>
 #include <vector>
 
 class TriangleRenderer : public mareweb::Renderer {
@@ -26,7 +27,6 @@ public:
     m_mesh = createMesh(vertices);
     m_material = createMaterial(vertexShaderSource, fragmentShaderSource);
     setClearColor({0.05f, 0.05f, 0.05f, 1.0f});
-    setFullscreen(true);
   }
 
   ~TriangleRenderer() override = default; // The default destructor will clean up m_mesh and m_material
@@ -42,15 +42,23 @@ int main() {
   mareweb::Application &app = mareweb::Application::getInstance();
   app.initialize();
 
-  mareweb::RendererProperties props = {.width = 800,
-                                       .height = 600,
-                                       .title = "Triangle",
-                                       .fullscreen = true,
-                                       .resizable = true,
-                                       .presentMode = wgpu::PresentMode::Fifo,
-                                       .sampleCount = 4};
+  mareweb::RendererProperties props1 = {.width = 800,
+                                        .height = 600,
+                                        .title = "Triangle 1",
+                                        .fullscreen = false,
+                                        .resizable = true,
+                                        .presentMode = wgpu::PresentMode::Fifo,
+                                        .sampleCount = 1};
+  mareweb::RendererProperties props2 = {.width = 800,
+                                        .height = 600,
+                                        .title = "Triangle 2",
+                                        .fullscreen = false,
+                                        .resizable = true,
+                                        .presentMode = wgpu::PresentMode::Fifo,
+                                        .sampleCount = 4};
 
-  app.createRenderer<TriangleRenderer>(props);
+  app.createRenderer<TriangleRenderer>(props1);
+  app.createRenderer<TriangleRenderer>(props2);
 
   app.run();
 

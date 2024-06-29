@@ -5,12 +5,13 @@
 #include "mareweb/shader.hpp"
 #include <memory>
 #include <string>
+#include <sys/types.h>
 
 namespace mareweb {
 
 class Material {
 public:
-    Material(wgpu::Device& device, const std::string& vertexShaderSource, const std::string& fragmentShaderSource, wgpu::TextureFormat surfaceFormat);
+    Material(wgpu::Device& device, const std::string& vertexShaderSource, const std::string& fragmentShaderSource, wgpu::TextureFormat surfaceFormat, uint32_t sampleCount);
 
     void bind(wgpu::RenderPassEncoder& passEncoder) const;
 

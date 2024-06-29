@@ -42,7 +42,7 @@ public:
 
   SDL_Window *getWindow() const { return m_window; }
   const std::string &getTitle() const { return m_properties.title; }
-  const RendererProperties& getProperties() const { return m_properties; }
+  const RendererProperties &getProperties() const { return m_properties; }
 
 protected:
   RendererProperties m_properties;
@@ -54,9 +54,12 @@ protected:
   wgpu::RenderPassEncoder m_renderPass;
   wgpu::TextureView m_currentTextureView;
   wgpu::Color m_clearColor;
+  wgpu::Texture m_msaaTexture;
+  wgpu::TextureView m_msaaTextureView;
 
 private:
   void configureSurface();
+  void createMSAATexture();
 };
 
 } // namespace mareweb

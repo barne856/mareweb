@@ -1,9 +1,10 @@
 #include "mareweb/pipeline.hpp"
 #include <stdexcept>
+#include <sys/types.h>
 
 namespace mareweb {
 
-Pipeline::Pipeline(wgpu::Device& device, const Shader& vertexShader, const Shader& fragmentShader, wgpu::TextureFormat surfaceFormat)
+Pipeline::Pipeline(wgpu::Device& device, const Shader& vertexShader, const Shader& fragmentShader, wgpu::TextureFormat surfaceFormat, uint32_t sampleCount)
     : m_device(device) {
     
     // Describe vertex buffer layout
@@ -53,7 +54,7 @@ Pipeline::Pipeline(wgpu::Device& device, const Shader& vertexShader, const Shade
 
     pipelineDesc.depthStencil = nullptr; // No depth or stencil for now
 
-    pipelineDesc.multisample.count = 1;
+    pipelineDesc.multisample.count = sampleCount;
     pipelineDesc.multisample.mask = 0xFFFFFFFF;
     pipelineDesc.multisample.alphaToCoverageEnabled = false;
 

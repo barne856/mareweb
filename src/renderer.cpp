@@ -1,5 +1,7 @@
 #include "mareweb/renderer.hpp"
 #include <SDL3/SDL_video.h>
+#include <iostream>
+#include <sstream>
 #include <stdexcept>
 
 namespace mareweb {
@@ -10,7 +12,17 @@ Renderer::Renderer(wgpu::Device &device, wgpu::Surface surface, SDL_Window *wind
   wgpu::SurfaceCapabilities capabilities{};
   m_surface.GetCapabilities(m_device.GetAdapter(), &capabilities);
   m_surfaceFormat = *capabilities.formats;
+
   configureSurface();
+
+  if (m_properties.sampleCount > 1) {
+    try {
+      createMSAATexture();
+    } catch (const std::exception &e) {
+      std::cout << "MSAA not supported: " << e.what() << ". Falling back to no MSAA." << std::endl;
+      m_properties.sampleCount = 1;
+    }
+  }
 }
 
 Renderer::~Renderer() {
@@ -23,6 +35,9 @@ void Renderer::resize(uint32_t newWidth, uint32_t newHeight) {
   m_properties.width = newWidth;
   m_properties.height = newHeight;
   configureSurface();
+  if (m_properties.sampleCount > 1) {
+    createMSAATexture(); // Recreate MSAA texture with new size
+  }
 }
 
 void Renderer::present() { m_surface.Present(); }
@@ -33,7 +48,8 @@ std::unique_ptr<Mesh> Renderer::createMesh(const std::vector<float> &vertices, c
 
 std::unique_ptr<Material> Renderer::createMaterial(const std::string &vertexShaderSource,
                                                    const std::string &fragmentShaderSource) {
-  return std::make_unique<Material>(m_device, vertexShaderSource, fragmentShaderSource, m_surfaceFormat);
+  return std::make_unique<Material>(m_device, vertexShaderSource, fragmentShaderSource, m_surfaceFormat,
+                                    m_properties.sampleCount);
 }
 
 void Renderer::setFullscreen(bool fullscreen) {
@@ -96,14 +112,33 @@ void Renderer::setPresentMode(wgpu::PresentMode presentMode) {
 void Renderer::beginFrame() {
   wgpu::SurfaceTexture surfaceTexture{};
   m_surface.GetCurrentTexture(&surfaceTexture);
+  if (!surfaceTexture.texture) {
+    throw std::runtime_error("Failed to get current surface texture");
+  }
   m_currentTextureView = surfaceTexture.texture.CreateView();
+  if (!m_currentTextureView) {
+    throw std::runtime_error("Failed to create view for surface texture");
+  }
 
   m_commandEncoder = m_device.CreateCommandEncoder();
+  if (!m_commandEncoder) {
+    throw std::runtime_error("Failed to create command encoder");
+  }
 
   wgpu::RenderPassColorAttachment colorAttachment{};
-  colorAttachment.view = m_currentTextureView;
+  if (m_properties.sampleCount > 1) {
+    if (!m_msaaTextureView) {
+      throw std::runtime_error("MSAA texture view is null");
+    }
+    colorAttachment.view = m_msaaTextureView;
+    colorAttachment.resolveTarget = m_currentTextureView;
+    colorAttachment.storeOp = wgpu::StoreOp::Discard;
+  } else {
+    colorAttachment.view = m_currentTextureView;
+    colorAttachment.resolveTarget = nullptr;
+    colorAttachment.storeOp = wgpu::StoreOp::Store;
+  }
   colorAttachment.loadOp = wgpu::LoadOp::Clear;
-  colorAttachment.storeOp = wgpu::StoreOp::Store;
   colorAttachment.clearValue = m_clearColor;
 
   wgpu::RenderPassDescriptor renderPassDescriptor{};
@@ -111,6 +146,14 @@ void Renderer::beginFrame() {
   renderPassDescriptor.colorAttachments = &colorAttachment;
 
   m_renderPass = m_commandEncoder.BeginRenderPass(&renderPassDescriptor);
+  if (!m_renderPass) {
+    std::stringstream ss;
+    ss << "Failed to begin render pass. "
+       << "Sample count: " << m_properties.sampleCount
+       << ", MSAA view valid: " << (m_msaaTextureView ? "true" : "false")
+       << ", Surface view valid: " << (m_currentTextureView ? "true" : "false");
+    throw std::runtime_error(ss.str());
+  }
 }
 
 void Renderer::endFrame() {
@@ -138,6 +181,30 @@ void Renderer::configureSurface() {
   config.presentMode = m_properties.presentMode;
 
   m_surface.Configure(&config);
+}
+
+void Renderer::createMSAATexture() {
+  if (m_properties.sampleCount <= 1) {
+    return;
+  }
+
+  wgpu::TextureDescriptor textureDesc{};
+  textureDesc.size.width = m_properties.width;
+  textureDesc.size.height = m_properties.height;
+  textureDesc.size.depthOrArrayLayers = 1;
+  textureDesc.sampleCount = m_properties.sampleCount;
+  textureDesc.format = m_surfaceFormat;
+  textureDesc.mipLevelCount = 1;
+  textureDesc.usage = wgpu::TextureUsage::RenderAttachment;
+
+  m_msaaTexture = m_device.CreateTexture(&textureDesc);
+  if (!m_msaaTexture) {
+    throw std::runtime_error("Failed to create MSAA texture");
+  }
+  m_msaaTextureView = m_msaaTexture.CreateView();
+  if (!m_msaaTextureView) {
+    throw std::runtime_error("Failed to create MSAA texture view");
+  }
 }
 
 } // namespace mareweb

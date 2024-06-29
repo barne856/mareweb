@@ -1,6 +1,7 @@
 #ifndef MAREWEB_PIPELINE_HPP
 #define MAREWEB_PIPELINE_HPP
 
+#include <cstdint>
 #include <webgpu/webgpu_cpp.h>
 #include "mareweb/shader.hpp"
 
@@ -8,7 +9,7 @@ namespace mareweb {
 
 class Pipeline {
 public:
-    Pipeline(wgpu::Device& device, const Shader& vertexShader, const Shader& fragmentShader, wgpu::TextureFormat surfaceFormat);
+    Pipeline(wgpu::Device& device, const Shader& vertexShader, const Shader& fragmentShader, wgpu::TextureFormat surfaceFormat, uint32_t sampleCount);
 
     wgpu::RenderPipeline getPipeline() const { return m_pipeline; }
 
