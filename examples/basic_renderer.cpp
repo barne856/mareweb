@@ -8,27 +8,9 @@ public:
   using mareweb::Renderer::Renderer; // Inherit constructor
 
   void render() override {
-    wgpu::SurfaceTexture surfaceTexture{};
-    m_surface.GetCurrentTexture(&surfaceTexture);
-    wgpu::TextureView view = surfaceTexture.texture.CreateView();
-
-    wgpu::CommandEncoder encoder = m_device.CreateCommandEncoder();
-
-    const wgpu::Color clearColor{std::sin(m_time + 1.0F), std::cos(m_time), std::sin(m_time), 1.0F};
-    wgpu::RenderPassColorAttachment colorAttachment{};
-    colorAttachment.view = view;
-    colorAttachment.loadOp = wgpu::LoadOp::Clear;
-    colorAttachment.storeOp = wgpu::StoreOp::Store;
-    colorAttachment.clearValue = clearColor;
-
-    wgpu::RenderPassDescriptor renderPassDescriptor{};
-    renderPassDescriptor.colorAttachmentCount = 1;
-    renderPassDescriptor.colorAttachments = &colorAttachment;
-
-    wgpu::RenderPassEncoder pass = encoder.BeginRenderPass(&renderPassDescriptor);
-    pass.End();
-    wgpu::CommandBuffer commands = encoder.Finish();
-    m_device.GetQueue().Submit(1, &commands);
+    // Clear the screen
+    wgpu::Color clearColor = {0.0f, std::sin(m_time), 0.0f, 1.0f};
+    setClearColor(clearColor);
 
     m_time += 0.01f*static_cast<float>(m_width)*0.01f;
   }
