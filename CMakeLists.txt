@@ -83,18 +83,37 @@ set(SDL3IMAGE_STATIC OFF)
 # Make SDL_image available
 FetchContent_MakeAvailable(SDL_image)
 
-# Create executable
-add_executable(DawnApp src/main.cpp)
-
+# Add include directories
 include_directories(include)
 
-# Link against Dawn and SDL libraries
-target_link_libraries(DawnApp PRIVATE webgpu_cpp webgpu_dawn SDL3::SDL3 SDL3_image::SDL3_image)
-
-# Copy only the necessary shared libraries to the output directory
-add_custom_command(TARGET DawnApp POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        $<TARGET_FILE:SDL3::SDL3>
-        $<TARGET_FILE:SDL3_image::SDL3_image>
-        $<TARGET_FILE_DIR:DawnApp>
+# Create library target for mareweb
+add_library(mareweb
+    src/application.cpp
+    src/renderer.cpp
 )
+
+target_include_directories(mareweb PUBLIC include)
+target_link_libraries(mareweb PUBLIC webgpu_cpp webgpu_dawn SDL3::SDL3 SDL3_image::SDL3_image)
+
+# Function to add an example executable
+function(add_example NAME)
+    add_executable(${NAME} examples/${NAME}.cpp)
+    target_link_libraries(${NAME} PRIVATE mareweb)
+    
+    # Copy only the necessary shared libraries to the output directory
+    add_custom_command(TARGET ${NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:SDL3::SDL3>
+            $<TARGET_FILE:SDL3_image::SDL3_image>
+            $<TARGET_FILE_DIR:${NAME}>
+    )
+endfunction()
+
+# Find all .cpp files in the examples directory
+file(GLOB EXAMPLE_SOURCES "examples/*.cpp")
+
+# Add an executable for each example
+foreach(EXAMPLE_SOURCE ${EXAMPLE_SOURCES})
+    get_filename_component(EXAMPLE_NAME ${EXAMPLE_SOURCE} NAME_WE)
+    add_example(${EXAMPLE_NAME})
+endforeach()
