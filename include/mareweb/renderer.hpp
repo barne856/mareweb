@@ -5,6 +5,9 @@
 #include <cstdint>
 #include <webgpu/webgpu_cpp.h>
 
+#include "mareweb/material.hpp"
+#include "mareweb/mesh.hpp"
+
 namespace mareweb {
 
 class Renderer {
@@ -15,6 +18,11 @@ public:
   void resize(uint32_t newWidth, uint32_t newHeight);
   virtual void render() = 0;
   void present();
+
+  std::unique_ptr<Mesh> createMesh(const std::vector<float> &vertices, const std::vector<uint32_t> &indices = {});
+  std::unique_ptr<Material> createMaterial(const std::string &vertexShaderSource,
+                                           const std::string &fragmentShaderSource);
+  void drawMesh(const Mesh &mesh, const Material &material);
 
   SDL_Window *getWindow() const { return m_window; }
 

@@ -84,6 +84,16 @@ void Application::initWebGPU() {
         deviceLostCallbackInfo.userdata = self;
         deviceDesc.deviceLostCallbackInfo = deviceLostCallbackInfo;
 
+        // Add uncaptured error callback info
+        wgpu::UncapturedErrorCallbackInfo uncapturedErrorCallbackInfo{};
+        uncapturedErrorCallbackInfo.callback = [](WGPUErrorType /*type*/, const char *message, void *userdata) {
+          auto *self = static_cast<Application *>(userdata);
+          std::cerr << "Uncaptured error: " << message << std::endl;
+          self->m_quit = true;
+        };
+        uncapturedErrorCallbackInfo.userdata = self;
+        deviceDesc.uncapturedErrorCallbackInfo = uncapturedErrorCallbackInfo;
+
         adapter.RequestDevice(
             &deviceDesc,
             [](WGPURequestDeviceStatus status, WGPUDevice cDevice, const char * /*message*/, void *userdata) {

@@ -86,11 +86,11 @@ FetchContent_MakeAvailable(SDL_image)
 # Add include directories
 include_directories(include)
 
+# Find all .cpp files in the src directory
+file(GLOB MAREWEB_SOURCES "src/*.cpp")
+
 # Create library target for mareweb
-add_library(mareweb
-    src/application.cpp
-    src/renderer.cpp
-)
+add_library(mareweb ${MAREWEB_SOURCES})
 
 target_include_directories(mareweb PUBLIC include)
 target_link_libraries(mareweb PUBLIC webgpu_cpp webgpu_dawn SDL3::SDL3 SDL3_image::SDL3_image)

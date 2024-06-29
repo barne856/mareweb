@@ -30,7 +30,7 @@ public:
     wgpu::CommandBuffer commands = encoder.Finish();
     m_device.GetQueue().Submit(1, &commands);
 
-    m_time += 0.01f;
+    m_time += 0.01f*static_cast<float>(m_width)*0.01f;
   }
 
 private:
