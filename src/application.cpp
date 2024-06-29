@@ -3,6 +3,7 @@
 #include "mareweb/renderer.hpp"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include <SDL3/SDL_video.h>
 #include <iostream>
 #include <stdexcept>
 
@@ -171,11 +172,44 @@ void Application::handleEvents() {
 }
 
 SDL_Window *Application::createWindow(const RendererProperties &properties) {
+  SDL_WindowFlags flags = 0; // Start with no flags
+
+  if (properties.resizable) {
+    flags = static_cast<SDL_WindowFlags>(flags | SDL_WINDOW_RESIZABLE);
+  }
+
   SDL_Window *window = SDL_CreateWindow(properties.title.c_str(), static_cast<int>(properties.width),
-                                        static_cast<int>(properties.height), SDL_WINDOW_RESIZABLE);
+                                        static_cast<int>(properties.height), flags);
+
   if (window == nullptr) {
     throw std::runtime_error(std::string("Window creation failed: ") + SDL_GetError());
   }
+
+  if (properties.fullscreen) {
+    int count_displays;
+    SDL_DisplayID *displays = SDL_GetDisplays(&count_displays);
+    if (!displays) {
+      SDL_DestroyWindow(window);
+      throw std::runtime_error(std::string("Failed to get displays: ") + SDL_GetError());
+    }
+
+    const SDL_DisplayMode *display_mode = SDL_GetCurrentDisplayMode(displays[0]);
+    if (!display_mode) {
+      SDL_free(displays);
+      SDL_DestroyWindow(window);
+      throw std::runtime_error(std::string("Failed to get current display mode: ") + SDL_GetError());
+    }
+
+    if (SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN) != 0) {
+      SDL_free(displays);
+      SDL_DestroyWindow(window);
+      throw std::runtime_error(std::string("Failed to set fullscreen mode: ") + SDL_GetError());
+    }
+
+    SDL_SetWindowSize(window, display_mode->w, display_mode->h);
+    SDL_free(displays);
+  }
+
   return window;
 }
 

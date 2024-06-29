@@ -26,6 +26,7 @@ public:
     m_mesh = createMesh(vertices);
     m_material = createMaterial(vertexShaderSource, fragmentShaderSource);
     setClearColor({0.05f, 0.05f, 0.05f, 1.0f});
+    setFullscreen(true);
   }
 
   ~TriangleRenderer() override = default; // The default destructor will clean up m_mesh and m_material
@@ -41,7 +42,13 @@ int main() {
   mareweb::Application &app = mareweb::Application::getInstance();
   app.initialize();
 
-  mareweb::RendererProperties props = {800, 600, "Triangle"};
+  mareweb::RendererProperties props = {.width = 800,
+                                       .height = 600,
+                                       .title = "Triangle",
+                                       .fullscreen = true,
+                                       .resizable = true,
+                                       .presentMode = wgpu::PresentMode::Fifo,
+                                       .sampleCount = 4};
 
   app.createRenderer<TriangleRenderer>(props);
 

@@ -1,4 +1,5 @@
 #include "mareweb/renderer.hpp"
+#include <SDL3/SDL_video.h>
 #include <stdexcept>
 
 namespace mareweb {
@@ -36,20 +37,60 @@ std::unique_ptr<Material> Renderer::createMaterial(const std::string &vertexShad
 }
 
 void Renderer::setFullscreen(bool fullscreen) {
-    if (fullscreen != m_properties.fullscreen) {
-        m_properties.fullscreen = fullscreen;
-        SDL_SetWindowFullscreen(m_window, fullscreen ? SDL_WINDOW_FULLSCREEN : 0);
-        int width, height;
-        SDL_GetWindowSize(m_window, &width, &height);
-        resize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+  if (fullscreen != m_properties.fullscreen) {
+    m_properties.fullscreen = fullscreen;
+
+    if (fullscreen) {
+      // Get the display index of the window
+      int count_displays;
+      SDL_DisplayID *displays = SDL_GetDisplays(&count_displays);
+      if (!displays) {
+        // Handle error, perhaps throw an exception
+        throw std::runtime_error("Failed to get window display index");
+      }
+
+      // Get the display mode of the display
+      const SDL_DisplayMode *display_mode = SDL_GetCurrentDisplayMode(displays[0]);
+      if (!display_mode) {
+        SDL_free(displays);
+        // Handle error, perhaps throw an exception
+        throw std::runtime_error("Failed to get current display mode");
+      }
+
+      // Set fullscreen
+      if (SDL_SetWindowFullscreen(m_window, SDL_WINDOW_FULLSCREEN) != 0) {
+        // Handle error, perhaps throw an exception
+        SDL_free(displays);
+        throw std::runtime_error("Failed to set fullscreen mode");
+      }
+
+      // Update width and height to match the display
+      m_properties.width = static_cast<uint32_t>(display_mode->w);
+      m_properties.height = static_cast<uint32_t>(display_mode->h);
+      SDL_free(displays);
+    } else {
+      // Exit fullscreen mode
+      if (SDL_SetWindowFullscreen(m_window, 0) != 0) {
+        // Handle error, perhaps throw an exception
+        throw std::runtime_error("Failed to exit fullscreen mode");
+      }
+
+      // Restore original width and height (you might want to store these separately)
+      // For now, we'll just set a default size
+      m_properties.width = 800;  // or whatever default you prefer
+      m_properties.height = 600; // or whatever default you prefer
     }
+
+    // Resize the renderer to match the new dimensions
+    resize(m_properties.width, m_properties.height);
+  }
 }
 
 void Renderer::setPresentMode(wgpu::PresentMode presentMode) {
-    if (presentMode != m_properties.presentMode) {
-        m_properties.presentMode = presentMode;
-        configureSurface();  // Reconfigure surface to apply present mode change
-    }
+  if (presentMode != m_properties.presentMode) {
+    m_properties.presentMode = presentMode;
+    configureSurface(); // Reconfigure surface to apply present mode change
+  }
 }
 
 void Renderer::beginFrame() {
