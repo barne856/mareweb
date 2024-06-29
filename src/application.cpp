@@ -61,6 +61,55 @@ void Application::initSDL() {
   }
 }
 
+void Application::setupWebGPUCallbacks(wgpu::DeviceDescriptor &deviceDesc) {
+  // Device lost callback
+  wgpu::DeviceLostCallbackInfo deviceLostCallbackInfo{};
+  deviceLostCallbackInfo.callback = [](WGPUDeviceImpl *const * /*device*/, WGPUDeviceLostReason reason,
+                                       char const *message, void *userdata) {
+    auto *self = static_cast<Application *>(userdata);
+    std::cerr << "Device lost: " << message << std::endl;
+
+    std::string reasonStr;
+    switch (reason) {
+    case WGPUDeviceLostReason_Destroyed:
+      reasonStr = "The device was explicitly destroyed";
+      break;
+    case WGPUDeviceLostReason_Unknown:
+      reasonStr = "The device was lost for an unknown reason";
+      break;
+    case WGPUDeviceLostReason_FailedCreation:
+      reasonStr = "The device was lost due to a failed creation";
+      break;
+    case WGPUDeviceLostReason_InstanceDropped:
+      reasonStr = "The instance was dropped";
+      break;
+    case WGPUDeviceLostReason_Force32:
+      reasonStr = "Force32";
+      break;
+    default:
+      reasonStr = "Unknown reason code: " + std::to_string(static_cast<int>(reason));
+    }
+
+    std::cerr << "Reason: " << reasonStr << std::endl;
+  };
+  deviceLostCallbackInfo.userdata = this;
+
+  // Uncaptured error callback
+  wgpu::UncapturedErrorCallbackInfo uncapturedErrorCallbackInfo{};
+  uncapturedErrorCallbackInfo.callback = [](WGPUErrorType type, const char *message, void *userdata) {
+    auto *self = static_cast<Application *>(userdata);
+    std::cerr << "Uncaptured error: " << message << std::endl;
+    if (type == WGPUErrorType_DeviceLost) {
+      self->m_quit = true;
+    }
+  };
+  uncapturedErrorCallbackInfo.userdata = this;
+
+  // Set up the device descriptor with the callbacks
+  deviceDesc.deviceLostCallbackInfo = deviceLostCallbackInfo;
+  deviceDesc.uncapturedErrorCallbackInfo = uncapturedErrorCallbackInfo;
+}
+
 void Application::initWebGPU() {
   m_instance = wgpu::CreateInstance();
 
@@ -75,25 +124,7 @@ void Application::initWebGPU() {
 
         // Create device descriptor with device lost callback info
         wgpu::DeviceDescriptor deviceDesc{};
-        wgpu::DeviceLostCallbackInfo deviceLostCallbackInfo{};
-        deviceLostCallbackInfo.callback = [](WGPUDeviceImpl *const * /*device*/, WGPUDeviceLostReason /*reason*/,
-                                             char const *message, void *userdata) {
-          auto *self = static_cast<Application *>(userdata);
-          std::cerr << "Device lost: " << message << std::endl;
-          self->m_quit = true;
-        };
-        deviceLostCallbackInfo.userdata = self;
-        deviceDesc.deviceLostCallbackInfo = deviceLostCallbackInfo;
-
-        // Add uncaptured error callback info
-        wgpu::UncapturedErrorCallbackInfo uncapturedErrorCallbackInfo{};
-        uncapturedErrorCallbackInfo.callback = [](WGPUErrorType /*type*/, const char *message, void *userdata) {
-          auto *self = static_cast<Application *>(userdata);
-          std::cerr << "Uncaptured error: " << message << std::endl;
-          self->m_quit = true;
-        };
-        uncapturedErrorCallbackInfo.userdata = self;
-        deviceDesc.uncapturedErrorCallbackInfo = uncapturedErrorCallbackInfo;
+        self->setupWebGPUCallbacks(deviceDesc);
 
         adapter.RequestDevice(
             &deviceDesc,
@@ -139,9 +170,9 @@ void Application::handleEvents() {
   }
 }
 
-SDL_Window *Application::createWindow(uint32_t width, uint32_t height) {
-  SDL_Window *window =
-      SDL_CreateWindow("WebGPU Window", static_cast<int>(width), static_cast<int>(height), SDL_WINDOW_RESIZABLE);
+SDL_Window *Application::createWindow(const RendererProperties &properties) {
+  SDL_Window *window = SDL_CreateWindow(properties.title.c_str(), static_cast<int>(properties.width),
+                                        static_cast<int>(properties.height), SDL_WINDOW_RESIZABLE);
   if (window == nullptr) {
     throw std::runtime_error(std::string("Window creation failed: ") + SDL_GetError());
   }

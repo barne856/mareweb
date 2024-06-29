@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 #include <webgpu/webgpu_cpp.h>
+#include "mareweb/renderer.hpp"
 
 namespace mareweb {
 
@@ -21,7 +22,7 @@ public:
   wgpu::Instance &getWGPUInstance() { return m_instance; }
   wgpu::Device &getWGPUDevice() { return m_device; }
 
-  template <typename T, typename... Args> void createRenderer(uint32_t width, uint32_t height, Args &&...args);
+  template <typename T, typename... Args> void createRenderer(const RendererProperties &properties, Args &&...args);
 
 private:
   Application() = default;
@@ -35,8 +36,9 @@ private:
   void initSDL();
   void initWebGPU();
   void handleEvents();
+  void setupWebGPUCallbacks(wgpu::DeviceDescriptor& deviceDesc);
 
-  SDL_Window *createWindow(uint32_t width, uint32_t height);
+  SDL_Window *createWindow(const RendererProperties &properties);
   wgpu::Surface createSurface(SDL_Window *window);
 
   bool m_initialized = false;
@@ -47,15 +49,15 @@ private:
 };
 
 template <typename T, typename... Args>
-void Application::createRenderer(uint32_t width, uint32_t height, Args &&...args) {
+void Application::createRenderer(const RendererProperties &properties, Args &&...args) {
   if (!m_initialized) {
     throw std::runtime_error("Application not initialized");
   }
 
-  SDL_Window *window = createWindow(width, height);
+  SDL_Window *window = createWindow(properties);
   wgpu::Surface surface = createSurface(window);
 
-  m_renderers.push_back(std::make_unique<T>(m_device, surface, window, width, height, std::forward<Args>(args)...));
+  m_renderers.push_back(std::make_unique<T>(m_device, surface, window, properties, std::forward<Args>(args)...));
 }
 
 } // namespace mareweb

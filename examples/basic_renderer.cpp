@@ -8,11 +8,10 @@ public:
   using mareweb::Renderer::Renderer; // Inherit constructor
 
   void render() override {
-    // Clear the screen
-    wgpu::Color clearColor = {0.0f, std::sin(m_time), 0.0f, 1.0f};
-    setClearColor(clearColor);
-
-    m_time += 0.01f*static_cast<float>(m_width)*0.01f;
+    // set clear color based on time
+    m_clearColor = {std::abs(std::sin(m_time)), std::abs(std::cos(m_time)), 0.0f, 1.0f};
+    setClearColor(m_clearColor);
+    m_time += 0.01f;
   }
 
 private:
@@ -24,8 +23,24 @@ int main() {
     mareweb::Application &app = mareweb::Application::getInstance();
     app.initialize();
 
-    app.createRenderer<BasicRenderer>(800, 600);
-    app.createRenderer<BasicRenderer>(400, 300);
+    mareweb::RendererProperties props1 = {.width = 800,
+                                          .height = 600,
+                                          .title = "Basic Renderer 1",
+                                          .fullscreen = false,
+                                          .resizable = true,
+                                          .presentMode = wgpu::PresentMode::Fifo,
+                                          .sampleCount = 4};
+
+    mareweb::RendererProperties props2 = {.width = 400,
+                                          .height = 300,
+                                          .title = "Basic Renderer 2",
+                                          .fullscreen = false,
+                                          .resizable = false,
+                                          .presentMode = wgpu::PresentMode::Immediate,
+                                          .sampleCount = 1};
+
+    app.createRenderer<BasicRenderer>(props1);
+    app.createRenderer<BasicRenderer>(props2);
 
     app.run();
   } catch (const std::exception &e) {
