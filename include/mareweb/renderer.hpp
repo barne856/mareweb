@@ -7,6 +7,7 @@
 
 #include "mareweb/material.hpp"
 #include "mareweb/mesh.hpp"
+#include "mareweb/object.hpp"
 
 namespace mareweb {
 
@@ -21,7 +22,7 @@ struct renderer_properties {
   wgpu::Color clear_color = {0.0f, 0.0f, 0.0f, 1.0f};
 };
 
-class renderer {
+class renderer : public object {
 public:
   renderer(wgpu::Device &device, wgpu::Surface surface, SDL_Window *window, const renderer_properties &properties);
   virtual ~renderer();
@@ -45,6 +46,11 @@ public:
   const renderer_properties &get_properties() const { return m_properties; }
 
 protected:
+  void on_enter() override {};
+  void on_exit() override {};
+  void update(float dt) override {};
+  void render(float dt) override {};
+
   renderer_properties m_properties;
   SDL_Window *m_window;
   wgpu::Device m_device;
