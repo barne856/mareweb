@@ -1,11 +1,11 @@
 #ifndef MAREWEB_APPLICATION_HPP
 #define MAREWEB_APPLICATION_HPP
 
+#include "mareweb/renderer.hpp"
 #include <SDL3/SDL.h>
 #include <memory>
 #include <vector>
 #include <webgpu/webgpu_cpp.h>
-#include "mareweb/renderer.hpp"
 
 namespace mareweb {
 
@@ -36,7 +36,7 @@ private:
   void initSDL();
   void initWebGPU();
   void handleEvents();
-  void setupWebGPUCallbacks(wgpu::DeviceDescriptor& deviceDesc);
+  void setupWebGPUCallbacks(wgpu::DeviceDescriptor &deviceDesc);
 
   SDL_Window *createWindow(const RendererProperties &properties);
   wgpu::Surface createSurface(SDL_Window *window);

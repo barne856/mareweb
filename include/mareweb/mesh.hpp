@@ -9,19 +9,19 @@ namespace mareweb {
 
 class Mesh {
 public:
-    Mesh(wgpu::Device& device, const std::vector<float>& vertices, const std::vector<uint32_t>& indices = {});
+  Mesh(wgpu::Device &device, const std::vector<float> &vertices, const std::vector<uint32_t> &indices = {});
 
-    const VertexBuffer& getVertexBuffer() const { return *m_vertexBuffer; }
-    const IndexBuffer* getIndexBuffer() const { return m_indexBuffer.get(); }
+  const VertexBuffer &getVertexBuffer() const { return *m_vertexBuffer; }
+  const IndexBuffer *getIndexBuffer() const { return m_indexBuffer.get(); }
 
-    uint32_t getVertexCount() const;
-    uint32_t getIndexCount() const;
+  uint32_t getVertexCount() const;
+  uint32_t getIndexCount() const;
 
-    void draw(wgpu::RenderPassEncoder& passEncoder) const;
+  void draw(wgpu::RenderPassEncoder &passEncoder) const;
 
 private:
-    std::unique_ptr<VertexBuffer> m_vertexBuffer;
-    std::unique_ptr<IndexBuffer> m_indexBuffer;
+  std::unique_ptr<VertexBuffer> m_vertexBuffer;
+  std::unique_ptr<IndexBuffer> m_indexBuffer;
 };
 
 } // namespace mareweb
