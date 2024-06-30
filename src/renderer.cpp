@@ -23,6 +23,10 @@ renderer::renderer(wgpu::Device &device, wgpu::Surface surface, SDL_Window *wind
       m_properties.sample_count = 1;
     }
   }
+
+  attach_system<renderer_render_system>();
+  attach_system<renderer_physics_system>();
+  attach_system<renderer_controls_system>();
 }
 
 renderer::~renderer() {

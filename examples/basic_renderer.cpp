@@ -8,12 +8,13 @@ public:
   using mareweb::renderer::renderer; // Inherit constructor
 
   void render(float dt) override {
+    begin_frame();
     // set clear color based on time
+    m_time += dt;
     m_clear_color = {std::abs(std::sin(m_time)), std::abs(std::cos(m_time)), 0.0f, 1.0f};
     set_clear_color(m_clear_color);
-    m_time += 0.01f;
+    end_frame();
   }
-
 private:
   float m_time = 0.0f;
 };

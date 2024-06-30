@@ -42,10 +42,6 @@ private:
   SDL_Window *create_window(const renderer_properties &properties);
   wgpu::Surface create_surface(SDL_Window *window);
 
-  void update_object_hierarchy(object *obj, float dt);
-  void render_object_hierarchy(renderer *rend, float dt);
-  void render_object(object *obj, float dt);
-
   bool m_initialized = false;
   bool m_quit = false;
   wgpu::Instance m_instance;

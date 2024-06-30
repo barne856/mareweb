@@ -13,8 +13,6 @@ public:
   object(){};
   virtual ~object() = default;
 
-  virtual void on_enter() {}
-  virtual void on_exit() {}
   virtual void update(float dt) {}
   virtual void render(float dt) {}
 
@@ -24,17 +22,17 @@ public:
   virtual bool on_mouse_wheel(const mouse_scroll_event &event) { return false; }
   virtual bool on_resize(const window_resize_event &event) { return false; }
 
-  template <typename T, typename... args> T *create_child(args &&...a) {
-    auto child = std::make_unique<T>(std::forward<args>(a)...);
-    T *child_ptr = child.get();
-    m_children.push_back(std::move(child));
-    return child_ptr;
+  template <typename T, typename... args> T *create_object(args &&...a) {
+    auto obj = std::make_unique<T>(std::forward<args>(a)...);
+    T *obj_ptr = obj.get();
+    m_children.push_back(std::move(obj));
+    return obj_ptr;
   }
 
-  void add_child(std::unique_ptr<object> child) { m_children.push_back(std::move(child)); }
+  void add_object(std::unique_ptr<object> obj) { m_children.push_back(std::move(obj)); }
 
-  void remove_child(object *child) {
-    auto it = std::find_if(m_children.begin(), m_children.end(), [child](const auto &c) { return c.get() == child; });
+  void remove_object(object *obj) {
+    auto it = std::find_if(m_children.begin(), m_children.end(), [obj](const auto &c) { return c.get() == obj; });
     if (it != m_children.end()) {
       m_children.erase(it);
     }

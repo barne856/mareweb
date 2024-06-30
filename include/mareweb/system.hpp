@@ -11,10 +11,10 @@ struct mouse_scroll_event {
   float y; // the amount scrolled vertically, positive away from the user and negative toward the user
 };
 struct mouse_move_event {
-  int x;    // window coordinates of mouse position (in pixels from left), reported if cursor is visible
-  int y;    // window coordinates of mouse position (in pixels from top), reported if cursor is visible
-  int xrel; // relative motion from last event in x direction (right is positive), always reported
-  int yrel; // relative motion from last event in y direction (down is positive), always reported
+  float x;    // window coordinates of mouse position (in pixels from left), reported if cursor is visible
+  float y;    // window coordinates of mouse position (in pixels from top), reported if cursor is visible
+  float xrel; // relative motion from last event in x direction (right is positive), always reported
+  float yrel; // relative motion from last event in y direction (down is positive), always reported
 };
 struct window_resize_event {
   uint64_t width;  // horizontal pixels

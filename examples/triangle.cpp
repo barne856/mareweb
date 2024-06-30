@@ -3,11 +3,17 @@
 #include <iostream>
 #include <vector>
 
-class triangle_renderer : public mareweb::renderer {
+template <typename T>
+class triangle_render_system : public mareweb::render_system<T> {
 public:
-  triangle_renderer(wgpu::Device &device, wgpu::Surface surface, SDL_Window *window,
-                    const mareweb::renderer_properties &properties)
-      : renderer(device, surface, window, properties) {
+  void render(float dt, T &ent) override {
+    ent.rend->draw_mesh(*ent.mesh.get(), *ent.material.get());
+  }
+};
+
+class triangle : public mareweb::entity<triangle> {
+  public:
+  triangle(mareweb::renderer* rend) : rend(rend){
     std::vector<float> vertices = {0.0f, 0.5f, 0.0f, -0.5f, -0.5f, 0.0f, 0.5f, -0.5f, 0.0f};
 
     const char *vertex_shader_source = R"(
@@ -24,18 +30,24 @@ public:
             }
         )";
 
-    m_mesh = create_mesh(vertices);
-    m_material = create_material(vertex_shader_source, fragment_shader_source);
-    set_clear_color({0.05f, 0.05f, 0.05f, 1.0f});
+    mesh = rend->create_mesh(vertices);
+    material = rend->create_material(vertex_shader_source, fragment_shader_source);
+    attach_system<triangle_render_system>();
   }
+    std::unique_ptr<mareweb::mesh> mesh;
+    std::unique_ptr<mareweb::material> material;
+    mareweb::renderer* rend;
+};
 
-  ~triangle_renderer() override = default; // The default destructor will clean up m_mesh and m_material
 
-  void render(float dt) override { draw_mesh(*m_mesh, *m_material); }
-
-private:
-  std::unique_ptr<mareweb::mesh> m_mesh;
-  std::unique_ptr<mareweb::material> m_material;
+class main_renderer : public mareweb::renderer {
+public:
+  main_renderer(wgpu::Device &device, wgpu::Surface surface, SDL_Window *window,
+                    const mareweb::renderer_properties &properties)
+      : renderer(device, surface, window, properties) {
+    set_clear_color({0.05f, 0.05f, 0.05f, 1.0f});
+    create_object<triangle>(this);
+  }
 };
 
 int main() {
@@ -50,7 +62,7 @@ int main() {
                                         .present_mode = wgpu::PresentMode::Fifo,
                                         .sample_count = 4};
 
-  app.create_renderer<triangle_renderer>(props);
+  app.create_renderer<main_renderer>(props);
 
   app.run();
 

@@ -49,54 +49,14 @@ void application::run() {
         handle_events();
         
         // Update all renderers and their object hierarchies
-        for (auto& renderer : m_renderers) {
-            update_object_hierarchy(renderer.get(), dt);
+        for (auto& rend : m_renderers) {
+            rend->update(dt);
         }
         
         // Render all renderers and their object hierarchies
-        for (auto& renderer : m_renderers) {
-            render_object_hierarchy(renderer.get(), dt);
+        for (auto& rend : m_renderers) {
+            rend->render(dt);
         }
-    }
-}
-
-void application::update_object_hierarchy(object* obj, float dt) {
-    if (obj->is_disabled()) {
-        return;
-    }
-    
-    obj->update(dt);
-    
-    for (const auto& child : obj->get_children()) {
-        update_object_hierarchy(child.get(), dt);
-    }
-}
-
-void application::render_object_hierarchy(renderer* rend, float dt) {
-    if (rend->is_disabled()) {
-        return;
-    }
-    
-    rend->begin_frame();
-    
-    render_object(rend, dt);
-    
-    for (const auto& child : rend->get_children()) {
-        render_object(child.get(), dt);
-    }
-    
-    rend->end_frame();
-}
-
-void application::render_object(object* obj, float dt) {
-    if (obj->is_disabled()) {
-        return;
-    }
-    
-    obj->render(dt);
-    
-    for (const auto& child : obj->get_children()) {
-        render_object(child.get(), dt);
     }
 }
 
@@ -208,13 +168,47 @@ void application::handle_events() {
       }
     } break;
     case SDL_EVENT_WINDOW_RESIZED:
-      for (auto &renderer : m_renderers) {
-        if (event.window.windowID == SDL_GetWindowID(renderer->get_window())) {
-          renderer->resize(event.window.data1, event.window.data2);
+      for (auto &rend : m_renderers) {
+        if (event.window.windowID == SDL_GetWindowID(rend->get_window())) {
+          rend->resize(event.window.data1, event.window.data2);
           break;
         }
       }
       break;
+          case SDL_EVENT_KEY_DOWN:
+    case SDL_EVENT_KEY_UP: {
+      key_event key_evt = static_cast<key_event>(event.key.key * 2 + (event.type == SDL_EVENT_KEY_DOWN ? 0 : 1));
+      for (auto &rend : m_renderers) {
+        if (rend->on_key(key_evt)) {
+          break;
+        }
+      }
+    } break;
+    case SDL_EVENT_MOUSE_BUTTON_DOWN:
+    case SDL_EVENT_MOUSE_BUTTON_UP: {
+      mouse_button_event button_evt = static_cast<mouse_button_event>(event.button.button * 2 + (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN ? 0 : 1));
+      for (auto &rend : m_renderers) {
+        if (rend->on_mouse_button(button_evt)) {
+          break;
+        }
+      }
+    } break;
+    case SDL_EVENT_MOUSE_MOTION: {
+      mouse_move_event move_evt{event.motion.x, event.motion.y, event.motion.xrel, event.motion.yrel};
+      for (auto &rend : m_renderers) {
+        if (rend->on_mouse_move(move_evt)) {
+          break;
+        }
+      }
+    } break;
+    case SDL_EVENT_MOUSE_WHEEL: {
+      mouse_scroll_event scroll_evt{static_cast<float>(event.wheel.x), static_cast<float>(event.wheel.y)};
+      for (auto &rend : m_renderers) {
+        if (rend->on_mouse_wheel(scroll_evt)) {
+          break;
+        }
+      }
+    } break;
     }
   }
 }

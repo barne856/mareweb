@@ -7,7 +7,7 @@
 
 #include "mareweb/material.hpp"
 #include "mareweb/mesh.hpp"
-#include "mareweb/object.hpp"
+#include "mareweb/entity.hpp"
 
 namespace mareweb {
 
@@ -22,7 +22,77 @@ struct renderer_properties {
   wgpu::Color clear_color = {0.0f, 0.0f, 0.0f, 1.0f};
 };
 
-class renderer : public object {
+template <typename T> class renderer_render_system : public render_system<T> {
+public:
+  void render(float dt, T &rend) override {
+    if(rend.is_disabled())
+      return;
+    rend.begin_frame();
+    for(const auto& child : rend.get_children())
+      child->render(dt);
+    rend.end_frame();
+  }
+};
+
+template <typename T> class renderer_physics_system : public physics_system<T> {
+public:
+  void update(float dt, T &rend) override {
+    if(rend.is_disabled())
+      return;
+    for(const auto& child : rend.get_children())
+      child->update(dt);
+  }
+};
+
+template <typename T> class renderer_controls_system : public controls_system<T> {
+public:
+  bool on_key(const key_event &event, T &rend) override {
+    if(rend.is_disabled())
+      return false;
+    for(auto it = rend.get_children().rbegin(); it != rend.get_children().rend(); ++it)
+      if(it->get()->on_key(event))
+        return true;
+    return false;
+  }
+
+  bool on_mouse_button(const mouse_button_event &event, T &rend) override {
+    if(rend.is_disabled())
+      return false;
+    for(auto it = rend.get_children().rbegin(); it != rend.get_children().rend(); ++it)
+      if(it->get()->on_mouse_button(event))
+        return true;
+    return false;
+  }
+
+  bool on_mouse_move(const mouse_move_event &event, T &rend) override {
+    if(rend.is_disabled())
+      return false;
+    for(auto it = rend.get_children().rbegin(); it != rend.get_children().rend(); ++it)
+      if(it->get()->on_mouse_move(event))
+        return true;
+    return false;
+  }
+
+  bool on_mouse_wheel(const mouse_scroll_event &event, T &rend) override {
+    if(rend.is_disabled())
+      return false;
+    for(auto it = rend.get_children().rbegin(); it != rend.get_children().rend(); ++it)
+      if(it->get()->on_mouse_wheel(event))
+        return true;
+    return false;
+  }
+
+  bool on_resize(const window_resize_event &event, T &rend) override {
+    if(rend.is_disabled())
+      return false;
+    for(auto it = rend.get_children().rbegin(); it != rend.get_children().rend(); ++it)
+      if(it->get()->on_resize(event))
+        return true;
+    return false;
+  }
+};
+
+class renderer : public entity<renderer> {
 public:
   renderer(wgpu::Device &device, wgpu::Surface surface, SDL_Window *window, const renderer_properties &properties);
   virtual ~renderer();
@@ -45,11 +115,6 @@ public:
   const renderer_properties &get_properties() const { return m_properties; }
 
 protected:
-  void on_enter() override {};
-  void on_exit() override {};
-  void update(float dt) override {};
-  void render(float dt) override {};
-
   renderer_properties m_properties;
   SDL_Window *m_window;
   wgpu::Device m_device;
