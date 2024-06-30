@@ -10,56 +10,56 @@
 
 namespace mareweb {
 
-struct RendererProperties {
+struct renderer_properties {
   uint32_t width;
   uint32_t height;
   std::string title;
   bool fullscreen = false;
   bool resizable = true;
-  wgpu::PresentMode presentMode = wgpu::PresentMode::Fifo; // Fifo is equivalent to VSync
-  uint32_t sampleCount = 1;                                // MSAA sample count
-  wgpu::Color clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
+  wgpu::PresentMode present_mode = wgpu::PresentMode::Fifo; // Fifo is equivalent to VSync
+  uint32_t sample_count = 1;                                // MSAA sample count
+  wgpu::Color clear_color = {0.0f, 0.0f, 0.0f, 1.0f};
 };
 
-class Renderer {
+class renderer {
 public:
-  Renderer(wgpu::Device &device, wgpu::Surface surface, SDL_Window *window, const RendererProperties &properties);
-  virtual ~Renderer();
+  renderer(wgpu::Device &device, wgpu::Surface surface, SDL_Window *window, const renderer_properties &properties);
+  virtual ~renderer();
 
-  void resize(uint32_t newWidth, uint32_t newHeight);
+  void resize(uint32_t new_width, uint32_t new_height);
   virtual void render() = 0;
   void present();
 
-  std::unique_ptr<Mesh> createMesh(const std::vector<float> &vertices, const std::vector<uint32_t> &indices = {});
-  std::unique_ptr<Material> createMaterial(const std::string &vertexShaderSource,
-                                           const std::string &fragmentShaderSource);
-  void setFullscreen(bool fullscreen);
-  void setPresentMode(wgpu::PresentMode presentMode);
-  void setClearColor(const wgpu::Color &clearColor) { m_clearColor = clearColor; }
-  void beginFrame();
-  void endFrame();
-  void drawMesh(const Mesh &mesh, const Material &material);
+  std::unique_ptr<mesh> create_mesh(const std::vector<float> &vertices, const std::vector<uint32_t> &indices = {});
+  std::unique_ptr<material> create_material(const std::string &vertex_shader_source,
+                                            const std::string &fragment_shader_source);
+  void set_fullscreen(bool fullscreen);
+  void set_present_mode(wgpu::PresentMode present_mode);
+  void set_clear_color(const wgpu::Color &clear_color) { m_clear_color = clear_color; }
+  void begin_frame();
+  void end_frame();
+  void draw_mesh(const mesh &mesh, const material &material);
 
-  SDL_Window *getWindow() const { return m_window; }
-  const std::string &getTitle() const { return m_properties.title; }
-  const RendererProperties &getProperties() const { return m_properties; }
+  SDL_Window *get_window() const { return m_window; }
+  const std::string &get_title() const { return m_properties.title; }
+  const renderer_properties &get_properties() const { return m_properties; }
 
 protected:
-  RendererProperties m_properties;
+  renderer_properties m_properties;
   SDL_Window *m_window;
   wgpu::Device m_device;
   wgpu::Surface m_surface;
-  wgpu::TextureFormat m_surfaceFormat;
-  wgpu::CommandEncoder m_commandEncoder;
-  wgpu::RenderPassEncoder m_renderPass;
-  wgpu::TextureView m_currentTextureView;
-  wgpu::Color m_clearColor;
-  wgpu::Texture m_msaaTexture;
-  wgpu::TextureView m_msaaTextureView;
+  wgpu::TextureFormat m_surface_format;
+  wgpu::CommandEncoder m_command_encoder;
+  wgpu::RenderPassEncoder m_render_pass;
+  wgpu::TextureView m_current_texture_view;
+  wgpu::Color m_clear_color;
+  wgpu::Texture m_msaa_texture;
+  wgpu::TextureView m_msaa_texture_view;
 
 private:
-  void configureSurface();
-  void createMSAATexture();
+  void configure_surface();
+  void create_msaa_texture();
 };
 
 } // namespace mareweb

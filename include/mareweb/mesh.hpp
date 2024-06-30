@@ -7,21 +7,21 @@
 
 namespace mareweb {
 
-class Mesh {
+class mesh {
 public:
-  Mesh(wgpu::Device &device, const std::vector<float> &vertices, const std::vector<uint32_t> &indices = {});
+  mesh(wgpu::Device &device, const std::vector<float> &vertices, const std::vector<uint32_t> &indices = {});
 
-  const VertexBuffer &getVertexBuffer() const { return *m_vertexBuffer; }
-  const IndexBuffer *getIndexBuffer() const { return m_indexBuffer.get(); }
+  const vertex_buffer &get_vertex_buffer() const { return *m_vertex_buffer; }
+  const index_buffer *get_index_buffer() const { return m_index_buffer.get(); }
 
-  uint32_t getVertexCount() const;
-  uint32_t getIndexCount() const;
+  uint32_t get_vertex_count() const;
+  uint32_t get_index_count() const;
 
-  void draw(wgpu::RenderPassEncoder &passEncoder) const;
+  void draw(wgpu::RenderPassEncoder &pass_encoder) const;
 
 private:
-  std::unique_ptr<VertexBuffer> m_vertexBuffer;
-  std::unique_ptr<IndexBuffer> m_indexBuffer;
+  std::unique_ptr<vertex_buffer> m_vertex_buffer;
+  std::unique_ptr<index_buffer> m_index_buffer;
 };
 
 } // namespace mareweb

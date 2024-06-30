@@ -6,15 +6,15 @@
 
 namespace mareweb {
 
-class Shader {
+class shader {
 public:
-  Shader(wgpu::Device &device, const std::string &source, wgpu::ShaderStage stage);
+  shader(wgpu::Device &device, const std::string &source, wgpu::ShaderStage stage);
 
-  wgpu::ShaderModule getShaderModule() const { return m_shaderModule; }
+  wgpu::ShaderModule get_shader_module() const { return m_shader_module; }
 
 private:
   wgpu::Device m_device;
-  wgpu::ShaderModule m_shaderModule;
+  wgpu::ShaderModule m_shader_module;
 };
 
 } // namespace mareweb

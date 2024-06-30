@@ -3,54 +3,54 @@
 #include <iostream>
 #include <vector>
 
-class TriangleRenderer : public mareweb::Renderer {
+class triangle_renderer : public mareweb::renderer {
 public:
-  TriangleRenderer(wgpu::Device &device, wgpu::Surface surface, SDL_Window *window,
-                   const mareweb::RendererProperties &properties)
-      : Renderer(device, surface, window, properties) {
+  triangle_renderer(wgpu::Device &device, wgpu::Surface surface, SDL_Window *window,
+                    const mareweb::renderer_properties &properties)
+      : renderer(device, surface, window, properties) {
     std::vector<float> vertices = {0.0f, 0.5f, 0.0f, -0.5f, -0.5f, 0.0f, 0.5f, -0.5f, 0.0f};
 
-    const char *vertexShaderSource = R"(
+    const char *vertex_shader_source = R"(
             @vertex
             fn main(@location(0) position: vec3<f32>) -> @builtin(position) vec4<f32> {
                 return vec4<f32>(position, 1.0);
             }
         )";
 
-    const char *fragmentShaderSource = R"(
+    const char *fragment_shader_source = R"(
             @fragment
             fn main() -> @location(0) vec4<f32> {
                 return vec4<f32>(1.0, 0.1, 0.05, 1.0);
             }
         )";
 
-    m_mesh = createMesh(vertices);
-    m_material = createMaterial(vertexShaderSource, fragmentShaderSource);
-    setClearColor({0.05f, 0.05f, 0.05f, 1.0f});
+    m_mesh = create_mesh(vertices);
+    m_material = create_material(vertex_shader_source, fragment_shader_source);
+    set_clear_color({0.05f, 0.05f, 0.05f, 1.0f});
   }
 
-  ~TriangleRenderer() override = default; // The default destructor will clean up m_mesh and m_material
+  ~triangle_renderer() override = default; // The default destructor will clean up m_mesh and m_material
 
-  void render() override { drawMesh(*m_mesh, *m_material); }
+  void render() override { draw_mesh(*m_mesh, *m_material); }
 
 private:
-  std::unique_ptr<mareweb::Mesh> m_mesh;
-  std::unique_ptr<mareweb::Material> m_material;
+  std::unique_ptr<mareweb::mesh> m_mesh;
+  std::unique_ptr<mareweb::material> m_material;
 };
 
 int main() {
-  mareweb::Application &app = mareweb::Application::getInstance();
+  mareweb::application &app = mareweb::application::get_instance();
   app.initialize();
 
-  mareweb::RendererProperties props = {.width = 800,
+  mareweb::renderer_properties props = {.width = 800,
                                         .height = 600,
                                         .title = "Triangle",
                                         .fullscreen = false,
                                         .resizable = true,
-                                        .presentMode = wgpu::PresentMode::Fifo,
-                                        .sampleCount = 4};
+                                        .present_mode = wgpu::PresentMode::Fifo,
+                                        .sample_count = 4};
 
-  app.createRenderer<TriangleRenderer>(props);
+  app.create_renderer<triangle_renderer>(props);
 
   app.run();
 

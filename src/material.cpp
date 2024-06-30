@@ -3,29 +3,29 @@
 
 namespace mareweb {
 
-Material::Material(wgpu::Device &device, const std::string &vertexShaderSource, const std::string &fragmentShaderSource,
-                   wgpu::TextureFormat surfaceFormat, uint32_t sampleCount)
+material::material(wgpu::Device &device, const std::string &vertex_shader_source, const std::string &fragment_shader_source,
+                   wgpu::TextureFormat surface_format, uint32_t sample_count)
     : m_device(device) {
 
   // Create vertex shader
-  m_vertexShader = std::make_unique<Shader>(device, vertexShaderSource, wgpu::ShaderStage::Vertex);
-  if (!m_vertexShader) {
+  m_vertex_shader = std::make_unique<shader>(device, vertex_shader_source, wgpu::ShaderStage::Vertex);
+  if (!m_vertex_shader) {
     throw std::runtime_error("Failed to create vertex shader");
   }
 
   // Create fragment shader
-  m_fragmentShader = std::make_unique<Shader>(device, fragmentShaderSource, wgpu::ShaderStage::Fragment);
-  if (!m_fragmentShader) {
+  m_fragment_shader = std::make_unique<shader>(device, fragment_shader_source, wgpu::ShaderStage::Fragment);
+  if (!m_fragment_shader) {
     throw std::runtime_error("Failed to create fragment shader");
   }
 
   // Create pipeline
-  m_pipeline = std::make_unique<Pipeline>(device, *m_vertexShader, *m_fragmentShader, surfaceFormat, sampleCount);
+  m_pipeline = std::make_unique<pipeline>(device, *m_vertex_shader, *m_fragment_shader, surface_format, sample_count);
   if (!m_pipeline) {
     throw std::runtime_error("Failed to create pipeline");
   }
 }
 
-void Material::bind(wgpu::RenderPassEncoder &passEncoder) const { passEncoder.SetPipeline(m_pipeline->getPipeline()); }
+void material::bind(wgpu::RenderPassEncoder &pass_encoder) const { pass_encoder.SetPipeline(m_pipeline->get_pipeline()); }
 
 } // namespace mareweb

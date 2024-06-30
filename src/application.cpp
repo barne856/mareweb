@@ -17,45 +17,45 @@
 
 namespace mareweb {
 
-Application &Application::getInstance() {
-  static Application instance;
+application &application::get_instance() {
+  static application instance;
   return instance;
 }
 
-void Application::initialize() {
+void application::initialize() {
   if (m_initialized)
     return;
 
-  initSDL();
-  initWebGPU();
+  init_sdl();
+  init_webgpu();
 
   m_initialized = true;
 }
 
-Application::~Application() {
+application::~application() {
   if (m_initialized) {
     SDL_Quit();
   }
 }
 
-void Application::run() {
+void application::run() {
   if (!m_initialized) {
     throw std::runtime_error("Application not initialized");
   }
 
   while (!m_quit) {
-    handleEvents();
+    handle_events();
     for (auto &renderer : m_renderers) {
-      renderer->beginFrame();
+      renderer->begin_frame();
       renderer->render();
-      renderer->endFrame();
+      renderer->end_frame();
     }
   }
 }
 
-void Application::quit() { m_quit = true; }
+void application::quit() { m_quit = true; }
 
-void Application::initSDL() {
+void application::init_sdl() {
   SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "x11,wayland,windows");
   SDL_SetMainReady();
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -63,86 +63,86 @@ void Application::initSDL() {
   }
 }
 
-void Application::setupWebGPUCallbacks(wgpu::DeviceDescriptor &deviceDesc) {
+void application::setup_webgpu_callbacks(wgpu::DeviceDescriptor &device_desc) {
   // Device lost callback
-  wgpu::DeviceLostCallbackInfo deviceLostCallbackInfo{};
-  deviceLostCallbackInfo.callback = [](WGPUDeviceImpl *const * /*device*/, WGPUDeviceLostReason reason,
-                                       char const *message, void *userdata) {
-    auto *self = static_cast<Application *>(userdata);
+  wgpu::DeviceLostCallbackInfo device_lost_callback_info{};
+  device_lost_callback_info.callback = [](WGPUDeviceImpl *const * /*device*/, WGPUDeviceLostReason reason,
+                                          char const *message, void *userdata) {
+    auto *self = static_cast<application *>(userdata);
     std::cerr << "Device lost: " << message << std::endl;
 
-    std::string reasonStr;
+    std::string reason_str;
     switch (reason) {
     case WGPUDeviceLostReason_Destroyed:
-      reasonStr = "The device was explicitly destroyed";
+      reason_str = "The device was explicitly destroyed";
       break;
     case WGPUDeviceLostReason_Unknown:
-      reasonStr = "The device was lost for an unknown reason";
+      reason_str = "The device was lost for an unknown reason";
       break;
     case WGPUDeviceLostReason_FailedCreation:
-      reasonStr = "The device was lost due to a failed creation";
+      reason_str = "The device was lost due to a failed creation";
       break;
     case WGPUDeviceLostReason_InstanceDropped:
-      reasonStr = "The instance was dropped";
+      reason_str = "The instance was dropped";
       break;
     case WGPUDeviceLostReason_Force32:
-      reasonStr = "Force32";
+      reason_str = "Force32";
       break;
     default:
-      reasonStr = "Unknown reason code: " + std::to_string(static_cast<int>(reason));
+      reason_str = "Unknown reason code: " + std::to_string(static_cast<int>(reason));
     }
 
-    std::cerr << "Reason: " << reasonStr << std::endl;
+    std::cerr << "Reason: " << reason_str << std::endl;
   };
-  deviceLostCallbackInfo.userdata = this;
+  device_lost_callback_info.userdata = this;
 
   // Uncaptured error callback
-  wgpu::UncapturedErrorCallbackInfo uncapturedErrorCallbackInfo{};
-  uncapturedErrorCallbackInfo.callback = [](WGPUErrorType type, const char *message, void *userdata) {
-    auto *self = static_cast<Application *>(userdata);
+  wgpu::UncapturedErrorCallbackInfo uncaptured_error_callback_info{};
+  uncaptured_error_callback_info.callback = [](WGPUErrorType type, const char *message, void *userdata) {
+    auto *self = static_cast<application *>(userdata);
     std::cerr << "Uncaptured error: " << message << std::endl;
     if (type == WGPUErrorType_DeviceLost) {
       self->m_quit = true;
     }
   };
-  uncapturedErrorCallbackInfo.userdata = this;
+  uncaptured_error_callback_info.userdata = this;
 
   // Set up the device descriptor with the callbacks
-  deviceDesc.deviceLostCallbackInfo = deviceLostCallbackInfo;
-  deviceDesc.uncapturedErrorCallbackInfo = uncapturedErrorCallbackInfo;
+  device_desc.deviceLostCallbackInfo = device_lost_callback_info;
+  device_desc.uncapturedErrorCallbackInfo = uncaptured_error_callback_info;
 }
 
-void Application::initWebGPU() {
+void application::init_webgpu() {
   m_instance = wgpu::CreateInstance();
 
   m_instance.RequestAdapter(
       nullptr,
-      [](WGPURequestAdapterStatus status, WGPUAdapter cAdapter, const char * /*message*/, void *userdata) {
-        auto *self = static_cast<Application *>(userdata);
+      [](WGPURequestAdapterStatus status, WGPUAdapter c_adapter, const char * /*message*/, void *userdata) {
+        auto *self = static_cast<application *>(userdata);
         if (status != WGPURequestAdapterStatus_Success) {
           throw std::runtime_error("Failed to request adapter");
         }
-        wgpu::Adapter adapter = wgpu::Adapter::Acquire(cAdapter);
+        wgpu::Adapter adapter = wgpu::Adapter::Acquire(c_adapter);
 
         // Create device descriptor with device lost callback info
-        wgpu::DeviceDescriptor deviceDesc{};
-        self->setupWebGPUCallbacks(deviceDesc);
+        wgpu::DeviceDescriptor device_desc{};
+        self->setup_webgpu_callbacks(device_desc);
 
         adapter.RequestDevice(
-            &deviceDesc,
-            [](WGPURequestDeviceStatus status, WGPUDevice cDevice, const char * /*message*/, void *userdata) {
-              auto *self = static_cast<Application *>(userdata);
+            &device_desc,
+            [](WGPURequestDeviceStatus status, WGPUDevice c_device, const char * /*message*/, void *userdata) {
+              auto *self = static_cast<application *>(userdata);
               if (status != WGPURequestDeviceStatus_Success) {
                 throw std::runtime_error("Failed to request device");
               }
-              self->m_device = wgpu::Device::Acquire(cDevice);
+              self->m_device = wgpu::Device::Acquire(c_device);
             },
             self);
       },
       this);
 }
 
-void Application::handleEvents() {
+void application::handle_events() {
   SDL_Event event{};
   while (SDL_PollEvent(&event) != 0) {
     switch (event.type) {
@@ -151,7 +151,7 @@ void Application::handleEvents() {
       break;
     case SDL_EVENT_WINDOW_CLOSE_REQUESTED: {
       auto it = std::find_if(m_renderers.begin(), m_renderers.end(), [&event](const auto &renderer) {
-        return event.window.windowID == SDL_GetWindowID(renderer->getWindow());
+        return event.window.windowID == SDL_GetWindowID(renderer->get_window());
       });
       if (it != m_renderers.end()) {
         m_renderers.erase(it);
@@ -162,7 +162,7 @@ void Application::handleEvents() {
     } break;
     case SDL_EVENT_WINDOW_RESIZED:
       for (auto &renderer : m_renderers) {
-        if (event.window.windowID == SDL_GetWindowID(renderer->getWindow())) {
+        if (event.window.windowID == SDL_GetWindowID(renderer->get_window())) {
           renderer->resize(event.window.data1, event.window.data2);
           break;
         }
@@ -172,7 +172,7 @@ void Application::handleEvents() {
   }
 }
 
-SDL_Window *Application::createWindow(const RendererProperties &properties) {
+SDL_Window *application::create_window(const renderer_properties &properties) {
   SDL_WindowFlags flags = 0; // Start with no flags
 
   if (properties.resizable) {
@@ -214,49 +214,49 @@ SDL_Window *Application::createWindow(const RendererProperties &properties) {
   return window;
 }
 
-wgpu::Surface Application::createSurface(SDL_Window *window) {
-  SDL_PropertiesID propertiesID = SDL_GetWindowProperties(window);
-  if (propertiesID == 0) {
+wgpu::Surface application::create_surface(SDL_Window *window) {
+  SDL_PropertiesID properties_id = SDL_GetWindowProperties(window);
+  if (properties_id == 0) {
     throw std::runtime_error("SDL_GetWindowProperties failed");
   }
 
-  wgpu::SurfaceDescriptor surfaceDescriptor{};
+  wgpu::SurfaceDescriptor surface_descriptor{};
 
 #if defined(SDL_PLATFORM_WIN32)
-  HWND hwnd = static_cast<HWND>(SDL_GetProperty(propertiesID, SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL));
+  HWND hwnd = static_cast<HWND>(SDL_GetProperty(properties_id, SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL));
   HINSTANCE hinstance =
-      static_cast<HINSTANCE>(SDL_GetProperty(propertiesID, SDL_PROP_WINDOW_WIN32_INSTANCE_POINTER, NULL));
+      static_cast<HINSTANCE>(SDL_GetProperty(properties_id, SDL_PROP_WINDOW_WIN32_INSTANCE_POINTER, NULL));
   if (hwnd && hinstance) {
-    wgpu::SurfaceDescriptorFromWindowsHWND windowDesc{};
-    windowDesc.hinstance = hinstance;
-    windowDesc.hwnd = hwnd;
-    surfaceDescriptor.nextInChain = &windowDesc;
+    wgpu::SurfaceDescriptorFromWindowsHWND window_desc{};
+    window_desc.hinstance = hinstance;
+    window_desc.hwnd = hwnd;
+    surface_descriptor.nextInChain = &window_desc;
   } else {
     throw std::runtime_error("Failed to get Win32 window properties");
   }
 #elif defined(SDL_PLATFORM_LINUX)
-  const char *videoDriver = SDL_GetCurrentVideoDriver();
-  if (std::strcmp(videoDriver, "x11") == 0) {
-    auto *display = static_cast<Display *>(SDL_GetProperty(propertiesID, SDL_PROP_WINDOW_X11_DISPLAY_POINTER, nullptr));
-    auto x11Window = static_cast<Window>(SDL_GetNumberProperty(propertiesID, SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0));
-    if ((display != nullptr) && x11Window != 0) {
-      wgpu::SurfaceDescriptorFromXlibWindow windowDesc{};
-      windowDesc.display = display;
-      windowDesc.window = x11Window;
-      surfaceDescriptor.nextInChain = &windowDesc;
+  const char *video_driver = SDL_GetCurrentVideoDriver();
+  if (std::strcmp(video_driver, "x11") == 0) {
+    auto *display = static_cast<Display *>(SDL_GetProperty(properties_id, SDL_PROP_WINDOW_X11_DISPLAY_POINTER, nullptr));
+    auto x11_window = static_cast<Window>(SDL_GetNumberProperty(properties_id, SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0));
+    if ((display != nullptr) && x11_window != 0) {
+      wgpu::SurfaceDescriptorFromXlibWindow window_desc{};
+      window_desc.display = display;
+      window_desc.window = x11_window;
+      surface_descriptor.nextInChain = &window_desc;
     } else {
       throw std::runtime_error("Failed to get X11 window properties");
     }
-  } else if (std::strcmp(videoDriver, "wayland") == 0) {
+  } else if (std::strcmp(video_driver, "wayland") == 0) {
     auto *display = static_cast<struct wl_display *>(
-        SDL_GetProperty(propertiesID, SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER, nullptr));
+        SDL_GetProperty(properties_id, SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER, nullptr));
     auto *surface = static_cast<struct wl_surface *>(
-        SDL_GetProperty(propertiesID, SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, nullptr));
+        SDL_GetProperty(properties_id, SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, nullptr));
     if ((display != nullptr) && (surface != nullptr)) {
-      wgpu::SurfaceDescriptorFromWaylandSurface windowDesc{};
-      windowDesc.display = display;
-      windowDesc.surface = surface;
-      surfaceDescriptor.nextInChain = &windowDesc;
+      wgpu::SurfaceDescriptorFromWaylandSurface window_desc{};
+      window_desc.display = display;
+      window_desc.surface = surface;
+      surface_descriptor.nextInChain = &window_desc;
     } else {
       throw std::runtime_error("Failed to get Wayland window properties");
     }
@@ -267,7 +267,7 @@ wgpu::Surface Application::createSurface(SDL_Window *window) {
   throw std::runtime_error("Unsupported platform");
 #endif
 
-  return m_instance.CreateSurface(&surfaceDescriptor);
+  return m_instance.CreateSurface(&surface_descriptor);
 }
 
 } // namespace mareweb

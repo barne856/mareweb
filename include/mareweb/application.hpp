@@ -9,53 +9,53 @@
 
 namespace mareweb {
 
-class Renderer;
+class renderer;
 
-class Application {
+class application {
 public:
-  static Application &getInstance();
+  static application &get_instance();
 
   void initialize();
   void run();
   void quit();
 
-  wgpu::Instance &getWGPUInstance() { return m_instance; }
-  wgpu::Device &getWGPUDevice() { return m_device; }
+  wgpu::Instance &get_wgpu_instance() { return m_instance; }
+  wgpu::Device &get_wgpu_device() { return m_device; }
 
-  template <typename T, typename... Args> void createRenderer(const RendererProperties &properties, Args &&...args);
+  template <typename T, typename... Args> void create_renderer(const renderer_properties &properties, Args &&...args);
 
 private:
-  Application() = default;
-  ~Application();
+  application() = default;
+  ~application();
 
-  Application(const Application &) = delete;
-  Application &operator=(const Application &) = delete;
-  Application(Application &&) = delete;
-  Application &operator=(Application &&) = delete;
+  application(const application &) = delete;
+  application &operator=(const application &) = delete;
+  application(application &&) = delete;
+  application &operator=(application &&) = delete;
 
-  void initSDL();
-  void initWebGPU();
-  void handleEvents();
-  void setupWebGPUCallbacks(wgpu::DeviceDescriptor &deviceDesc);
+  void init_sdl();
+  void init_webgpu();
+  void handle_events();
+  void setup_webgpu_callbacks(wgpu::DeviceDescriptor &device_desc);
 
-  SDL_Window *createWindow(const RendererProperties &properties);
-  wgpu::Surface createSurface(SDL_Window *window);
+  SDL_Window *create_window(const renderer_properties &properties);
+  wgpu::Surface create_surface(SDL_Window *window);
 
   bool m_initialized = false;
   bool m_quit = false;
   wgpu::Instance m_instance;
   wgpu::Device m_device;
-  std::vector<std::unique_ptr<Renderer>> m_renderers;
+  std::vector<std::unique_ptr<renderer>> m_renderers;
 };
 
 template <typename T, typename... Args>
-void Application::createRenderer(const RendererProperties &properties, Args &&...args) {
+void application::create_renderer(const renderer_properties &properties, Args &&...args) {
   if (!m_initialized) {
     throw std::runtime_error("Application not initialized");
   }
 
-  SDL_Window *window = createWindow(properties);
-  wgpu::Surface surface = createSurface(window);
+  SDL_Window *window = create_window(properties);
+  wgpu::Surface surface = create_surface(window);
 
   m_renderers.push_back(std::make_unique<T>(m_device, surface, window, properties, std::forward<Args>(args)...));
 }

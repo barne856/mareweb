@@ -7,12 +7,12 @@
 
 namespace mareweb {
 
-class Pipeline {
+class pipeline {
 public:
-  Pipeline(wgpu::Device &device, const Shader &vertexShader, const Shader &fragmentShader,
-           wgpu::TextureFormat surfaceFormat, uint32_t sampleCount);
+  pipeline(wgpu::Device &device, const shader &vertex_shader, const shader &fragment_shader,
+           wgpu::TextureFormat surface_format, uint32_t sample_count);
 
-  wgpu::RenderPipeline getPipeline() const { return m_pipeline; }
+  wgpu::RenderPipeline get_pipeline() const { return m_pipeline; }
 
 private:
   wgpu::Device m_device;

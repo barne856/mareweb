@@ -2,7 +2,7 @@
 
 namespace mareweb {
 
-Buffer::Buffer(wgpu::Device &device, const void *data, size_t size, wgpu::BufferUsage usage)
+buffer::buffer(wgpu::Device &device, const void *data, size_t size, wgpu::BufferUsage usage)
     : m_device(device), m_size(size) {
   wgpu::BufferDescriptor desc{};
   desc.size = size;
@@ -13,12 +13,12 @@ Buffer::Buffer(wgpu::Device &device, const void *data, size_t size, wgpu::Buffer
   device.GetQueue().WriteBuffer(m_buffer, 0, data, size);
 }
 
-Buffer::~Buffer() { m_buffer.Destroy(); }
+buffer::~buffer() { m_buffer.Destroy(); }
 
-VertexBuffer::VertexBuffer(wgpu::Device &device, const std::vector<float> &vertices)
-    : Buffer(device, vertices.data(), vertices.size() * sizeof(float), wgpu::BufferUsage::Vertex) {}
+vertex_buffer::vertex_buffer(wgpu::Device &device, const std::vector<float> &vertices)
+    : buffer(device, vertices.data(), vertices.size() * sizeof(float), wgpu::BufferUsage::Vertex) {}
 
-IndexBuffer::IndexBuffer(wgpu::Device &device, const std::vector<uint32_t> &indices)
-    : Buffer(device, indices.data(), indices.size() * sizeof(uint32_t), wgpu::BufferUsage::Index) {}
+index_buffer::index_buffer(wgpu::Device &device, const std::vector<uint32_t> &indices)
+    : buffer(device, indices.data(), indices.size() * sizeof(uint32_t), wgpu::BufferUsage::Index) {}
 
 } // namespace mareweb

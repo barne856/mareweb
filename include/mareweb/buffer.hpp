@@ -6,13 +6,13 @@
 
 namespace mareweb {
 
-class Buffer {
+class buffer {
 public:
-  Buffer(wgpu::Device &device, const void *data, size_t size, wgpu::BufferUsage usage);
-  ~Buffer();
+  buffer(wgpu::Device &device, const void *data, size_t size, wgpu::BufferUsage usage);
+  ~buffer();
 
-  wgpu::Buffer getBuffer() const { return m_buffer; }
-  size_t getSize() const { return m_size; }
+  wgpu::Buffer get_buffer() const { return m_buffer; }
+  size_t get_size() const { return m_size; }
 
 private:
   wgpu::Device m_device;
@@ -20,14 +20,14 @@ private:
   size_t m_size;
 };
 
-class VertexBuffer : public Buffer {
+class vertex_buffer : public buffer {
 public:
-  VertexBuffer(wgpu::Device &device, const std::vector<float> &vertices);
+  vertex_buffer(wgpu::Device &device, const std::vector<float> &vertices);
 };
 
-class IndexBuffer : public Buffer {
+class index_buffer : public buffer {
 public:
-  IndexBuffer(wgpu::Device &device, const std::vector<uint32_t> &indices);
+  index_buffer(wgpu::Device &device, const std::vector<uint32_t> &indices);
 };
 
 } // namespace mareweb

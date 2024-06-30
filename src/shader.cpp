@@ -2,14 +2,14 @@
 
 namespace mareweb {
 
-Shader::Shader(wgpu::Device &device, const std::string &source, wgpu::ShaderStage stage) : m_device(device) {
-  wgpu::ShaderModuleWGSLDescriptor wgslDesc{};
-  wgslDesc.code = source.c_str();
+shader::shader(wgpu::Device &device, const std::string &source, wgpu::ShaderStage stage) : m_device(device) {
+  wgpu::ShaderModuleWGSLDescriptor wgsl_desc{};
+  wgsl_desc.code = source.c_str();
 
   wgpu::ShaderModuleDescriptor desc{};
-  desc.nextInChain = &wgslDesc;
+  desc.nextInChain = &wgsl_desc;
 
-  m_shaderModule = device.CreateShaderModule(&desc);
+  m_shader_module = device.CreateShaderModule(&desc);
 }
 
 } // namespace mareweb

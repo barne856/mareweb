@@ -9,18 +9,18 @@
 
 namespace mareweb {
 
-class Material {
+class material {
 public:
-  Material(wgpu::Device &device, const std::string &vertexShaderSource, const std::string &fragmentShaderSource,
-           wgpu::TextureFormat surfaceFormat, uint32_t sampleCount);
+  material(wgpu::Device &device, const std::string &vertex_shader_source, const std::string &fragment_shader_source,
+           wgpu::TextureFormat surface_format, uint32_t sample_count);
 
-  void bind(wgpu::RenderPassEncoder &passEncoder) const;
+  void bind(wgpu::RenderPassEncoder &pass_encoder) const;
 
 private:
   wgpu::Device m_device;
-  std::unique_ptr<Shader> m_vertexShader;
-  std::unique_ptr<Shader> m_fragmentShader;
-  std::unique_ptr<Pipeline> m_pipeline;
+  std::unique_ptr<shader> m_vertex_shader;
+  std::unique_ptr<shader> m_fragment_shader;
+  std::unique_ptr<pipeline> m_pipeline;
 };
 
 } // namespace mareweb
