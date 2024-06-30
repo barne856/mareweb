@@ -42,23 +42,15 @@ int main() {
   mareweb::Application &app = mareweb::Application::getInstance();
   app.initialize();
 
-  mareweb::RendererProperties props1 = {.width = 800,
+  mareweb::RendererProperties props = {.width = 800,
                                         .height = 600,
-                                        .title = "Triangle 1",
-                                        .fullscreen = false,
-                                        .resizable = true,
-                                        .presentMode = wgpu::PresentMode::Fifo,
-                                        .sampleCount = 1};
-  mareweb::RendererProperties props2 = {.width = 800,
-                                        .height = 600,
-                                        .title = "Triangle 2",
+                                        .title = "Triangle",
                                         .fullscreen = false,
                                         .resizable = true,
                                         .presentMode = wgpu::PresentMode::Fifo,
                                         .sampleCount = 4};
 
-  app.createRenderer<TriangleRenderer>(props1);
-  app.createRenderer<TriangleRenderer>(props2);
+  app.createRenderer<TriangleRenderer>(props);
 
   app.run();
 
