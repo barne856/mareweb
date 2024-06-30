@@ -31,7 +31,7 @@ public:
 
   ~triangle_renderer() override = default; // The default destructor will clean up m_mesh and m_material
 
-  void render() override { draw_mesh(*m_mesh, *m_material); }
+  void render(float dt) override { draw_mesh(*m_mesh, *m_material); }
 
 private:
   std::unique_ptr<mareweb::mesh> m_mesh;

@@ -28,7 +28,6 @@ public:
   virtual ~renderer();
 
   void resize(uint32_t new_width, uint32_t new_height);
-  virtual void render() = 0;
   void present();
 
   std::unique_ptr<mesh> create_mesh(const std::vector<float> &vertices, const std::vector<uint32_t> &indices = {});

@@ -80,14 +80,10 @@ public:
         }
     }
 
-    void set_disabled(bool disabled) { m_disabled = disabled; }
-    bool is_disabled() const { return m_disabled; }
-
 private:
     std::vector<std::unique_ptr<controls_system<derived>>> m_controls_systems;
     std::vector<std::unique_ptr<physics_system<derived>>> m_physics_systems;
     std::vector<std::unique_ptr<render_system<derived>>> m_render_systems;
-    bool m_disabled = false;
 };
 
 } // namespace mareweb

@@ -39,18 +39,65 @@ application::~application() {
 }
 
 void application::run() {
-  if (!m_initialized) {
-    throw std::runtime_error("Application not initialized");
-  }
-
-  while (!m_quit) {
-    handle_events();
-    for (auto &renderer : m_renderers) {
-      renderer->begin_frame();
-      renderer->render();
-      renderer->end_frame();
+    if (!m_initialized) {
+        throw std::runtime_error("Application not initialized");
     }
-  }
+
+    while (!m_quit) {
+        float dt = 0.1f; // TODO Dummy delta time for now
+        
+        handle_events();
+        
+        // Update all renderers and their object hierarchies
+        for (auto& renderer : m_renderers) {
+            update_object_hierarchy(renderer.get(), dt);
+        }
+        
+        // Render all renderers and their object hierarchies
+        for (auto& renderer : m_renderers) {
+            render_object_hierarchy(renderer.get(), dt);
+        }
+    }
+}
+
+void application::update_object_hierarchy(object* obj, float dt) {
+    if (obj->is_disabled()) {
+        return;
+    }
+    
+    obj->update(dt);
+    
+    for (const auto& child : obj->get_children()) {
+        update_object_hierarchy(child.get(), dt);
+    }
+}
+
+void application::render_object_hierarchy(renderer* rend, float dt) {
+    if (rend->is_disabled()) {
+        return;
+    }
+    
+    rend->begin_frame();
+    
+    render_object(rend, dt);
+    
+    for (const auto& child : rend->get_children()) {
+        render_object(child.get(), dt);
+    }
+    
+    rend->end_frame();
+}
+
+void application::render_object(object* obj, float dt) {
+    if (obj->is_disabled()) {
+        return;
+    }
+    
+    obj->render(dt);
+    
+    for (const auto& child : obj->get_children()) {
+        render_object(child.get(), dt);
+    }
 }
 
 void application::quit() { m_quit = true; }
