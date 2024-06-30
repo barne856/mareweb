@@ -2,9 +2,17 @@
 #include "mareweb/renderer.hpp"
 #include <iostream>
 #include <vector>
+#include <concepts>
 
 template <typename T>
-class triangle_render_system : public mareweb::render_system<T> {
+concept renderable_mesh = requires(T t) {
+  { t.mesh.get() } -> std::convertible_to<mareweb::mesh *>;
+  { t.material.get() } -> std::convertible_to<mareweb::material *>;
+};
+
+template <typename T>
+requires renderable_mesh<T>
+class render_mesh : public mareweb::render_system<T> {
 public:
   void render(float dt, T &ent) override {
     ent.rend->draw_mesh(*ent.mesh.get(), *ent.material.get());
@@ -32,7 +40,7 @@ class triangle : public mareweb::entity<triangle> {
 
     mesh = rend->create_mesh(vertices);
     material = rend->create_material(vertex_shader_source, fragment_shader_source);
-    attach_system<triangle_render_system>();
+    attach_system<render_mesh>();
   }
     std::unique_ptr<mareweb::mesh> mesh;
     std::unique_ptr<mareweb::material> material;
