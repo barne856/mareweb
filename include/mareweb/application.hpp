@@ -6,6 +6,7 @@
 #include <memory>
 #include <vector>
 #include <webgpu/webgpu_cpp.h>
+#include <stdexcept>
 
 namespace mareweb {
 
