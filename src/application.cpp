@@ -6,6 +6,7 @@
 #include <SDL3/SDL_video.h>
 #include <iostream>
 #include <stdexcept>
+#include <cstring>
 
 #if defined(SDL_PLATFORM_WIN32)
 #include <windows.h>
