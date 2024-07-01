@@ -1,8 +1,10 @@
 #include "mareweb/application.hpp"
 #include "mareweb/renderer.hpp"
+#include "squint/linalg.hpp"
+#include <concepts>
 #include <iostream>
 #include <vector>
-#include <concepts>
+#include "mareweb/components/transform.hpp"
 
 template <typename T>
 concept renderable_mesh = requires(T t) {
@@ -14,14 +16,12 @@ template <typename T>
 requires renderable_mesh<T>
 class render_mesh : public mareweb::render_system<T> {
 public:
-  void render(float dt, T &ent) override {
-    ent.rend->draw_mesh(*ent.mesh.get(), *ent.material.get());
-  }
+  void render(float dt, T &ent) override { ent.rend->draw_mesh(*ent.mesh.get(), *ent.material.get()); }
 };
 
-class triangle : public mareweb::entity<triangle> {
-  public:
-  triangle(mareweb::renderer* rend) : rend(rend){
+class triangle : public mareweb::entity<triangle>, public mareweb::transform {
+public:
+  triangle(mareweb::renderer *rend) : rend(rend) {
     std::vector<float> vertices = {0.0f, 0.5f, 0.0f, -0.5f, -0.5f, 0.0f, 0.5f, -0.5f, 0.0f};
 
     const char *vertex_shader_source = R"(
@@ -42,16 +42,15 @@ class triangle : public mareweb::entity<triangle> {
     material = rend->create_material(vertex_shader_source, fragment_shader_source);
     attach_system<render_mesh>();
   }
-    std::unique_ptr<mareweb::mesh> mesh;
-    std::unique_ptr<mareweb::material> material;
-    mareweb::renderer* rend;
+  std::unique_ptr<mareweb::mesh> mesh;
+  std::unique_ptr<mareweb::material> material;
+  mareweb::renderer *rend;
 };
-
 
 class main_renderer : public mareweb::renderer {
 public:
   main_renderer(wgpu::Device &device, wgpu::Surface surface, SDL_Window *window,
-                    const mareweb::renderer_properties &properties)
+                const mareweb::renderer_properties &properties)
       : renderer(device, surface, window, properties) {
     set_clear_color({0.05f, 0.05f, 0.05f, 1.0f});
     create_object<triangle>(this);

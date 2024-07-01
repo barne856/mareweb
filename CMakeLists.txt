@@ -37,6 +37,15 @@ FetchContent_Declare(
   GIT_SUBMODULES "docs"
 )
 
+# SQUINT
+FetchContent_Declare(
+  squint
+  GIT_REPOSITORY https://github.com/barne856/squint.git
+  GIT_TAG main
+  GIT_SHALLOW ON
+  EXCLUDE_FROM_ALL
+)
+
 # Dawn has some specific build requirements
 set(DAWN_FETCH_DEPENDENCIES ON)
 set(DAWN_ENABLE_D3D11 OFF)
@@ -82,17 +91,20 @@ set(SDL3IMAGE_STATIC OFF)
 # Make SDL_image available
 FetchContent_MakeAvailable(SDL_image)
 
+# Make squint available
+FetchContent_MakeAvailable(squint)
+
 # Add include directories
 include_directories(include)
 
 # Find all .cpp files in the src directory
-file(GLOB MAREWEB_SOURCES "src/*.cpp")
+file(GLOB MAREWEB_SOURCES "src/*.cpp" "src/components/*.cpp")
 
 # Create library target for mareweb
 add_library(mareweb ${MAREWEB_SOURCES})
 
 target_include_directories(mareweb PUBLIC include)
-target_link_libraries(mareweb PUBLIC webgpu_cpp webgpu_dawn SDL3::SDL3 SDL3_image::SDL3_image)
+target_link_libraries(mareweb PUBLIC webgpu_cpp webgpu_dawn SDL3::SDL3 SDL3_image::SDL3_image squint)
 
 # Function to add an example executable
 function(add_example NAME)
