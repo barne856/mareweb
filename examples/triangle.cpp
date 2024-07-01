@@ -58,6 +58,11 @@ public:
 };
 
 int main() {
+  const auto position = squint::tensor<squint::quantities::length_f, 3>{2.0f, 0.0f, 0.0f};
+  const auto pos_norm = squint::norm(position);
+  std::cout << "Position: " << position << std::endl;
+  std::cout << "Position Norm: " << pos_norm << std::endl;
+
   mareweb::application &app = mareweb::application::get_instance();
   app.initialize();
 
