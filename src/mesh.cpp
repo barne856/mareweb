@@ -15,11 +15,11 @@ mesh::mesh(wgpu::Device &device, const std::vector<float> &vertices, const std::
   }
 }
 
-uint32_t mesh::get_vertex_count() const {
+auto mesh::get_vertex_count() const -> uint32_t {
   return static_cast<uint32_t>(m_vertex_buffer->get_size() / (3 * sizeof(float))); // Assuming 3 floats per vertex
 }
 
-uint32_t mesh::get_index_count() const {
+auto mesh::get_index_count() const -> uint32_t {
   return m_index_buffer ? static_cast<uint32_t>(m_index_buffer->get_size() / sizeof(uint32_t)) : 0;
 }
 

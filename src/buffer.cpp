@@ -13,7 +13,11 @@ buffer::buffer(wgpu::Device &device, const void *data, size_t size, wgpu::Buffer
   device.GetQueue().WriteBuffer(m_buffer, 0, data, size);
 }
 
-buffer::~buffer() { m_buffer.Destroy(); }
+buffer::~buffer() {
+  if (m_buffer) {
+    m_buffer.Destroy();
+  }
+}
 
 vertex_buffer::vertex_buffer(wgpu::Device &device, const std::vector<float> &vertices)
     : buffer(device, vertices.data(), vertices.size() * sizeof(float), wgpu::BufferUsage::Vertex) {}

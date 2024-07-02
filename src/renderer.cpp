@@ -3,12 +3,13 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <utility>
 
 namespace mareweb {
 
-renderer::renderer(wgpu::Device &device, wgpu::Surface surface, SDL_Window *window,
-                   const renderer_properties &properties)
-    : m_device(device), m_surface(surface), m_window(window), m_properties(properties) {
+renderer::renderer(wgpu::Device &device, wgpu::Surface surface, SDL_Window *window, renderer_properties properties)
+    : m_device(device), m_surface(std::move(surface)), m_window(window), m_properties(std::move(properties)),
+      m_clear_color({0.0F, 0.0F, 0.0F, 1.0F}) {
   wgpu::SurfaceCapabilities capabilities{};
   m_surface.GetCapabilities(m_device.GetAdapter(), &capabilities);
   m_surface_format = *capabilities.formats;
@@ -30,7 +31,7 @@ renderer::renderer(wgpu::Device &device, wgpu::Surface surface, SDL_Window *wind
 }
 
 renderer::~renderer() {
-  if (m_window) {
+  if (m_window != nullptr) {
     SDL_DestroyWindow(m_window);
   }
 }
@@ -46,12 +47,13 @@ void renderer::resize(uint32_t new_width, uint32_t new_height) {
 
 void renderer::present() { m_surface.Present(); }
 
-std::unique_ptr<mesh> renderer::create_mesh(const std::vector<float> &vertices, const std::vector<uint32_t> &indices) {
+auto renderer::create_mesh(const std::vector<float> &vertices, const std::vector<uint32_t> &indices)
+    -> std::unique_ptr<mesh> {
   return std::make_unique<mesh>(m_device, vertices, indices);
 }
 
-std::unique_ptr<material> renderer::create_material(const std::string &vertex_shader_source,
-                                                    const std::string &fragment_shader_source) {
+auto renderer::create_material(const std::string &vertex_shader_source, const std::string &fragment_shader_source)
+    -> std::unique_ptr<material> {
   return std::make_unique<material>(m_device, vertex_shader_source, fragment_shader_source, m_surface_format,
                                     m_properties.sample_count);
 }
@@ -62,16 +64,16 @@ void renderer::set_fullscreen(bool fullscreen) {
 
     if (fullscreen) {
       // Get the display index of the window
-      int count_displays;
+      int count_displays = 0;
       SDL_DisplayID *displays = SDL_GetDisplays(&count_displays);
-      if (!displays) {
+      if (displays == nullptr) {
         // Handle error, perhaps throw an exception
         throw std::runtime_error("Failed to get window display index");
       }
 
       // Get the display mode of the display
-      const SDL_DisplayMode *display_mode = SDL_GetCurrentDisplayMode(displays[0]);
-      if (!display_mode) {
+      const SDL_DisplayMode *display_mode = SDL_GetCurrentDisplayMode(*displays);
+      if (display_mode == nullptr) {
         SDL_free(displays);
         // Handle error, perhaps throw an exception
         throw std::runtime_error("Failed to get current display mode");
@@ -79,7 +81,6 @@ void renderer::set_fullscreen(bool fullscreen) {
 
       // Set fullscreen
       if (SDL_SetWindowFullscreen(m_window, SDL_WINDOW_FULLSCREEN) != 0) {
-        // Handle error, perhaps throw an exception
         SDL_free(displays);
         throw std::runtime_error("Failed to set fullscreen mode");
       }
@@ -91,14 +92,8 @@ void renderer::set_fullscreen(bool fullscreen) {
     } else {
       // Exit fullscreen mode
       if (SDL_SetWindowFullscreen(m_window, 0) != 0) {
-        // Handle error, perhaps throw an exception
         throw std::runtime_error("Failed to exit fullscreen mode");
       }
-
-      // Restore original width and height (you might want to store these separately)
-      // For now, we'll just set a default size
-      m_properties.width = 800;  // or whatever default you prefer
-      m_properties.height = 600; // or whatever default you prefer
     }
 
     // Resize the renderer to match the new dimensions

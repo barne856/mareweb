@@ -1,10 +1,11 @@
 #include "mareweb/application.hpp"
+#include "mareweb/components/transform.hpp"
 #include "mareweb/renderer.hpp"
 #include "squint/linalg.hpp"
+#include "squint/quantity.hpp"
 #include <concepts>
 #include <iostream>
 #include <vector>
-#include "mareweb/components/transform.hpp"
 
 template <typename T>
 concept renderable_mesh = requires(T t) {
@@ -16,13 +17,13 @@ template <typename T>
 requires renderable_mesh<T>
 class render_mesh : public mareweb::render_system<T> {
 public:
-  void render(float dt, T &ent) override { ent.rend->draw_mesh(*ent.mesh.get(), *ent.material.get()); }
+  void render(float /*dt*/, T &ent) override { ent.rend->draw_mesh(*ent.mesh.get(), *ent.material.get()); }
 };
 
 class triangle : public mareweb::entity<triangle>, public mareweb::transform {
 public:
   triangle(mareweb::renderer *rend) : rend(rend) {
-    std::vector<float> vertices = {0.0f, 0.5f, 0.0f, -0.5f, -0.5f, 0.0f, 0.5f, -0.5f, 0.0f};
+    std::vector<float> vertices = {0.0F, 0.5F, 0.0F, -0.5F, -0.5F, 0.0F, 0.5F, -0.5F, 0.0F};
 
     const char *vertex_shader_source = R"(
             @vertex
@@ -52,17 +53,12 @@ public:
   main_renderer(wgpu::Device &device, wgpu::Surface surface, SDL_Window *window,
                 const mareweb::renderer_properties &properties)
       : renderer(device, surface, window, properties) {
-    set_clear_color({0.05f, 0.05f, 0.05f, 1.0f});
+    set_clear_color({0.05F, 0.05F, 0.05F, 1.0F});
     create_object<triangle>(this);
   }
 };
 
-int main() {
-  const auto position = squint::tensor<squint::quantities::length_f, 3>{2.0f, 0.0f, 0.0f};
-  const auto pos_norm = squint::norm(position);
-  std::cout << "Position: " << position << std::endl;
-  std::cout << "Position Norm: " << pos_norm << std::endl;
-
+auto main() -> int {
   mareweb::application &app = mareweb::application::get_instance();
   app.initialize();
 

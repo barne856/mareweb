@@ -4,9 +4,10 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #include <SDL3/SDL_video.h>
+#include <chrono>
+#include <cstring>
 #include <iostream>
 #include <stdexcept>
-#include <cstring>
 
 #if defined(SDL_PLATFORM_WIN32)
 #include <windows.h>
@@ -17,14 +18,15 @@
 
 namespace mareweb {
 
-application &application::get_instance() {
+auto application::get_instance() -> application & {
   static application instance;
   return instance;
 }
 
 void application::initialize() {
-  if (m_initialized)
+  if (m_initialized) {
     return;
+  }
 
   init_sdl();
   init_webgpu();
@@ -39,25 +41,32 @@ application::~application() {
 }
 
 void application::run() {
-    if (!m_initialized) {
-        throw std::runtime_error("Application not initialized");
+  if (!m_initialized) {
+    throw std::runtime_error("Application not initialized");
+  }
+
+  static float dt_seconds = 0.0F;
+  static auto last_time = std::chrono::high_resolution_clock::now();
+
+  while (!m_quit) {
+    auto current_time = std::chrono::high_resolution_clock::now();
+    dt_seconds = std::chrono::duration<float>(current_time - last_time).count();
+    last_time = current_time;
+
+    handle_events();
+
+    // Update all renderers and their object hierarchies
+    for (auto &rend : m_renderers) {
+      // physics updates use a fixed time step
+      rend->update(rend->get_properties().fixed_time_step);
     }
 
-    while (!m_quit) {
-        float dt = 0.1f; // TODO Dummy delta time for now
-        
-        handle_events();
-        
-        // Update all renderers and their object hierarchies
-        for (auto& rend : m_renderers) {
-            rend->update(dt);
-        }
-        
-        // Render all renderers and their object hierarchies
-        for (auto& rend : m_renderers) {
-            rend->render(dt);
-        }
+    // Render all renderers and their object hierarchies
+    for (auto &rend : m_renderers) {
+      // render updates use the actual time step
+      rend->render(dt_seconds);
     }
+  }
 }
 
 void application::quit() { m_quit = true; }
@@ -156,64 +165,89 @@ void application::handle_events() {
     case SDL_EVENT_QUIT:
       m_quit = true;
       break;
-    case SDL_EVENT_WINDOW_CLOSE_REQUESTED: {
-      auto it = std::find_if(m_renderers.begin(), m_renderers.end(), [&event](const auto &renderer) {
-        return event.window.windowID == SDL_GetWindowID(renderer->get_window());
-      });
-      if (it != m_renderers.end()) {
-        m_renderers.erase(it);
-      }
-      if (m_renderers.empty()) {
-        m_quit = true;
-      }
-    } break;
-    case SDL_EVENT_WINDOW_RESIZED:
-      for (auto &rend : m_renderers) {
-        if (event.window.windowID == SDL_GetWindowID(rend->get_window())) {
-          rend->resize(event.window.data1, event.window.data2);
-          break;
-        }
-      }
+    case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+      handle_window_close(event);
       break;
-          case SDL_EVENT_KEY_DOWN:
-    case SDL_EVENT_KEY_UP: {
-      key_event key_evt = static_cast<key_event>(event.key.key * 2 + (event.type == SDL_EVENT_KEY_DOWN ? 0 : 1));
-      for (auto &rend : m_renderers) {
-        if (rend->on_key(key_evt)) {
-          break;
-        }
-      }
-    } break;
+    case SDL_EVENT_WINDOW_RESIZED:
+      handle_window_resize(event);
+      break;
+    case SDL_EVENT_KEY_DOWN:
+    case SDL_EVENT_KEY_UP:
+      handle_key_event(event);
+      break;
     case SDL_EVENT_MOUSE_BUTTON_DOWN:
-    case SDL_EVENT_MOUSE_BUTTON_UP: {
-      mouse_button_event button_evt = static_cast<mouse_button_event>(event.button.button * 2 + (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN ? 0 : 1));
-      for (auto &rend : m_renderers) {
-        if (rend->on_mouse_button(button_evt)) {
-          break;
-        }
-      }
-    } break;
-    case SDL_EVENT_MOUSE_MOTION: {
-      mouse_move_event move_evt{event.motion.x, event.motion.y, event.motion.xrel, event.motion.yrel};
-      for (auto &rend : m_renderers) {
-        if (rend->on_mouse_move(move_evt)) {
-          break;
-        }
-      }
-    } break;
-    case SDL_EVENT_MOUSE_WHEEL: {
-      mouse_scroll_event scroll_evt{static_cast<float>(event.wheel.x), static_cast<float>(event.wheel.y)};
-      for (auto &rend : m_renderers) {
-        if (rend->on_mouse_wheel(scroll_evt)) {
-          break;
-        }
-      }
-    } break;
+    case SDL_EVENT_MOUSE_BUTTON_UP:
+      handle_mouse_button_event(event);
+      break;
+    case SDL_EVENT_MOUSE_MOTION:
+      handle_mouse_motion_event(event);
+      break;
+    case SDL_EVENT_MOUSE_WHEEL:
+      handle_mouse_wheel_event(event);
+      break;
     }
   }
 }
 
-SDL_Window *application::create_window(const renderer_properties &properties) {
+void application::handle_window_close(const SDL_Event &event) {
+  auto it = std::find_if(m_renderers.begin(), m_renderers.end(), [&event](const auto &renderer) {
+    return event.window.windowID == SDL_GetWindowID(renderer->get_window());
+  });
+  if (it != m_renderers.end()) {
+    m_renderers.erase(it);
+  }
+  if (m_renderers.empty()) {
+    m_quit = true;
+  }
+}
+
+void application::handle_window_resize(const SDL_Event &event) {
+  for (auto &rend : m_renderers) {
+    if (event.window.windowID == SDL_GetWindowID(rend->get_window())) {
+      rend->resize(event.window.data1, event.window.data2);
+      break;
+    }
+  }
+}
+
+void application::handle_key_event(const SDL_Event &event) {
+  auto key_evt = static_cast<key_event>(event.key.key * 2 + (event.type == SDL_EVENT_KEY_DOWN ? 0 : 1));
+  for (auto &rend : m_renderers) {
+    if (rend->on_key(key_evt)) {
+      break;
+    }
+  }
+}
+
+void application::handle_mouse_button_event(const SDL_Event &event) {
+  auto button_evt =
+      static_cast<mouse_button_event>(event.button.button * 2 + (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN ? 0 : 1));
+  for (auto &rend : m_renderers) {
+    if (rend->on_mouse_button(button_evt)) {
+      break;
+    }
+  }
+}
+
+void application::handle_mouse_motion_event(const SDL_Event &event) {
+  mouse_move_event move_evt{event.motion.x, event.motion.y, event.motion.xrel, event.motion.yrel};
+  for (auto &rend : m_renderers) {
+    if (rend->on_mouse_move(move_evt)) {
+      break;
+    }
+  }
+}
+
+void application::handle_mouse_wheel_event(const SDL_Event &event) {
+  mouse_scroll_event scroll_evt{static_cast<float>(event.wheel.x), static_cast<float>(event.wheel.y)};
+  for (auto &rend : m_renderers) {
+    if (rend->on_mouse_wheel(scroll_evt)) {
+      break;
+    }
+  }
+}
+
+auto application::create_window(const renderer_properties &properties) -> SDL_Window * {
   SDL_WindowFlags flags = 0; // Start with no flags
 
   if (properties.resizable) {
@@ -228,15 +262,15 @@ SDL_Window *application::create_window(const renderer_properties &properties) {
   }
 
   if (properties.fullscreen) {
-    int count_displays;
+    int count_displays = 0;
     SDL_DisplayID *displays = SDL_GetDisplays(&count_displays);
-    if (!displays) {
+    if (displays == nullptr) {
       SDL_DestroyWindow(window);
       throw std::runtime_error(std::string("Failed to get displays: ") + SDL_GetError());
     }
 
-    const SDL_DisplayMode *display_mode = SDL_GetCurrentDisplayMode(displays[0]);
-    if (!display_mode) {
+    const SDL_DisplayMode *display_mode = SDL_GetCurrentDisplayMode(*displays);
+    if (display_mode == nullptr) {
       SDL_free(displays);
       SDL_DestroyWindow(window);
       throw std::runtime_error(std::string("Failed to get current display mode: ") + SDL_GetError());
@@ -255,7 +289,7 @@ SDL_Window *application::create_window(const renderer_properties &properties) {
   return window;
 }
 
-wgpu::Surface application::create_surface(SDL_Window *window) {
+auto application::create_surface(SDL_Window *window) -> wgpu::Surface {
   SDL_PropertiesID properties_id = SDL_GetWindowProperties(window);
   if (properties_id == 0) {
     throw std::runtime_error("SDL_GetWindowProperties failed");
@@ -278,7 +312,8 @@ wgpu::Surface application::create_surface(SDL_Window *window) {
 #elif defined(SDL_PLATFORM_LINUX)
   const char *video_driver = SDL_GetCurrentVideoDriver();
   if (std::strcmp(video_driver, "x11") == 0) {
-    auto *display = static_cast<Display *>(SDL_GetProperty(properties_id, SDL_PROP_WINDOW_X11_DISPLAY_POINTER, nullptr));
+    auto *display =
+        static_cast<Display *>(SDL_GetProperty(properties_id, SDL_PROP_WINDOW_X11_DISPLAY_POINTER, nullptr));
     auto x11_window = static_cast<Window>(SDL_GetNumberProperty(properties_id, SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0));
     if ((display != nullptr) && x11_window != 0) {
       wgpu::SurfaceDescriptorFromXlibWindow window_desc{};

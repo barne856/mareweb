@@ -4,6 +4,10 @@
 
 namespace mareweb {
 
+// This constant represents a bitmask where all bits are set to 1, indicating
+// that all samples should be affected in multisample operations.
+constexpr uint32_t kAllSamplesMask = 0xFFFFFFFF;
+
 pipeline::pipeline(wgpu::Device &device, const shader &vertex_shader, const shader &fragment_shader,
                    wgpu::TextureFormat surface_format, uint32_t sample_count)
     : m_device(device) {
@@ -56,7 +60,7 @@ pipeline::pipeline(wgpu::Device &device, const shader &vertex_shader, const shad
   pipeline_desc.depthStencil = nullptr; // No depth or stencil for now
 
   pipeline_desc.multisample.count = sample_count;
-  pipeline_desc.multisample.mask = 0xFFFFFFFF;
+  pipeline_desc.multisample.mask = kAllSamplesMask;
   pipeline_desc.multisample.alphaToCoverageEnabled = false;
 
   m_pipeline = device.CreateRenderPipeline(&pipeline_desc);

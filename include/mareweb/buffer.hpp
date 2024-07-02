@@ -11,8 +11,33 @@ public:
   buffer(wgpu::Device &device, const void *data, size_t size, wgpu::BufferUsage usage);
   ~buffer();
 
-  wgpu::Buffer get_buffer() const { return m_buffer; }
-  size_t get_size() const { return m_size; }
+  // Copy constructor and assignment operator (deleted)
+  buffer(const buffer &) = delete;
+  auto operator=(const buffer &) -> buffer & = delete;
+
+  // Move constructor
+  buffer(buffer&& other) noexcept
+    : m_device(std::move(other.m_device)),
+      m_buffer(std::exchange(other.m_buffer, nullptr)),
+      m_size(std::exchange(other.m_size, 0)) {}
+
+  // Move assignment operator
+  auto operator=(buffer&& other) noexcept -> buffer& {
+    if (this != &other) {
+      // Clean up current buffer if necessary
+      if (m_buffer) {
+        m_buffer.Destroy();
+      }
+
+      m_device = std::move(other.m_device);
+      m_buffer = std::exchange(other.m_buffer, nullptr);
+      m_size = std::exchange(other.m_size, 0);
+    }
+    return *this;
+  }
+
+  [[nodiscard]] auto get_buffer() const -> wgpu::Buffer { return m_buffer; }
+  [[nodiscard]] auto get_size() const -> size_t { return m_size; }
 
 private:
   wgpu::Device m_device;

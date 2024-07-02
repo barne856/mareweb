@@ -242,22 +242,40 @@ enum class key_event {
 template <typename T> class controls_system {
 public:
   virtual ~controls_system() = default;
-  virtual bool on_key(const key_event &event, T &entity) { return false; }
-  virtual bool on_mouse_button(const mouse_button_event &event, T &entity) { return false; }
-  virtual bool on_mouse_move(const mouse_move_event &event, T &entity) { return false; }
-  virtual bool on_mouse_wheel(const mouse_scroll_event &event, T &entity) { return false; }
-  virtual bool on_resize(const window_resize_event &event, T &entity) { return false; }
+  controls_system() = default;
+  controls_system(const controls_system &) = delete;
+  auto operator=(const controls_system &) -> controls_system & = delete;
+  controls_system(controls_system &&) = delete;
+  auto operator=(controls_system &&) -> controls_system & = delete;
+
+  virtual auto on_key(const key_event & /*event*/, T & /*entity*/) -> bool { return false; }
+  virtual auto on_mouse_button(const mouse_button_event & /*event*/, T & /*entity*/) -> bool { return false; }
+  virtual auto on_mouse_move(const mouse_move_event & /*event*/, T & /*entity*/) -> bool { return false; }
+  virtual auto on_mouse_wheel(const mouse_scroll_event & /*event*/, T & /*entity*/) -> bool { return false; }
+  virtual auto on_resize(const window_resize_event & /*event*/, T & /*entity*/) -> bool { return false; }
 };
 
 template <typename T> class physics_system {
 public:
   virtual ~physics_system() = default;
+  physics_system() = default;
+  physics_system(const physics_system &) = delete;
+  auto operator=(const physics_system &) -> physics_system & = delete;
+  physics_system(physics_system &&) = delete;
+  auto operator=(physics_system &&) -> physics_system & = delete;
+
   virtual void update(float dt, T &entity) {}
 };
 
 template <typename T> class render_system {
 public:
   virtual ~render_system() = default;
+  render_system() = default;
+  render_system(const render_system &) = delete;
+  auto operator=(const render_system &) -> render_system & = delete;
+  render_system(render_system &&) = delete;
+  auto operator=(render_system &&) -> render_system & = delete;
+
   virtual void render(float dt, T &entity) {}
 };
 

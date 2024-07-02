@@ -6,21 +6,28 @@
 
 namespace mareweb {
 
+// Define a length type using squint's quantity system
+using length_t = squint::quantities::quantity<float, squint::dimensions::length>;
+
+// Define a length vector type
+using length_vec3 = squint::tensor<length_t, 3>;
+using length_vec4 = squint::tensor<length_t, 4>;
+
 template <typename T>
 concept transformable = requires(T t) {
-    { t.get_position() } -> std::same_as<squint::tensor<squint::quantities::length_f, 3>>;
+    { t.get_position() } -> std::same_as<length_vec3>;
     { t.get_scale() } -> std::same_as<squint::fvec3>;
     { t.get_translation_matrix() } -> std::same_as<squint::fmat4>;
     { t.get_rotation_matrix() } -> std::same_as<squint::fmat4>;
     { t.get_scale_matrix() } -> std::same_as<squint::fmat4>;
-    { t.get_transformation_matrix() } -> std::same_as<const squint::fmat4 &>;
+    { t.get_transformation_matrix() } -> std::same_as<const squint::fmat4&>;
     { t.get_normal_matrix() } -> std::same_as<squint::fmat3>;
     { t.get_view_matrix() } -> std::same_as<squint::fmat4>;
-    { t.face_towards(std::declval<squint::tensor<squint::quantities::length_f, 3>>(), std::declval<squint::fvec3>()) } -> std::same_as<void>;
-    { t.translate(std::declval<squint::tensor<squint::quantities::length_f, 3>>()) } -> std::same_as<void>;
-    { t.set_position(std::declval<squint::tensor<squint::quantities::length_f, 3>>()) } -> std::same_as<void>;
-    { t.rotate(std::declval<squint::fvec3>(), 0.f) } -> std::same_as<void>;
-    { t.set_rotation(std::declval<squint::fvec3>(), 0.f) } -> std::same_as<void>;
+    { t.face_towards(std::declval<length_vec3>(), std::declval<squint::fvec3>()) } -> std::same_as<void>;
+    { t.translate(std::declval<length_vec3>()) } -> std::same_as<void>;
+    { t.set_position(std::declval<length_vec3>()) } -> std::same_as<void>;
+    { t.rotate(std::declval<squint::fvec3>(), 0.F) } -> std::same_as<void>;
+    { t.set_rotation(std::declval<squint::fvec3>(), 0.F) } -> std::same_as<void>;
     { t.set_rotation_matrix(std::declval<squint::fmat4>()) } -> std::same_as<void>;
     { t.set_scale(std::declval<squint::fvec3>()) } -> std::same_as<void>;
     { t.get_forward_vector() } -> std::same_as<squint::fvec3>;
@@ -31,30 +38,32 @@ concept transformable = requires(T t) {
 class transform {
 public:
     transform();
-    explicit transform(const squint::fmat4 &transform_matrix);
+    explicit transform(const squint::fmat4& transform_matrix);
 
-    squint::tensor<squint::quantities::length_f, 3> get_position() const;
-    squint::fvec3 get_scale() const;
-    squint::fmat4 get_translation_matrix() const;
-    squint::fmat4 get_rotation_matrix() const;
-    squint::fmat4 get_scale_matrix() const;
-    const squint::fmat4 &get_transformation_matrix() const;
-    void set_transformation_matrix(const squint::fmat4 &transformation_matrix);
-    squint::fmat3 get_normal_matrix() const;
-    squint::fmat4 get_view_matrix() const;
-    void face_towards(const squint::tensor<squint::quantities::length_f, 3> &point, const squint::fvec3 &up);
-    void translate(const squint::tensor<squint::quantities::length_f, 3> &offset);
-    void set_position(const squint::tensor<squint::quantities::length_f, 3> &position);
-    void rotate(const squint::fvec3 &axis, float angle);
-    void set_rotation(const squint::fvec3 &axis, float angle);
-    void set_rotation_matrix(const squint::fmat4 &rotation_matrix);
-    void set_scale(const squint::fvec3 &scale);
-    squint::fvec3 get_forward_vector() const;
-    squint::fvec3 get_right_vector() const;
-    squint::fvec3 get_up_vector() const;
+    [[nodiscard]] auto get_position() const -> length_vec3;
+    [[nodiscard]] auto get_scale() const -> squint::fvec3;
+    [[nodiscard]] auto get_translation_matrix() const -> squint::fmat4;
+    [[nodiscard]] auto get_rotation_matrix() const -> squint::fmat4;
+    [[nodiscard]] auto get_scale_matrix() const -> squint::fmat4;
+    [[nodiscard]] auto get_transformation_matrix() const -> const squint::fmat4&;
+    void set_transformation_matrix(const squint::fmat4& transformation_matrix);
+    [[nodiscard]] auto get_normal_matrix() const -> squint::fmat3;
+    [[nodiscard]] auto get_view_matrix() const -> squint::fmat4;
+    void face_towards(const length_vec3& point, const squint::fvec3& up);
+    void translate(const length_vec3& offset);
+    void set_position(const length_vec3& position);
+    void rotate(const squint::fvec3& axis, float angle);
+    void set_rotation(const squint::fvec3& axis, float angle);
+    void set_rotation_matrix(const squint::fmat4& rotation_matrix);
+    void set_scale(const squint::fvec3& scale);
+    [[nodiscard]] auto get_forward_vector() const -> squint::fvec3;
+    [[nodiscard]] auto get_right_vector() const -> squint::fvec3;
+    [[nodiscard]] auto get_up_vector() const -> squint::fvec3;
+    void set_unit_length(const length_t& unit_length);
 
 private:
-    squint::fmat4 transformation_matrix;
+    squint::fmat4 m_transformation_matrix;
+    length_t m_unit_length;
 };
 
 } // namespace mareweb

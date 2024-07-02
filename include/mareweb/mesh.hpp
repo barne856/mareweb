@@ -11,11 +11,11 @@ class mesh {
 public:
   mesh(wgpu::Device &device, const std::vector<float> &vertices, const std::vector<uint32_t> &indices = {});
 
-  const vertex_buffer &get_vertex_buffer() const { return *m_vertex_buffer; }
-  const index_buffer *get_index_buffer() const { return m_index_buffer.get(); }
+  [[nodiscard]] auto get_vertex_buffer() const -> const vertex_buffer & { return *m_vertex_buffer; }
+  [[nodiscard]] auto get_index_buffer() const -> const index_buffer * { return m_index_buffer.get(); }
 
-  uint32_t get_vertex_count() const;
-  uint32_t get_index_count() const;
+  [[nodiscard]] auto get_vertex_count() const -> uint32_t;
+  [[nodiscard]] auto get_index_count() const -> uint32_t;
 
   void draw(wgpu::RenderPassEncoder &pass_encoder) const;
 

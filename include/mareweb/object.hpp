@@ -10,19 +10,27 @@ namespace mareweb {
 
 class object {
 public:
-  object(){};
+  object() = default;
   virtual ~object() = default;
+
+  // Delete copy constructor and copy assignment operator
+  object(const object &) = delete;
+  auto operator=(const object &) -> object & = delete;
+
+  // Default move constructor and move assignment operator
+  object(object &&) noexcept = default;
+  auto operator=(object &&) noexcept -> object & = default;
 
   virtual void update(float dt) {}
   virtual void render(float dt) {}
 
-  virtual bool on_key(const key_event &event) { return false; }
-  virtual bool on_mouse_button(const mouse_button_event &event) { return false; }
-  virtual bool on_mouse_move(const mouse_move_event &event) { return false; }
-  virtual bool on_mouse_wheel(const mouse_scroll_event &event) { return false; }
-  virtual bool on_resize(const window_resize_event &event) { return false; }
+  virtual auto on_key(const key_event & /*event*/) -> bool { return false; }
+  virtual auto on_mouse_button(const mouse_button_event & /*event*/) -> bool { return false; }
+  virtual auto on_mouse_move(const mouse_move_event & /*event*/) -> bool { return false; }
+  virtual auto on_mouse_wheel(const mouse_scroll_event & /*event*/) -> bool { return false; }
+  virtual auto on_resize(const window_resize_event & /*event*/) -> bool { return false; }
 
-  template <typename T, typename... args> T *create_object(args &&...a) {
+  template <typename T, typename... args> auto create_object(args &&...a) -> T * {
     auto obj = std::make_unique<T>(std::forward<args>(a)...);
     T *obj_ptr = obj.get();
     m_children.push_back(std::move(obj));
@@ -38,12 +46,12 @@ public:
     }
   }
 
-  const std::vector<std::unique_ptr<object>> &get_children() const { return m_children; }
+  [[nodiscard]] auto get_children() const -> const std::vector<std::unique_ptr<object>> & { return m_children; }
 
   void set_disabled(bool disabled) { m_disabled = disabled; }
-  bool is_disabled() const { return m_disabled; }
+  [[nodiscard]] auto is_disabled() const -> bool { return m_disabled; }
 
-protected:
+private:
   std::vector<std::unique_ptr<object>> m_children;
   bool m_disabled = false;
 };

@@ -12,7 +12,7 @@ public:
   pipeline(wgpu::Device &device, const shader &vertex_shader, const shader &fragment_shader,
            wgpu::TextureFormat surface_format, uint32_t sample_count);
 
-  wgpu::RenderPipeline get_pipeline() const { return m_pipeline; }
+  [[nodiscard]] auto get_pipeline() const -> wgpu::RenderPipeline { return m_pipeline; }
 
 private:
   wgpu::Device m_device;

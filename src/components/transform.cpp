@@ -3,106 +3,118 @@
 
 namespace mareweb {
 
-transform::transform() : transformation_matrix(squint::fmat4::I()) {}
+transform::transform() : m_transformation_matrix(squint::fmat4::I()), m_unit_length(1.0F * squint::quantities::units::meter_f) {}
 
-transform::transform(const squint::fmat4 &transform_matrix) : transformation_matrix(transform_matrix) {}
+transform::transform(const squint::fmat4& transform_matrix) 
+    : m_transformation_matrix(transform_matrix), m_unit_length(1.0F * squint::quantities::units::meter_f) {}
 
-squint::tensor<squint::quantities::length_f, 3> transform::get_position() const {
-    return transformation_matrix.at<3>(0, 3).copy_as<squint::quantities::length_f>();
+auto transform::get_position() const -> length_vec3 {
+    auto pos = m_transformation_matrix.at<3>(0, 3);
+    return length_vec3{pos[0] * m_unit_length, pos[1] * m_unit_length, pos[2] * m_unit_length};
 }
 
-squint::fvec3 transform::get_scale() const {
-    squint::fvec3 scale_vector{};
-    scale_vector[0] = squint::norm(transformation_matrix.at<3>(0, 0));
-    scale_vector[1] = squint::norm(transformation_matrix.at<3>(0, 1));
-    scale_vector[2] = squint::norm(transformation_matrix.at<3>(0, 2));
-    return scale_vector;
+auto transform::get_scale() const -> squint::fvec3 {
+    return {
+        squint::norm(m_transformation_matrix.at<3>(0, 0)),
+        squint::norm(m_transformation_matrix.at<3>(0, 1)),
+        squint::norm(m_transformation_matrix.at<3>(0, 2))
+    };
 }
 
-squint::fmat4 transform::get_translation_matrix() const {
-    return squint::translate(squint::fmat4::I(), transformation_matrix.at<3>(0, 3));
+auto transform::get_translation_matrix() const -> squint::fmat4 {
+    return squint::translate(squint::fmat4::I(), m_transformation_matrix.at<3>(0, 3));
 }
 
-squint::fmat4 transform::get_rotation_matrix() const {
+auto transform::get_rotation_matrix() const -> squint::fmat4 {
     squint::fvec3 scale = get_scale();
     squint::fmat4 rotation = squint::fmat4::I();
-    if (scale[0] != 0.0f) {
-        rotation.at<3>(0, 0) = transformation_matrix.at<3>(0, 0) / scale[0];
-    }
-    if (scale[1] != 0.0f) {
-        rotation.at<3>(0, 1) = transformation_matrix.at<3>(0, 1) / scale[1];
-    }
-    if (scale[2] != 0.0f) {
-        rotation.at<3>(0, 2) = transformation_matrix.at<3>(0, 2) / scale[2];
+    for (int i = 0; i < 3; ++i) {
+        if (scale[i] != 0.0F) {
+            rotation.at<3>(0, i) = m_transformation_matrix.at<3>(0, i) / scale[i];
+        }
     }
     return rotation;
 }
 
-squint::fmat4 transform::get_scale_matrix() const {
+auto transform::get_scale_matrix() const -> squint::fmat4 {
     return squint::scale(squint::fmat4::I(), get_scale());
 }
 
-const squint::fmat4 &transform::get_transformation_matrix() const {
-    return transformation_matrix;
+auto transform::get_transformation_matrix() const -> const squint::fmat4& {
+    return m_transformation_matrix;
 }
 
-void transform::set_transformation_matrix(const squint::fmat4 &transformation_matrix) {
-    this->transformation_matrix = transformation_matrix;
+void transform::set_transformation_matrix(const squint::fmat4& transformation_matrix) {
+    m_transformation_matrix = transformation_matrix;
 }
 
-squint::fmat3 transform::get_normal_matrix() const {
-    return squint::inv(transformation_matrix.at<3, 3>(0, 0)).transpose();
+auto transform::get_normal_matrix() const -> squint::fmat3 {
+    return squint::inv(m_transformation_matrix.at<3, 3>(0, 0)).transpose();
 }
 
-squint::fmat4 transform::get_view_matrix() const {
-    return squint::inv(transformation_matrix);
+auto transform::get_view_matrix() const -> squint::fmat4 {
+    return squint::inv(m_transformation_matrix);
 }
 
-void transform::face_towards(const squint::tensor<squint::quantities::length_f, 3> &point, const squint::fvec3 &up) {
+void transform::face_towards(const length_vec3& point, const squint::fvec3& up) {
     auto view = squint::look_at(get_position().view_as<const float>(), point.view_as<const float>(), up.as_ref());
-    transformation_matrix = squint::inv(view) * get_scale_matrix();
+    m_transformation_matrix = squint::inv(view) * get_scale_matrix();
 }
 
-void transform::translate(const squint::tensor<squint::quantities::length_f, 3> &offset) {
-    transformation_matrix.at<3>(0, 3) += offset.view_as<const float>();
+void transform::translate(const length_vec3& offset) {
+    squint::fvec3 offset_normalized{
+        offset[0] / m_unit_length,
+        offset[1] / m_unit_length,
+        offset[2] / m_unit_length
+    };
+    m_transformation_matrix.at<3>(0, 3) += offset_normalized;
 }
 
-void transform::set_position(const squint::tensor<squint::quantities::length_f, 3> &position) {
-    transformation_matrix.at<3>(0, 3) = position.view_as<const float>();
+void transform::set_position(const length_vec3& position) {
+    squint::fvec3 pos_normalized{
+        position[0] / m_unit_length,
+        position[1] / m_unit_length,
+        position[2] / m_unit_length
+    };
+    m_transformation_matrix.at<3>(0, 3) = pos_normalized;
 }
 
-void transform::rotate(const squint::fvec3 &axis, float angle) {
+void transform::rotate(const squint::fvec3& axis, float angle) {
     squint::fmat4 rotation = squint::rotate(squint::fmat4::I(), angle, axis) * get_rotation_matrix();
-    transformation_matrix = get_translation_matrix() * rotation * get_scale_matrix();
+    m_transformation_matrix = get_translation_matrix() * rotation * get_scale_matrix();
 }
 
-void transform::set_rotation(const squint::fvec3 &axis, float angle) {
+void transform::set_rotation(const squint::fvec3& axis, float angle) {
     squint::fmat4 rotation = squint::rotate(squint::fmat4::I(), angle, axis);
-    transformation_matrix = get_translation_matrix() * rotation * get_scale_matrix();
+    m_transformation_matrix = get_translation_matrix() * rotation * get_scale_matrix();
 }
 
-void transform::set_rotation_matrix(const squint::fmat4 &rotation_matrix) {
-    transformation_matrix = get_translation_matrix() * rotation_matrix * get_scale_matrix();
+void transform::set_rotation_matrix(const squint::fmat4& rotation_matrix) {
+    m_transformation_matrix = get_translation_matrix() * rotation_matrix * get_scale_matrix();
 }
 
-void transform::set_scale(const squint::fvec3 &scale) {
+void transform::set_scale(const squint::fvec3& scale) {
     squint::fmat4 scale_matrix = squint::scale(squint::fmat4::I(), scale);
-    transformation_matrix = get_translation_matrix() * get_rotation_matrix() * scale_matrix;
+    m_transformation_matrix = get_translation_matrix() * get_rotation_matrix() * scale_matrix;
 }
 
-squint::fvec3 transform::get_forward_vector() const {
+auto transform::get_forward_vector() const -> squint::fvec3 {
     auto rotation_matrix = get_rotation_matrix();
     return -rotation_matrix.at<3>(0, 2);
 }
 
-squint::fvec3 transform::get_right_vector() const {
+auto transform::get_right_vector() const -> squint::fvec3 {
     auto rotation_matrix = get_rotation_matrix();
     return rotation_matrix.at<3>(0, 0);
 }
 
-squint::fvec3 transform::get_up_vector() const {
+auto transform::get_up_vector() const -> squint::fvec3 {
     auto rotation_matrix = get_rotation_matrix();
     return rotation_matrix.at<3>(0, 1);
+}
+
+void transform::set_unit_length(const length_t& unit_length) {
+    m_unit_length = unit_length;
 }
 
 } // namespace mareweb

@@ -4,9 +4,9 @@
 #include "mareweb/renderer.hpp"
 #include <SDL3/SDL.h>
 #include <memory>
+#include <stdexcept>
 #include <vector>
 #include <webgpu/webgpu_cpp.h>
-#include <stdexcept>
 
 namespace mareweb {
 
@@ -14,14 +14,19 @@ class renderer;
 
 class application {
 public:
-  static application &get_instance();
+  static auto get_instance() -> application &;
+
+  application(const application &) = delete;
+  auto operator=(const application &) -> application & = delete;
+  application(application &&) = delete;
+  auto operator=(application &&) -> application & = delete;
 
   void initialize();
   void run();
   void quit();
 
-  wgpu::Instance &get_wgpu_instance() { return m_instance; }
-  wgpu::Device &get_wgpu_device() { return m_device; }
+  auto get_wgpu_instance() -> wgpu::Instance & { return m_instance; }
+  auto get_wgpu_device() -> wgpu::Device & { return m_device; }
 
   template <typename T, typename... Args> void create_renderer(const renderer_properties &properties, Args &&...args);
 
@@ -29,18 +34,19 @@ private:
   application() = default;
   ~application();
 
-  application(const application &) = delete;
-  application &operator=(const application &) = delete;
-  application(application &&) = delete;
-  application &operator=(application &&) = delete;
-
-  void init_sdl();
+  static void init_sdl();
   void init_webgpu();
   void handle_events();
+  void handle_window_close(const SDL_Event& event);
+  void handle_window_resize(const SDL_Event& event);
+  void handle_key_event(const SDL_Event& event);
+  void handle_mouse_button_event(const SDL_Event& event);
+  void handle_mouse_motion_event(const SDL_Event& event);
+  void handle_mouse_wheel_event(const SDL_Event& event);
   void setup_webgpu_callbacks(wgpu::DeviceDescriptor &device_desc);
 
-  SDL_Window *create_window(const renderer_properties &properties);
-  wgpu::Surface create_surface(SDL_Window *window);
+  static auto create_window(const renderer_properties &properties) -> SDL_Window *;
+  auto create_surface(SDL_Window *window) -> wgpu::Surface;
 
   bool m_initialized = false;
   bool m_quit = false;

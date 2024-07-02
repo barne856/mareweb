@@ -11,15 +11,14 @@ public:
     begin_frame();
     // set clear color based on time
     m_time += dt;
-    m_clear_color = {std::abs(std::sin(m_time)), std::abs(std::cos(m_time)), 0.0f, 1.0f};
-    set_clear_color(m_clear_color);
+    set_clear_color({std::abs(std::sin(m_time)), std::abs(std::cos(m_time)), 0.0f, 1.0f});
     end_frame();
   }
 private:
-  float m_time = 0.0f;
+  float m_time = 0.0F;
 };
 
-int main() {
+auto main() -> int {
   try {
     mareweb::application &app = mareweb::application::get_instance();
     app.initialize();

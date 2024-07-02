@@ -10,7 +10,7 @@ class shader {
 public:
   shader(wgpu::Device &device, const std::string &source, wgpu::ShaderStage stage);
 
-  wgpu::ShaderModule get_shader_module() const { return m_shader_module; }
+  [[nodiscard]] auto get_shader_module() const -> wgpu::ShaderModule { return m_shader_module; }
 
 private:
   wgpu::Device m_device;

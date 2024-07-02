@@ -5,11 +5,13 @@
 #include <cstdint>
 #include <webgpu/webgpu_cpp.h>
 
+#include "mareweb/entity.hpp"
 #include "mareweb/material.hpp"
 #include "mareweb/mesh.hpp"
-#include "mareweb/entity.hpp"
 
 namespace mareweb {
+
+constexpr float DEFAULT_FIXED_TIME_STEP = 1.0F / 60.0F;
 
 struct renderer_properties {
   uint32_t width;
@@ -19,17 +21,20 @@ struct renderer_properties {
   bool resizable = true;
   wgpu::PresentMode present_mode = wgpu::PresentMode::Fifo; // Fifo is equivalent to VSync
   uint32_t sample_count = 1;                                // MSAA sample count
-  wgpu::Color clear_color = {0.0f, 0.0f, 0.0f, 1.0f};
+  wgpu::Color clear_color = {0.0F, 0.0F, 0.0F, 1.0F};
+  float fixed_time_step = DEFAULT_FIXED_TIME_STEP;
 };
 
 template <typename T> class renderer_render_system : public render_system<T> {
 public:
   void render(float dt, T &rend) override {
-    if(rend.is_disabled())
+    if (rend.is_disabled()) {
       return;
+    }
     rend.begin_frame();
-    for(const auto& child : rend.get_children())
+    for (const auto &child : rend.get_children()) {
       child->render(dt);
+    }
     rend.end_frame();
   }
 };
@@ -37,84 +42,111 @@ public:
 template <typename T> class renderer_physics_system : public physics_system<T> {
 public:
   void update(float dt, T &rend) override {
-    if(rend.is_disabled())
+    if (rend.is_disabled()) {
       return;
-    for(const auto& child : rend.get_children())
+    }
+    for (const auto &child : rend.get_children()) {
       child->update(dt);
+    }
   }
 };
 
 template <typename T> class renderer_controls_system : public controls_system<T> {
 public:
-  bool on_key(const key_event &event, T &rend) override {
-    if(rend.is_disabled())
+  auto on_key(const key_event &event, T &rend) -> bool override {
+    if (rend.is_disabled()) {
       return false;
-    for(auto it = rend.get_children().rbegin(); it != rend.get_children().rend(); ++it)
-      if(it->get()->on_key(event))
+    }
+    for (auto it = rend.get_children().rbegin(); it != rend.get_children().rend(); ++it) {
+      if (it->get()->on_key(event)) {
         return true;
+      }
+    }
     return false;
   }
 
-  bool on_mouse_button(const mouse_button_event &event, T &rend) override {
-    if(rend.is_disabled())
+  auto on_mouse_button(const mouse_button_event &event, T &rend) -> bool override {
+    if (rend.is_disabled()) {
       return false;
-    for(auto it = rend.get_children().rbegin(); it != rend.get_children().rend(); ++it)
-      if(it->get()->on_mouse_button(event))
+    }
+    for (auto it = rend.get_children().rbegin(); it != rend.get_children().rend(); ++it) {
+      if (it->get()->on_mouse_button(event)) {
         return true;
+      }
+    }
     return false;
   }
 
-  bool on_mouse_move(const mouse_move_event &event, T &rend) override {
-    if(rend.is_disabled())
+  auto on_mouse_move(const mouse_move_event &event, T &rend) -> bool override {
+    if (rend.is_disabled()) {
       return false;
-    for(auto it = rend.get_children().rbegin(); it != rend.get_children().rend(); ++it)
-      if(it->get()->on_mouse_move(event))
+    }
+    for (auto it = rend.get_children().rbegin(); it != rend.get_children().rend(); ++it) {
+      if (it->get()->on_mouse_move(event)) {
         return true;
+      }
+    }
     return false;
   }
 
-  bool on_mouse_wheel(const mouse_scroll_event &event, T &rend) override {
-    if(rend.is_disabled())
+  auto on_mouse_wheel(const mouse_scroll_event &event, T &rend) -> bool override {
+    if (rend.is_disabled()) {
       return false;
-    for(auto it = rend.get_children().rbegin(); it != rend.get_children().rend(); ++it)
-      if(it->get()->on_mouse_wheel(event))
+    }
+    for (auto it = rend.get_children().rbegin(); it != rend.get_children().rend(); ++it) {
+      if (it->get()->on_mouse_wheel(event)) {
         return true;
+      }
+    }
     return false;
   }
 
-  bool on_resize(const window_resize_event &event, T &rend) override {
-    if(rend.is_disabled())
+  auto on_resize(const window_resize_event &event, T &rend) -> bool override {
+    if (rend.is_disabled()) {
       return false;
-    for(auto it = rend.get_children().rbegin(); it != rend.get_children().rend(); ++it)
-      if(it->get()->on_resize(event))
+    }
+    for (auto it = rend.get_children().rbegin(); it != rend.get_children().rend(); ++it) {
+      if (it->get()->on_resize(event)) {
         return true;
+      }
+    }
     return false;
   }
 };
 
 class renderer : public entity<renderer> {
 public:
-  renderer(wgpu::Device &device, wgpu::Surface surface, SDL_Window *window, const renderer_properties &properties);
-  virtual ~renderer();
+  renderer(wgpu::Device &device, wgpu::Surface surface, SDL_Window *window, renderer_properties properties);
+  ~renderer() override;
+
+  // Delete copy constructor and copy assignment operator
+  renderer(const renderer &) = delete;
+  auto operator=(const renderer &) -> renderer & = delete;
+
+  // Default move constructor and move assignment operator
+  renderer(renderer &&) noexcept = default;
+  auto operator=(renderer &&) noexcept -> renderer & = default;
 
   void resize(uint32_t new_width, uint32_t new_height);
   void present();
 
-  std::unique_ptr<mesh> create_mesh(const std::vector<float> &vertices, const std::vector<uint32_t> &indices = {});
-  std::unique_ptr<material> create_material(const std::string &vertex_shader_source,
-                                            const std::string &fragment_shader_source);
+  auto create_mesh(const std::vector<float> &vertices, const std::vector<uint32_t> &indices = {})
+      -> std::unique_ptr<mesh>;
+  auto create_material(const std::string &vertex_shader_source, const std::string &fragment_shader_source)
+      -> std::unique_ptr<material>;
   void set_fullscreen(bool fullscreen);
   void set_present_mode(wgpu::PresentMode present_mode);
   void set_clear_color(const wgpu::Color &clear_color) { m_clear_color = clear_color; }
+  [[nodiscard]] auto get_clear_color() const -> wgpu::Color { return m_clear_color; }
   void begin_frame();
   void end_frame();
   void draw_mesh(const mesh &mesh, const material &material);
 
-  SDL_Window *get_window() const { return m_window; }
-  const std::string &get_title() const { return m_properties.title; }
-  const renderer_properties &get_properties() const { return m_properties; }
+  [[nodiscard]] auto get_window() const -> SDL_Window * { return m_window; }
+  [[nodiscard]] auto get_title() const -> const std::string & { return m_properties.title; }
+  [[nodiscard]] auto get_properties() const -> const renderer_properties & { return m_properties; }
 
-protected:
+private:
   renderer_properties m_properties;
   SDL_Window *m_window;
   wgpu::Device m_device;
@@ -127,7 +159,6 @@ protected:
   wgpu::Texture m_msaa_texture;
   wgpu::TextureView m_msaa_texture_view;
 
-private:
   void configure_surface();
   void create_msaa_texture();
 };
