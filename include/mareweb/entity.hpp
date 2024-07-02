@@ -7,10 +7,11 @@
 #include <vector>
 
 namespace mareweb {
+using namespace squint::quantities;
 
 template <typename derived> class entity : public object {
 public:
-  void update(float dt) override {
+  void update(const time_f& dt) override {
     if (!is_disabled()) {
       for (auto &system : m_physics_systems) {
         system->update(dt, static_cast<derived &>(*this));
@@ -19,7 +20,7 @@ public:
     }
   }
 
-  void render(float dt) override {
+  void render(const time_f& dt) override {
     if (!is_disabled()) {
       for (auto &system : m_render_systems) {
         system->render(dt, static_cast<derived &>(*this));

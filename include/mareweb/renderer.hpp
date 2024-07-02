@@ -10,6 +10,7 @@
 #include "mareweb/mesh.hpp"
 
 namespace mareweb {
+using namespace squint::quantities;
 
 constexpr float DEFAULT_FIXED_TIME_STEP = 1.0F / 60.0F;
 
@@ -27,7 +28,7 @@ struct renderer_properties {
 
 template <typename T> class renderer_render_system : public render_system<T> {
 public:
-  void render(float dt, T &rend) override {
+  void render(const time_f& dt, T &rend) override {
     if (rend.is_disabled()) {
       return;
     }
@@ -41,7 +42,7 @@ public:
 
 template <typename T> class renderer_physics_system : public physics_system<T> {
 public:
-  void update(float dt, T &rend) override {
+  void update(const time_f& dt, T &rend) override {
     if (rend.is_disabled()) {
       return;
     }

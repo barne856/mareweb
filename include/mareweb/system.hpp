@@ -2,8 +2,10 @@
 #define MAREWEB_SYSTEM_HPP
 
 #include <cstdint>
+#include <squint/quantity.hpp>
 
 namespace mareweb {
+using namespace squint::quantities;
 
 // event callback types
 struct mouse_scroll_event {
@@ -264,7 +266,7 @@ public:
   physics_system(physics_system &&) = delete;
   auto operator=(physics_system &&) -> physics_system & = delete;
 
-  virtual void update(float dt, T &entity) {}
+  virtual void update(const time_f& dt, T &entity) {}
 };
 
 template <typename T> class render_system {
@@ -276,7 +278,7 @@ public:
   render_system(render_system &&) = delete;
   auto operator=(render_system &&) -> render_system & = delete;
 
-  virtual void render(float dt, T &entity) {}
+  virtual void render(const time_f& dt, T &entity) {}
 };
 
 } // namespace mareweb

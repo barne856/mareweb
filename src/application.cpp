@@ -17,6 +17,7 @@
 #endif
 
 namespace mareweb {
+using namespace squint::quantities;
 
 auto application::get_instance() -> application & {
   static application instance;
@@ -45,12 +46,12 @@ void application::run() {
     throw std::runtime_error("Application not initialized");
   }
 
-  static float dt_seconds = 0.0F;
+  static time_f dt_seconds = 0.0F;
   static auto last_time = std::chrono::high_resolution_clock::now();
 
   while (!m_quit) {
     auto current_time = std::chrono::high_resolution_clock::now();
-    dt_seconds = std::chrono::duration<float>(current_time - last_time).count();
+    dt_seconds = time_f(std::chrono::duration<float>(current_time - last_time).count());
     last_time = current_time;
 
     handle_events();
