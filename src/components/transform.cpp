@@ -8,9 +8,9 @@ transform::transform() : m_transformation_matrix(squint::fmat4::I()), m_unit_len
 transform::transform(const squint::fmat4& transform_matrix) 
     : m_transformation_matrix(transform_matrix), m_unit_length(1.0F * squint::quantities::units::meter_f) {}
 
-auto transform::get_position() const -> length_vec3 {
+auto transform::get_position() const -> fvec3_length {
     auto pos = m_transformation_matrix.at<3>(0, 3);
-    return length_vec3{pos[0] * m_unit_length, pos[1] * m_unit_length, pos[2] * m_unit_length};
+    return fvec3_length{pos[0] * m_unit_length, pos[1] * m_unit_length, pos[2] * m_unit_length};
 }
 
 auto transform::get_scale() const -> squint::fvec3 {
@@ -56,12 +56,12 @@ auto transform::get_view_matrix() const -> squint::fmat4 {
     return squint::inv(m_transformation_matrix);
 }
 
-void transform::face_towards(const length_vec3& point, const squint::fvec3& up) {
+void transform::face_towards(const fvec3_length& point, const squint::fvec3& up) {
     auto view = squint::look_at(get_position().view_as<const float>(), point.view_as<const float>(), up.as_ref());
     m_transformation_matrix = squint::inv(view) * get_scale_matrix();
 }
 
-void transform::translate(const length_vec3& offset) {
+void transform::translate(const fvec3_length& offset) {
     squint::fvec3 offset_normalized{
         offset[0] / m_unit_length,
         offset[1] / m_unit_length,
@@ -70,7 +70,7 @@ void transform::translate(const length_vec3& offset) {
     m_transformation_matrix.at<3>(0, 3) += offset_normalized;
 }
 
-void transform::set_position(const length_vec3& position) {
+void transform::set_position(const fvec3_length& position) {
     squint::fvec3 pos_normalized{
         position[0] / m_unit_length,
         position[1] / m_unit_length,
@@ -113,7 +113,7 @@ auto transform::get_up_vector() const -> squint::fvec3 {
     return rotation_matrix.at<3>(0, 1);
 }
 
-void transform::set_unit_length(const length_t& unit_length) {
+void transform::set_unit_length(const length_f& unit_length) {
     m_unit_length = unit_length;
 }
 
