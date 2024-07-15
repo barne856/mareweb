@@ -70,7 +70,7 @@ void transform::set_transformation_matrix(const mat4 &transformation_matrix) {
 
 auto transform::get_normal_matrix() const -> mat3 {
   auto normal_matrix = mat3{m_transformation_matrix.subview<3, 3>(slice{0, 3}, slice{0, 3})};
-  return normal_matrix.inv().transpose();
+  return mat3{normal_matrix.inv().transpose()};
 }
 
 auto transform::get_view_matrix() const -> mat4 { return m_transformation_matrix.inv(); }
