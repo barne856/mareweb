@@ -2,6 +2,7 @@
 #define MAREWEB_BUFFER_HPP
 
 #include <vector>
+#include <utility>
 #include <webgpu/webgpu_cpp.h>
 
 namespace mareweb {
