@@ -3,6 +3,7 @@
 #include "mareweb/renderer.hpp"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include <SDL3/SDL_properties.h>
 #include <SDL3/SDL_video.h>
 #include <chrono>
 #include <cstring>
@@ -13,11 +14,10 @@
 #include <windows.h>
 #elif defined(SDL_PLATFORM_LINUX)
 #include <X11/Xlib.h>
-#include <wayland-client.h>
 #endif
 
 namespace mareweb {
-using namespace squint::quantities;
+using namespace squint;
 
 auto application::get_instance() -> application & {
   static application instance;
@@ -46,12 +46,12 @@ void application::run() {
     throw std::runtime_error("Application not initialized");
   }
 
-  static time_f dt_seconds = 0.0F;
+  static units::time dt_seconds{0.0F};
   static auto last_time = std::chrono::high_resolution_clock::now();
 
   while (!m_quit) {
     auto current_time = std::chrono::high_resolution_clock::now();
-    dt_seconds = time_f(std::chrono::duration<float>(current_time - last_time).count());
+    dt_seconds = units::time(std::chrono::duration<float>(current_time - last_time).count());
     last_time = current_time;
 
     handle_events();
@@ -299,9 +299,9 @@ auto application::create_surface(SDL_Window *window) -> wgpu::Surface {
   wgpu::SurfaceDescriptor surface_descriptor{};
 
 #if defined(SDL_PLATFORM_WIN32)
-  HWND hwnd = static_cast<HWND>(SDL_GetProperty(properties_id, SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL));
+  HWND hwnd = static_cast<HWND>(SDL_GetPointerProperty(properties_id, SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL));
   HINSTANCE hinstance =
-      static_cast<HINSTANCE>(SDL_GetProperty(properties_id, SDL_PROP_WINDOW_WIN32_INSTANCE_POINTER, NULL));
+      static_cast<HINSTANCE>(SDL_GetPointerProperty(properties_id, SDL_PROP_WINDOW_WIN32_INSTANCE_POINTER, NULL));
   if (hwnd && hinstance) {
     wgpu::SurfaceDescriptorFromWindowsHWND window_desc{};
     window_desc.hinstance = hinstance;
@@ -314,7 +314,7 @@ auto application::create_surface(SDL_Window *window) -> wgpu::Surface {
   const char *video_driver = SDL_GetCurrentVideoDriver();
   if (std::strcmp(video_driver, "x11") == 0) {
     auto *display =
-        static_cast<Display *>(SDL_GetProperty(properties_id, SDL_PROP_WINDOW_X11_DISPLAY_POINTER, nullptr));
+        static_cast<Display *>(SDL_GetPointerProperty(properties_id, SDL_PROP_WINDOW_X11_DISPLAY_POINTER, nullptr));
     auto x11_window = static_cast<Window>(SDL_GetNumberProperty(properties_id, SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0));
     if ((display != nullptr) && x11_window != 0) {
       wgpu::SurfaceDescriptorFromXlibWindow window_desc{};
@@ -326,9 +326,9 @@ auto application::create_surface(SDL_Window *window) -> wgpu::Surface {
     }
   } else if (std::strcmp(video_driver, "wayland") == 0) {
     auto *display = static_cast<struct wl_display *>(
-        SDL_GetProperty(properties_id, SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER, nullptr));
+        SDL_GetPointerProperty(properties_id, SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER, nullptr));
     auto *surface = static_cast<struct wl_surface *>(
-        SDL_GetProperty(properties_id, SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, nullptr));
+        SDL_GetPointerProperty(properties_id, SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, nullptr));
     if ((display != nullptr) && (surface != nullptr)) {
       wgpu::SurfaceDescriptorFromWaylandSurface window_desc{};
       window_desc.display = display;

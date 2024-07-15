@@ -15,7 +15,8 @@
 				"llvm-vs-code-extensions.vscode-clangd",
 				"GitHub.copilot",
 				"GitHub.copilot-chat",
-				"ms-vscode.cmake-tools"
+				"ms-vscode.cmake-tools",
+				"matepek.vscode-catch2-test-adapter"
 			]
 		}
 	},

@@ -3,22 +3,22 @@
 #include <cmath>
 #include <iostream>
 
-using namespace squint::quantities;
+using namespace squint;
 
 class basic_renderer : public mareweb::renderer {
 public:
   using mareweb::renderer::renderer; // Inherit constructor
 
-  void render(const time_f& dt) override {
+  void render(const units::time& dt) override {
     begin_frame();
     // set clear color based on time
     m_time += dt;
-    set_clear_color({std::abs(std::sin(m_time.as_seconds())), std::abs(std::cos(m_time.as_seconds())), 0.0f, 1.0f});
+    set_clear_color({std::abs(std::sin(m_time.value())), std::abs(std::cos(m_time.value())), 0.0f, 1.0f});
     end_frame();
   }
 
 private:
-  time_f m_time = 0.0F;
+  units::time m_time{};
 };
 
 auto main() -> int {

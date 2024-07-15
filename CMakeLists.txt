@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.28)
 project(DawnProject VERSION 1.0)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -39,7 +39,7 @@ FetchContent_Declare(
 
 # SQUINT
 FetchContent_Declare(
-  squint
+  SQUINT
   GIT_REPOSITORY https://github.com/barne856/squint.git
   GIT_TAG main
   GIT_SHALLOW ON
@@ -91,8 +91,13 @@ set(SDL3IMAGE_STATIC OFF)
 # Make SDL_image available
 FetchContent_MakeAvailable(SDL_image)
 
+# Configure SQUINT options
+set(SQUINT_BUILD_TESTS OFF)
+set(BLAS_BACKEND "OpenBLAS")
+
+
 # Make squint available
-FetchContent_MakeAvailable(squint)
+FetchContent_MakeAvailable(SQUINT)
 
 # Add include directories
 include_directories(include)
@@ -104,7 +109,7 @@ file(GLOB MAREWEB_SOURCES "src/*.cpp" "src/components/*.cpp")
 add_library(mareweb ${MAREWEB_SOURCES})
 
 target_include_directories(mareweb PUBLIC include)
-target_link_libraries(mareweb PUBLIC webgpu_cpp webgpu_dawn SDL3::SDL3 SDL3_image::SDL3_image squint)
+target_link_libraries(mareweb PUBLIC webgpu_cpp webgpu_dawn SDL3::SDL3 SDL3_image::SDL3_image SQUINT::SQUINT)
 
 # Function to add an example executable
 function(add_example NAME)

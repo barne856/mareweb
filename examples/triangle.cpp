@@ -1,13 +1,12 @@
 #include "mareweb/application.hpp"
 #include "mareweb/components/transform.hpp"
 #include "mareweb/renderer.hpp"
-#include "squint/linalg.hpp"
 #include "squint/quantity.hpp"
 #include <concepts>
 #include <iostream>
 #include <vector>
 
-using namespace squint::quantities;
+using namespace squint;
 
 template <typename T>
 concept renderable_mesh = requires(T t) {
@@ -19,7 +18,7 @@ template <typename T>
 requires renderable_mesh<T>
 class render_mesh : public mareweb::render_system<T> {
 public:
-  void render(const time_f& /*dt*/, T &ent) override { ent.rend->draw_mesh(*ent.mesh.get(), *ent.material.get()); }
+  void render(const units::time& /*dt*/, T &ent) override { ent.rend->draw_mesh(*ent.mesh.get(), *ent.material.get()); }
 };
 
 class triangle : public mareweb::entity<triangle>, public mareweb::transform {

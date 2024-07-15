@@ -8,7 +8,7 @@
 #include <vector>
 
 namespace mareweb {
-using namespace squint::quantities;
+using namespace squint;
 
 class object {
 public:
@@ -23,8 +23,8 @@ public:
   object(object &&) noexcept = default;
   auto operator=(object &&) noexcept -> object & = default;
 
-  virtual void update(const time_f& dt) {}
-  virtual void render(const time_f& dt) {}
+  virtual void update(const units::time &dt) {}
+  virtual void render(const units::time &dt) {}
 
   virtual auto on_key(const key_event & /*event*/) -> bool { return false; }
   virtual auto on_mouse_button(const mouse_button_event & /*event*/) -> bool { return false; }
