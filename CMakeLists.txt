@@ -93,8 +93,6 @@ FetchContent_MakeAvailable(SDL_image)
 
 # Configure SQUINT options
 set(SQUINT_BUILD_TESTS OFF)
-set(BLAS_BACKEND "OpenBLAS")
-
 
 # Make squint available
 FetchContent_MakeAvailable(SQUINT)
@@ -114,7 +112,7 @@ target_link_libraries(mareweb PUBLIC webgpu_cpp webgpu_dawn SDL3::SDL3 SDL3_imag
 # Function to add an example executable
 function(add_example NAME)
     add_executable(${NAME} examples/${NAME}.cpp)
-    target_link_libraries(${NAME} PRIVATE mareweb gfortran)
+    target_link_libraries(${NAME} PRIVATE mareweb)
     
     # Copy only the necessary shared libraries to the output directory
     add_custom_command(TARGET ${NAME} POST_BUILD
