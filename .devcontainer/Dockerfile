@@ -53,5 +53,17 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && ln -s /usr/bin/lld-$LLVM_VERSION /usr/bin/lld \
     && ln -f -s /usr/bin/ld.lld-$LLVM_VERSION /usr/bin/ld 
 
+# Install Python and pip
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
+    && apt-get -y install --no-install-recommends \
+    python3 \
+    python3-pip \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install pip dependencies and aider-chat[browser]
+COPY requirements.txt /tmp/requirements.txt
+RUN pip3 install --no-cache-dir -r /tmp/requirements.txt \
+    && pip3 install --no-cache-dir aider-chat[browser]
+
 # set XDG_RUNTIME_DIR environment variable
 ENV XDG_RUNTIME_DIR=/tmp
