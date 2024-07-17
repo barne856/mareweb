@@ -39,6 +39,7 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     libxcursor-dev \
     libxinerama-dev \
     libxi-dev \
+    libxss-dev \
     # Vulkan
     libvulkan-dev \
     vulkan-tools \
