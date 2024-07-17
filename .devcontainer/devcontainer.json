@@ -7,6 +7,9 @@
 		"ghcr.io/devcontainers/features/git:1": {},
 		"ghcr.io/adamlm/devcontainer-features/cmake": {
 			"version": "3.29.5"
+		},
+		"ghcr.io/devcontainers/features/python:1": {
+			"version": "3.11"
 		}
 	},
 	"customizations": {
@@ -35,5 +38,5 @@
 	// make vscode user own the workspace and all mounts
 	"postCreateCommand": "sudo chown -R vscode:vscode ${containerWorkspaceFolder}",
 	// prevent git dubious ownership
-	"postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}"
+	"postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} && pip install -r ${containerWorkspaceFolder}/requirements.txt"
 }
