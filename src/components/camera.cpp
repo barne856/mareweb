@@ -1,5 +1,6 @@
-#include "camera.hpp"
+#include "mareweb/components/camera.hpp"
 #include <cmath>
+#include <squint/geometry.hpp>
 
 namespace mareweb {
 
@@ -22,10 +23,6 @@ void camera::set_orthographic(float left, float right, float bottom, float top, 
     m_far = far;
     m_is_perspective = false;
     m_projection_matrix = squint::ortho(left, right, bottom, top, near, far);
-}
-
-auto camera::get_view_matrix() const -> squint::mat4 {
-    return transform::get_view_matrix();
 }
 
 auto camera::get_projection_matrix() const -> squint::mat4 {
