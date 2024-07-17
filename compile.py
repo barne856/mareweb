@@ -1,4 +1,7 @@
 import os
+import tiktoken
+
+include_line_numbers = False  # Set to True to include line numbers
 
 def read_files(folder_path, file_extensions, excluded_subdirs):
     combined_content = ""
@@ -12,8 +15,12 @@ def read_files(folder_path, file_extensions, excluded_subdirs):
                     combined_content += f"Filename: {file}\n"
                     combined_content += f"File Path: {file_path}\n"
                     combined_content += "Content:\n"
-                    for i, line in enumerate(content, start=1):
-                        combined_content += f"{i}: {line}"
+                    if include_line_numbers:
+                        for i, line in enumerate(content, start=1):
+                            combined_content += f"{i}: {line}"
+                    else:
+                        for line in content:
+                            combined_content += line
                     combined_content += "=" * 50 + "\n\n"
     return combined_content
 
@@ -21,12 +28,16 @@ def write_combined_file(output_file, combined_content):
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write(combined_content)
 
+def count_tokens(text):
+    encoding = tiktoken.get_encoding("cl100k_base")
+    return len(encoding.encode(text))
+
 # Specify the folder path and file extensions to include
 folder_path = "./"
 file_extensions = ['.cpp', '.hpp', '.md', '.txt']
 
 # Specify the subdirectories to exclude
-excluded_subdirs = ['build', 'tests']
+excluded_subdirs = ['build', 'old', 'tests']
 
 # Specify the output file path
 output_file = "combined_files.txt"
@@ -37,4 +48,10 @@ combined_content = read_files(folder_path, file_extensions, excluded_subdirs)
 # Write the combined content to the output file
 write_combined_file(output_file, combined_content)
 
+# Count tokens in the output file
+with open(output_file, 'r', encoding='utf-8') as f:
+    output_content = f.read()
+    token_count = count_tokens(output_content)
+
 print(f"Combined file created: {output_file}")
+print(f"Number of tokens in the output file: {token_count}")

@@ -2,3 +2,5 @@ build/
 .vscode/
 .cache/
 combined_files.txt
+.env
+.aider*

@@ -35,5 +35,5 @@
 	// make vscode user own the workspace and all mounts
 	"postCreateCommand": "sudo chown -R vscode:vscode ${containerWorkspaceFolder}",
 	// prevent git dubious ownership
-	"postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}"
+	"postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} && echo 'source /opt/venv/bin/activate' >> /home/vscode/.bashrc"
 }
