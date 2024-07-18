@@ -33,7 +33,9 @@ public:
     set_clear_color({0.05F, 0.05F, 0.05F, 1.0F});
     m_camera = std::make_unique<mareweb::camera>(45.0f, float(properties.width) / float(properties.height),
                                                  length(0.1f), length(100.0f));
-    m_camera->set_position(vec3_t<length>{length(0), length(0), length(3)});
+    m_camera->set_position(vec3_t<length>{length(1), length(0), length(3)});
+    auto target = vec3_t<length>{length(0), length(0), length(0)};
+    m_camera->look_at(target, vec3{1.0f, 0.0f, 0.f});
     m_triangle = create_object<triangle>(this, device);
   }
 
@@ -57,31 +59,23 @@ public:
     std::vector<float> vertices = {0.0F, 0.5F, 0.0F, -0.5F, -0.5F, 0.0F, 0.5F, -0.5F, 0.0F};
 
     const char *vertex_shader_source = R"(
-    struct Uniforms {
-        mvp: mat4x4<f32>,
-    };
-    @group(0) @binding(0) var<uniform> uniforms: Uniforms;
+        struct Uniforms {
+            mvp: mat4x4<f32>,
+        };
+        @group(0) @binding(0) var<uniform> uniforms: Uniforms;
 
-    struct VertexOutput {
-        @builtin(position) position: vec4<f32>,
-        @location(0) mvp_value: f32,
-    };
-
-    @vertex
-    fn main(@location(0) position: vec3<f32>) -> VertexOutput {
-        var output: VertexOutput;
-        output.position = uniforms.mvp * vec4<f32>(position, 1.0);
-        output.mvp_value = uniforms.mvp[1][1]; // Pass the first element of the MVP matrix
-        return output;
-    }
-)";
+            @vertex
+            fn main(@location(0) position: vec3<f32>) -> @builtin(position) vec4<f32> {
+                return uniforms.mvp * vec4<f32>(position, 1.0);
+            }
+        )";
 
     const char *fragment_shader_source = R"(
-    @fragment
-    fn main(@location(0) mvp_value: f32) -> @location(0) vec4<f32> {
-        return vec4<f32>(1.0, mvp_value, 0.0, 1.0);
-    }
-)";
+            @fragment
+            fn main() -> @location(0) vec4<f32> {
+                return vec4<f32>(1.0, 0.1, 0.05, 1.0);
+            }
+        )";
 
     mesh = rend->create_mesh(vertices);
     material = rend->create_material(vertex_shader_source, fragment_shader_source);
@@ -101,7 +95,7 @@ public:
     mat4 mvp = rend->get_mvp_matrix(*this);
 
     // Update the uniform buffer
-    mvp_buffer->update(mvp.data(), sizeof(float) * 16);
+    mvp_buffer->update(&mvp, sizeof(mat4));
   }
 
   std::unique_ptr<mareweb::mesh> mesh;
