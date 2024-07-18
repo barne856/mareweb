@@ -1,4 +1,4 @@
-#include "mareweb/components/camera.hpp"
+#include "mareweb/entities/camera.hpp"
 #include <squint/geometry.hpp>
 
 using namespace squint::units;
@@ -34,6 +34,21 @@ auto camera::get_projection_matrix() const -> squint::mat4 {
 
 auto camera::get_view_projection_matrix() const -> squint::mat4 {
     return m_projection_matrix * get_view_matrix();
+}
+
+void camera::look_at(const squint::vec3_t<length>& target, const squint::vec3& up) {
+    squint::vec3 direction = squint::normalize(target - get_position());
+    squint::vec3 right = squint::normalize(squint::cross(direction, up));
+    squint::vec3 new_up = squint::cross(right, direction);
+
+    squint::mat4 rotation_matrix{
+        right[0], new_up[0], -direction[0], 0,
+        right[1], new_up[1], -direction[1], 0,
+        right[2], new_up[2], -direction[2], 0,
+        0, 0, 0, 1
+    };
+
+    set_rotation_matrix(rotation_matrix);
 }
 
 void camera::set_fov(float fov) {

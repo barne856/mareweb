@@ -24,6 +24,8 @@ public:
   auto get_projection_matrix() const -> squint::mat4;
   auto get_view_projection_matrix() const -> squint::mat4;
 
+  auto look_at(const squint::vec3_t<length>& target, const squint::vec3& up) -> void;
+
   void set_fov(float fov);
   void set_aspect_ratio(float aspect_ratio);
   void set_near(length near);
