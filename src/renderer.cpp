@@ -167,6 +167,19 @@ void renderer::draw_mesh(const mesh &mesh, const material &material) {
   mesh.draw(m_render_pass);
 }
 
+void renderer::update_model_view_projection(const transform &model_transform, const camera &cam) {
+  if (!m_mvp_buffer) {
+    m_mvp_buffer = std::make_shared<uniform_buffer>(m_device, sizeof(mat4), wgpu::ShaderStage::Vertex);
+  }
+
+  mat4 model_matrix = model_transform.get_transformation_matrix();
+  mat4 view_matrix = cam.get_view_matrix();
+  mat4 projection_matrix = cam.get_projection_matrix();
+  mat4 mvp = projection_matrix * view_matrix * model_matrix;
+
+  m_mvp_buffer->update(&mvp, sizeof(mat4));
+}
+
 void renderer::configure_surface() {
   wgpu::SurfaceConfiguration config{};
   config.device = m_device;

@@ -101,7 +101,7 @@ FetchContent_MakeAvailable(SQUINT)
 include_directories(include)
 
 # Find all .cpp files in the src directory
-file(GLOB MAREWEB_SOURCES "src/*.cpp" "src/components/*.cpp")
+file(GLOB MAREWEB_SOURCES "src/*.cpp" "src/components/*.cpp" "src/entities/*.cpp" "src/systems/*.cpp")
 
 # Create library target for mareweb
 add_library(mareweb ${MAREWEB_SOURCES})

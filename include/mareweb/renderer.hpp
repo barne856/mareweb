@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <webgpu/webgpu_cpp.h>
 
+#include "mareweb/components/transform.hpp"
+#include "mareweb/entities/camera.hpp"
 #include "mareweb/entity.hpp"
 #include "mareweb/material.hpp"
 #include "mareweb/mesh.hpp"
@@ -28,7 +30,7 @@ struct renderer_properties {
 
 template <typename T> class renderer_render_system : public render_system<T> {
 public:
-  void render(const units::time& dt, T &rend) override {
+  void render(const units::time &dt, T &rend) override {
     if (rend.is_disabled()) {
       return;
     }
@@ -42,7 +44,7 @@ public:
 
 template <typename T> class renderer_physics_system : public physics_system<T> {
 public:
-  void update(const units::time& dt, T &rend) override {
+  void update(const units::time &dt, T &rend) override {
     if (rend.is_disabled()) {
       return;
     }
@@ -142,6 +144,7 @@ public:
   void begin_frame();
   void end_frame();
   void draw_mesh(const mesh &mesh, const material &material);
+  void update_model_view_projection(const transform &model_transform, const camera &cam);
 
   [[nodiscard]] auto get_window() const -> SDL_Window * { return m_window; }
   [[nodiscard]] auto get_title() const -> const std::string & { return m_properties.title; }
@@ -162,6 +165,8 @@ private:
 
   void configure_surface();
   void create_msaa_texture();
+
+  std::shared_ptr<uniform_buffer> m_mvp_buffer;
 };
 
 } // namespace mareweb

@@ -3,8 +3,8 @@
 
 namespace mareweb {
 
-material::material(wgpu::Device &device, const std::string &vertex_shader_source, const std::string &fragment_shader_source,
-                   wgpu::TextureFormat surface_format, uint32_t sample_count)
+material::material(wgpu::Device &device, const std::string &vertex_shader_source,
+                   const std::string &fragment_shader_source, wgpu::TextureFormat surface_format, uint32_t sample_count)
     : m_device(device) {
 
   // Create vertex shader
@@ -26,6 +26,23 @@ material::material(wgpu::Device &device, const std::string &vertex_shader_source
   }
 }
 
-void material::bind(wgpu::RenderPassEncoder &pass_encoder) const { pass_encoder.SetPipeline(m_pipeline->get_pipeline()); }
+void material::bind(wgpu::RenderPassEncoder &pass_encoder) const {
+  pass_encoder.SetPipeline(m_pipeline->get_pipeline());
+  pass_encoder.SetBindGroup(0, m_pipeline->get_bind_group(), 0, nullptr);
+}
+
+void material::add_uniform_buffer(const std::string &name, std::shared_ptr<uniform_buffer> buffer) {
+  m_uniform_buffers[name] = buffer;
+  // We need to update the pipeline when adding a new uniform buffer
+  m_pipeline->setup_uniform_bindings(m_uniform_buffers);
+}
+
+void material::update_uniform_buffer(const std::string &name, const void *data, size_t size) {
+  auto it = m_uniform_buffers.find(name);
+  if (it == m_uniform_buffers.end()) {
+    throw std::runtime_error("Uniform buffer not found: " + name);
+  }
+  it->second->update(data, size);
+}
 
 } // namespace mareweb

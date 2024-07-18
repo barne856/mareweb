@@ -10,7 +10,16 @@ buffer::buffer(wgpu::Device &device, const void *data, size_t size, wgpu::Buffer
   desc.mappedAtCreation = false;
 
   m_buffer = device.CreateBuffer(&desc);
-  device.GetQueue().WriteBuffer(m_buffer, 0, data, size);
+  if (data != nullptr) {
+    device.GetQueue().WriteBuffer(m_buffer, 0, data, size);
+  }
+}
+
+void buffer::update(const void *data, size_t size) {
+  if (size > m_size) {
+    throw std::runtime_error("Update size exceeds buffer size");
+  }
+  m_device.GetQueue().WriteBuffer(m_buffer, 0, data, size);
 }
 
 buffer::~buffer() {
@@ -24,5 +33,9 @@ vertex_buffer::vertex_buffer(wgpu::Device &device, const std::vector<float> &ver
 
 index_buffer::index_buffer(wgpu::Device &device, const std::vector<uint32_t> &indices)
     : buffer(device, indices.data(), indices.size() * sizeof(uint32_t), wgpu::BufferUsage::Index) {}
+
+uniform_buffer::uniform_buffer(wgpu::Device &device, size_t size, wgpu::ShaderStage visibility)
+    : buffer(device, nullptr, size, wgpu::BufferUsage::Uniform | wgpu::BufferUsage::CopyDst), m_visibility(visibility) {
+}
 
 } // namespace mareweb
