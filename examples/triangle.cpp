@@ -33,9 +33,9 @@ public:
     set_clear_color({0.05F, 0.05F, 0.05F, 1.0F});
     m_camera = std::make_unique<mareweb::camera>(45.0f, float(properties.width) / float(properties.height),
                                                  length(0.1f), length(100.0f));
-    m_camera->set_position(vec3_t<length>{length(1), length(0), length(3)});
+    m_camera->set_position(vec3_t<length>{length(0), length(0), length(3)});
     auto target = vec3_t<length>{length(0), length(0), length(0)};
-    m_camera->look_at(target, vec3{1.0f, 0.0f, 0.f});
+    m_camera->look_at(target, vec3{0.0f, 1.0f, 0.f});
     m_triangle = create_object<triangle>(this, device);
   }
 

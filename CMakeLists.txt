@@ -50,11 +50,11 @@ FetchContent_Declare(
 set(DAWN_FETCH_DEPENDENCIES ON)
 set(DAWN_ENABLE_D3D11 OFF)
 set(DAWN_ENABLE_D3D12 OFF)
+set(DAWN_ENABLE_VULKAN ON)
 set(DAWN_ENABLE_METAL OFF)
 set(DAWN_ENABLE_NULL OFF)
 set(DAWN_ENABLE_DESKTOP_GL OFF)
 set(DAWN_ENABLE_OPENGLES OFF)
-set(DAWN_ENABLE_VULKAN ON)
 set(DAWN_USE_WAYLAND OFF)
 set(TINT_BUILD_SPV_READER OFF)
 # Disable unneeded parts
@@ -112,7 +112,12 @@ target_link_libraries(mareweb PUBLIC webgpu_cpp webgpu_dawn SDL3::SDL3 SDL3_imag
 # Function to add an example executable
 function(add_example NAME)
     add_executable(${NAME} examples/${NAME}.cpp)
-    target_link_libraries(${NAME} PRIVATE mareweb gfortran)
+    target_link_libraries(${NAME} PRIVATE mareweb)
+    
+    # Link gfortran only if SQUINT_BLAS_BACKEND is OpenBLAS
+    if(UNIX)
+        target_link_libraries(${NAME} PRIVATE gfortran)
+    endif()
     
     # Copy only the necessary shared libraries to the output directory
     add_custom_command(TARGET ${NAME} POST_BUILD

@@ -1,4 +1,5 @@
 #include "mareweb/buffer.hpp"
+#include <stdexcept>
 
 namespace mareweb {
 
