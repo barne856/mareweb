@@ -264,7 +264,7 @@ auto application::create_window(const renderer_properties &properties) -> SDL_Wi
 
   if (properties.fullscreen) {
     int count_displays = 0;
-    SDL_DisplayID *displays = SDL_GetDisplays(&count_displays);
+    const SDL_DisplayID *displays = SDL_GetDisplays(&count_displays);
     if (displays == nullptr) {
       SDL_DestroyWindow(window);
       throw std::runtime_error(std::string("Failed to get displays: ") + SDL_GetError());
@@ -272,19 +272,16 @@ auto application::create_window(const renderer_properties &properties) -> SDL_Wi
 
     const SDL_DisplayMode *display_mode = SDL_GetCurrentDisplayMode(*displays);
     if (display_mode == nullptr) {
-      SDL_free(displays);
       SDL_DestroyWindow(window);
       throw std::runtime_error(std::string("Failed to get current display mode: ") + SDL_GetError());
     }
 
     if (SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN) != 0) {
-      SDL_free(displays);
       SDL_DestroyWindow(window);
       throw std::runtime_error(std::string("Failed to set fullscreen mode: ") + SDL_GetError());
     }
 
     SDL_SetWindowSize(window, display_mode->w, display_mode->h);
-    SDL_free(displays);
   }
 
   return window;

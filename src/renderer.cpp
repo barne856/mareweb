@@ -65,7 +65,7 @@ void renderer::set_fullscreen(bool fullscreen) {
     if (fullscreen) {
       // Get the display index of the window
       int count_displays = 0;
-      SDL_DisplayID *displays = SDL_GetDisplays(&count_displays);
+      const SDL_DisplayID *displays = SDL_GetDisplays(&count_displays);
       if (displays == nullptr) {
         // Handle error, perhaps throw an exception
         throw std::runtime_error("Failed to get window display index");
@@ -74,21 +74,18 @@ void renderer::set_fullscreen(bool fullscreen) {
       // Get the display mode of the display
       const SDL_DisplayMode *display_mode = SDL_GetCurrentDisplayMode(*displays);
       if (display_mode == nullptr) {
-        SDL_free(displays);
         // Handle error, perhaps throw an exception
         throw std::runtime_error("Failed to get current display mode");
       }
 
       // Set fullscreen
       if (SDL_SetWindowFullscreen(m_window, SDL_WINDOW_FULLSCREEN) != 0) {
-        SDL_free(displays);
         throw std::runtime_error("Failed to set fullscreen mode");
       }
 
       // Update width and height to match the display
       m_properties.width = static_cast<uint32_t>(display_mode->w);
       m_properties.height = static_cast<uint32_t>(display_mode->h);
-      SDL_free(displays);
     } else {
       // Exit fullscreen mode
       if (SDL_SetWindowFullscreen(m_window, 0) != 0) {
