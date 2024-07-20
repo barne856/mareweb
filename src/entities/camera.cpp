@@ -30,20 +30,6 @@ auto camera::get_projection_matrix() const -> squint::mat4 { return m_projection
 
 auto camera::get_view_projection_matrix() const -> squint::mat4 { return m_projection_matrix * get_view_matrix(); }
 
-void camera::look_at(const squint::vec3_t<length> &target, const squint::vec3 &up) {
-  const auto eye = get_position();
-  vec3 z = squint::normalize(eye - target);
-  vec3 x = squint::normalize(squint::cross(up, z));
-  vec3 y = squint::cross(z, x);
-  float wx = dot(x, eye) / m_unit_length;
-  float wy = dot(y, eye) / m_unit_length;
-  float wz = dot(z, eye) / m_unit_length;
-
-  squint::mat4 rotation_matrix{x[0], y[0], z[0], 0.0F, x[1], y[1], z[1], 0.0F, x[2], y[2], z[2], 0, wx, wy, wz, 1.0F};
-
-  set_rotation_matrix(rotation_matrix);
-}
-
 void camera::set_fov(float fov) {
   m_fov = fov;
   update_projection_matrix();

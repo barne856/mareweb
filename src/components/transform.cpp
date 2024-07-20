@@ -76,23 +76,18 @@ auto transform::get_normal_matrix() const -> mat3 {
 auto transform::get_view_matrix() const -> mat4 { return m_transformation_matrix.inv(); }
 
 void transform::face_towards(const vec3_t<units::length> &point, const vec3 &up) {
-  auto position = get_position();
-  auto direction = (point - position) / m_unit_length;
-  auto right = cross(direction, up);
-  auto corrected_up = cross(right, direction);
+  const auto eye = get_position();
+  vec3 z = squint::normalize(eye - point);
+  vec3 x = squint::normalize(squint::cross(up, z));
+  vec3 y = squint::cross(z, x);
+  float wx = squint::dot(x, eye) / m_unit_length;
+  float wy = squint::dot(y, eye) / m_unit_length;
+  float wz = squint::dot(z, eye) / m_unit_length;
 
-  auto rotation_matrix = mat4::eye();
-  rotation_matrix[0, 0] = right[0];
-  rotation_matrix[1, 0] = right[1];
-  rotation_matrix[2, 0] = right[2];
-  rotation_matrix[0, 1] = corrected_up[0];
-  rotation_matrix[1, 1] = corrected_up[1];
-  rotation_matrix[2, 1] = corrected_up[2];
-  rotation_matrix[0, 2] = -direction[0];
-  rotation_matrix[1, 2] = -direction[1];
-  rotation_matrix[2, 2] = -direction[2];
-
-  m_transformation_matrix = rotation_matrix * get_translation_matrix() * get_scale_matrix();
+  squint::mat4 transform_matrix{x[0], y[0], z[0], 0.0F, x[1], y[1], z[1], 0.0F, x[2], y[2], z[2], 0, wx, wy, wz, 1.0F};
+  auto scale = get_scale();
+  squint::scale(transform_matrix, scale);
+  m_transformation_matrix = transform_matrix;
 }
 
 void transform::translate(const vec3_t<units::length> &offset) {
@@ -118,7 +113,7 @@ void transform::set_rotation_matrix(const mat4 &rotation_matrix) {
   auto translation = get_translation_matrix();
   auto scale_mat = mat4::eye();
   squint::scale(scale_mat, scale);
-  m_transformation_matrix = translation * rotation_matrix * scale_mat;
+  m_transformation_matrix = translation * rotation_matrix *scale_mat ;
 }
 
 void transform::set_scale(const vec3 &scale) {
