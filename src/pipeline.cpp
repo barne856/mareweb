@@ -13,12 +13,11 @@ pipeline::pipeline(wgpu::Device &device, const shader &vertex_shader, const shad
 }
 
 void pipeline::setup_uniform_bindings(
-    const std::unordered_map<std::string, std::shared_ptr<uniform_buffer>> &uniform_buffers) {
+    const std::unordered_map<uint32_t, std::shared_ptr<uniform_buffer>>& uniform_buffers) {
     std::vector<wgpu::BindGroupLayoutEntry> bind_group_layout_entries;
     std::vector<wgpu::BindGroupEntry> bind_group_entries;
 
-    uint32_t binding = 0;
-    for (const auto &[name, buffer] : uniform_buffers) {
+    for (const auto& [binding, buffer] : uniform_buffers) {
         wgpu::BindGroupLayoutEntry layout_entry{};
         layout_entry.binding = binding;
         layout_entry.visibility = buffer->get_visibility();
@@ -33,8 +32,6 @@ void pipeline::setup_uniform_bindings(
         group_entry.offset = 0;
         group_entry.size = buffer->get_size();
         bind_group_entries.push_back(group_entry);
-
-        binding++;
     }
 
     wgpu::BindGroupLayoutDescriptor bind_group_layout_desc{};

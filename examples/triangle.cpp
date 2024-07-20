@@ -59,14 +59,11 @@ public:
     std::vector<float> vertices = {0.0F, 0.5F, 0.0F, -0.5F, -0.5F, 0.0F, 0.5F, -0.5F, 0.0F};
 
     const char *vertex_shader_source = R"(
-        struct Uniforms {
-            mvp: mat4x4<f32>,
-        };
-        @group(0) @binding(0) var<uniform> uniforms: Uniforms;
+        @group(0) @binding(0) var<uniform> mvp: mat4x4<f32>;
 
             @vertex
             fn main(@location(0) position: vec3<f32>) -> @builtin(position) vec4<f32> {
-                return uniforms.mvp * vec4<f32>(position, 1.0);
+                return mvp * vec4<f32>(position, 1.0);
             }
         )";
 
@@ -82,7 +79,7 @@ public:
 
     // Create and add uniform buffer
     mvp_buffer = std::make_shared<mareweb::uniform_buffer>(device, sizeof(mat4), wgpu::ShaderStage::Vertex);
-    material->add_uniform_buffer("mvp", mvp_buffer);
+    material->add_uniform_buffer(0, mvp_buffer);
 
     attach_system<render_mesh>();
   }

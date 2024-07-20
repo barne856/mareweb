@@ -13,7 +13,7 @@ public:
     pipeline(wgpu::Device &device, const shader &vertex_shader, const shader &fragment_shader,
              wgpu::TextureFormat surface_format, uint32_t sample_count);
 
-    void setup_uniform_bindings(const std::unordered_map<std::string, std::shared_ptr<uniform_buffer>>& uniform_buffers);
+    void setup_uniform_bindings(const std::unordered_map<uint32_t, std::shared_ptr<uniform_buffer>>& uniform_buffers);
     [[nodiscard]] auto get_pipeline() const -> wgpu::RenderPipeline { return m_pipeline; }
     [[nodiscard]] auto get_bind_group() const -> wgpu::BindGroup { return m_bind_group; }
 

@@ -31,16 +31,16 @@ void material::bind(wgpu::RenderPassEncoder &pass_encoder) const {
   pass_encoder.SetBindGroup(0, m_pipeline->get_bind_group(), 0, nullptr);
 }
 
-void material::add_uniform_buffer(const std::string &name, std::shared_ptr<uniform_buffer> buffer) {
-  m_uniform_buffers[name] = buffer;
+void material::add_uniform_buffer(uint32_t binding_index, std::shared_ptr<uniform_buffer> buffer) {
+  m_uniform_buffers[binding_index] = buffer;
   // We need to update the pipeline when adding a new uniform buffer
   m_pipeline->setup_uniform_bindings(m_uniform_buffers);
 }
 
-void material::update_uniform_buffer(const std::string &name, const void *data, size_t size) {
-  auto it = m_uniform_buffers.find(name);
+void material::update_uniform_buffer(uint32_t binding_index, const void *data, size_t size) {
+  auto it = m_uniform_buffers.find(binding_index);
   if (it == m_uniform_buffers.end()) {
-    throw std::runtime_error("Uniform buffer not found: " + name);
+    throw std::runtime_error("Uniform buffer not found: " + std::to_string(binding_index));
   }
   it->second->update(data, size);
 }
