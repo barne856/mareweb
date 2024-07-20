@@ -12,7 +12,8 @@ renderer::renderer(wgpu::Device &device, wgpu::Surface surface, SDL_Window *wind
       m_clear_color({0.0F, 0.0F, 0.0F, 1.0F}) {
   wgpu::SurfaceCapabilities capabilities{};
   m_surface.GetCapabilities(m_device.GetAdapter(), &capabilities);
-  m_surface_format = *capabilities.formats;
+  // m_surface_format = *capabilities.formats;
+  m_surface_format = wgpu::TextureFormat::BGRA8Unorm;
 
   configure_surface();
 
