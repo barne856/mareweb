@@ -2,6 +2,7 @@
 #include "mareweb/components/transform.hpp"
 #include "mareweb/entities/camera.hpp"
 #include "mareweb/renderer.hpp"
+#include "mareweb/scene.hpp"
 #include "squint/quantity.hpp"
 #include <vector>
 
@@ -21,41 +22,34 @@ class render_mesh : public mareweb::render_system<T> {
 public:
   void render(const units::time &dt, T &ent) override {
     ent.update_mvp(dt);
-    ent.rend->draw_mesh(*ent.mesh.get(), *ent.material.get());
+    ent.scene->draw_mesh(*ent.mesh.get(), *ent.material.get());
   }
 };
 
-class main_renderer : public mareweb::renderer {
+class main_scene : public mareweb::scene {
 public:
-  main_renderer(wgpu::Device &device, wgpu::Surface surface, SDL_Window *window,
-                const mareweb::renderer_properties &properties)
-      : renderer(device, surface, window, properties) {
+  main_scene(wgpu::Device &device, wgpu::Surface surface, SDL_Window *window,
+             const mareweb::renderer_properties &properties,
+             mareweb::projection_type type = mareweb::projection_type::perspective)
+      : scene(device, surface, window, properties, type) {
     set_clear_color({0.05F, 0.05F, 0.05F, 1.0F});
-    m_camera = std::make_unique<mareweb::camera>(45.0f, float(properties.width) / float(properties.height),
-                                                 length(0.1f), length(100.0f));
-    m_camera->set_position(vec3_t<length>{length(0), length(3), length(3)});
-    auto target = vec3_t<length>{length(0), length(0), length(0)};
-    m_camera->face_towards(target, vec3{0.0f, 1.0f, 0.f});
+    get_camera()->set_position(vec3_t<units::length>{units::length(0.0F), units::length(0.0F), units::length(2.0F)});
     m_triangle = create_object<triangle>(this, device);
   }
 
-  void update(const units::time &dt) override { renderer::update(dt); }
-
   mat4 get_mvp_matrix(const mareweb::transform &model_transform) {
     mat4 model_matrix = model_transform.get_transformation_matrix();
-    mat4 view_matrix = m_camera->get_view_matrix();
-    mat4 projection_matrix = m_camera->get_projection_matrix();
-    return projection_matrix * view_matrix * model_matrix;
+    mat4 view_projection_matrix = get_camera()->get_view_projection_matrix();
+    return view_projection_matrix * model_matrix;
   }
 
 private:
-  std::unique_ptr<mareweb::camera> m_camera;
   triangle *m_triangle;
 };
 
 class triangle : public mareweb::entity<triangle>, public mareweb::transform {
 public:
-  triangle(main_renderer *rend, wgpu::Device &device) : rend(rend) {
+  triangle(main_scene *scene, wgpu::Device &device) : scene(scene) {
     std::vector<float> vertices = {0.0F, 0.5F, 0.0F, -0.5F, -0.5F, 0.0F, 0.5F, -0.5F, 0.0F};
 
     const char *vertex_shader_source = R"(
@@ -74,8 +68,8 @@ public:
             }
         )";
 
-    mesh = rend->create_mesh(vertices);
-    material = rend->create_material(vertex_shader_source, fragment_shader_source);
+    mesh = scene->create_mesh(vertices);
+    material = scene->create_material(vertex_shader_source, fragment_shader_source);
 
     // Create and add uniform buffer
     mvp_buffer = std::make_shared<mareweb::uniform_buffer>(device, sizeof(mat4), wgpu::ShaderStage::Vertex);
@@ -89,7 +83,7 @@ public:
     rotate(vec3{0, 1, 0}, 1.0f * dt.value());
 
     // Get the updated MVP matrix from the renderer
-    mat4 mvp = rend->get_mvp_matrix(*this);
+    mat4 mvp = scene->get_mvp_matrix(*this);
 
     // Update the uniform buffer
     mvp_buffer->update(&mvp, sizeof(mat4));
@@ -98,7 +92,7 @@ public:
   std::unique_ptr<mareweb::mesh> mesh;
   std::unique_ptr<mareweb::material> material;
   std::shared_ptr<mareweb::uniform_buffer> mvp_buffer;
-  main_renderer *rend;
+  main_scene *scene;
 };
 
 auto main() -> int {
@@ -113,7 +107,7 @@ auto main() -> int {
                                         .present_mode = wgpu::PresentMode::Fifo,
                                         .sample_count = 4};
 
-  app.create_renderer<main_renderer>(props);
+  app.create_renderer<main_scene>(props);
 
   app.run();
 
