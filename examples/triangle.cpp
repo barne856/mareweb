@@ -80,7 +80,8 @@ public:
 
   void update_mvp(const units::time &dt) {
     // Rotate the triangle
-    rotate(vec3{0, 1, 0}, 1.0f * dt.value());
+    units::frequency f(1.0f);
+    rotate(vec3{0, 1, 0}, f * dt);
 
     // Get the updated MVP matrix from the renderer
     mat4 mvp = scene->get_mvp_matrix(*this);
