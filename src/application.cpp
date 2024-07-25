@@ -290,7 +290,7 @@ auto application::create_surface(SDL_Window *window) -> wgpu::Surface {
 #elif defined(__linux__)
   SDL_SysWMinfo wmi;
   SDL_VERSION(&wmi.version);
-  if (!SDL_GetWindowWMInfo(window, &wmi)) {
+  if (SDL_GetWindowWMInfo(window, &wmi) == 0U) {
     throw std::runtime_error("Failed to get Linux window info");
   }
   if (wmi.subsystem == SDL_SYSWM_X11) {
