@@ -1,5 +1,5 @@
 #include "mareweb/renderer.hpp"
-#include <SDL3/SDL_video.h>
+#include <SDL2/SDL_video.h>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -48,13 +48,13 @@ void renderer::resize(uint32_t new_width, uint32_t new_height) {
 
 void renderer::present() { m_surface.Present(); }
 
-auto renderer::create_mesh(const std::vector<float> &vertices, const std::vector<uint32_t> &indices)
-    -> std::unique_ptr<mesh> {
+auto renderer::create_mesh(const std::vector<float> &vertices,
+                           const std::vector<uint32_t> &indices) -> std::unique_ptr<mesh> {
   return std::make_unique<mesh>(m_device, vertices, indices);
 }
 
-auto renderer::create_material(const std::string &vertex_shader_source, const std::string &fragment_shader_source)
-    -> std::unique_ptr<material> {
+auto renderer::create_material(const std::string &vertex_shader_source,
+                               const std::string &fragment_shader_source) -> std::unique_ptr<material> {
   return std::make_unique<material>(m_device, vertex_shader_source, fragment_shader_source, m_surface_format,
                                     m_properties.sample_count);
 }
@@ -62,36 +62,35 @@ auto renderer::create_material(const std::string &vertex_shader_source, const st
 void renderer::set_fullscreen(bool fullscreen) {
   if (fullscreen != m_properties.fullscreen) {
     m_properties.fullscreen = fullscreen;
-
     if (fullscreen) {
       // Get the display index of the window
-      int count_displays = 0;
-      const SDL_DisplayID *displays = SDL_GetDisplays(&count_displays);
-      if (displays == nullptr) {
-        // Handle error, perhaps throw an exception
+      int display_index = SDL_GetWindowDisplayIndex(m_window);
+      if (display_index < 0) {
         throw std::runtime_error("Failed to get window display index");
       }
 
       // Get the display mode of the display
-      const SDL_DisplayMode *display_mode = SDL_GetCurrentDisplayMode(*displays);
-      if (display_mode == nullptr) {
-        // Handle error, perhaps throw an exception
+      SDL_DisplayMode display_mode;
+      if (SDL_GetCurrentDisplayMode(display_index, &display_mode) != 0) {
         throw std::runtime_error("Failed to get current display mode");
       }
 
       // Set fullscreen
-      if (SDL_SetWindowFullscreen(m_window, SDL_WINDOW_FULLSCREEN) != 0) {
+      if (SDL_SetWindowFullscreen(m_window, SDL_WINDOW_FULLSCREEN_DESKTOP) != 0) {
         throw std::runtime_error("Failed to set fullscreen mode");
       }
 
       // Update width and height to match the display
-      m_properties.width = static_cast<uint32_t>(display_mode->w);
-      m_properties.height = static_cast<uint32_t>(display_mode->h);
+      m_properties.width = static_cast<uint32_t>(display_mode.w);
+      m_properties.height = static_cast<uint32_t>(display_mode.h);
     } else {
       // Exit fullscreen mode
       if (SDL_SetWindowFullscreen(m_window, 0) != 0) {
         throw std::runtime_error("Failed to exit fullscreen mode");
       }
+
+      // Restore the original window size
+      SDL_SetWindowSize(m_window, m_properties.width, m_properties.height);
     }
 
     // Resize the renderer to match the new dimensions

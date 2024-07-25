@@ -1,10 +1,10 @@
 #define SDL_MAIN_HANDLED
 #include "mareweb/application.hpp"
 #include "mareweb/renderer.hpp"
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_main.h>
-#include <SDL3/SDL_properties.h>
-#include <SDL3/SDL_video.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_main.h>
+#include <SDL2/SDL_syswm.h>
+#include <SDL2/SDL_video.h>
 #include <chrono>
 #include <cstring>
 #include <iostream>
@@ -73,7 +73,7 @@ void application::run() {
 void application::quit() { m_quit = true; }
 
 void application::init_sdl() {
-  SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "x11,wayland,windows");
+  SDL_SetHint(SDL_HINT_VIDEODRIVER, "x11,wayland,windows");
   SDL_SetMainReady();
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     throw std::runtime_error(std::string("SDL initialization failed: ") + SDL_GetError());
@@ -163,27 +163,28 @@ void application::handle_events() {
   SDL_Event event{};
   while (SDL_PollEvent(&event) != 0) {
     switch (event.type) {
-    case SDL_EVENT_QUIT:
+    case SDL_QUIT:
       m_quit = true;
       break;
-    case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
-      handle_window_close(event);
+    case SDL_WINDOWEVENT:
+      if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
+        handle_window_close(event);
+      } else if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+        handle_window_resize(event);
+      }
       break;
-    case SDL_EVENT_WINDOW_RESIZED:
-      handle_window_resize(event);
-      break;
-    case SDL_EVENT_KEY_DOWN:
-    case SDL_EVENT_KEY_UP:
+    case SDL_KEYDOWN:
+    case SDL_KEYUP:
       handle_key_event(event);
       break;
-    case SDL_EVENT_MOUSE_BUTTON_DOWN:
-    case SDL_EVENT_MOUSE_BUTTON_UP:
+    case SDL_MOUSEBUTTONDOWN:
+    case SDL_MOUSEBUTTONUP:
       handle_mouse_button_event(event);
       break;
-    case SDL_EVENT_MOUSE_MOTION:
+    case SDL_MOUSEMOTION:
       handle_mouse_motion_event(event);
       break;
-    case SDL_EVENT_MOUSE_WHEEL:
+    case SDL_MOUSEWHEEL:
       handle_mouse_wheel_event(event);
       break;
     }
@@ -212,7 +213,7 @@ void application::handle_window_resize(const SDL_Event &event) {
 }
 
 void application::handle_key_event(const SDL_Event &event) {
-  auto key_evt = static_cast<key_event>(event.key.key * 2 + (event.type == SDL_EVENT_KEY_DOWN ? 0 : 1));
+  auto key_evt = static_cast<key_event>(event.key.keysym.sym * 2 + (event.type == SDL_KEYDOWN ? 0 : 1));
   for (auto &rend : m_renderers) {
     if (rend->on_key(key_evt)) {
       break;
@@ -222,7 +223,7 @@ void application::handle_key_event(const SDL_Event &event) {
 
 void application::handle_mouse_button_event(const SDL_Event &event) {
   auto button_evt =
-      static_cast<mouse_button_event>(event.button.button * 2 + (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN ? 0 : 1));
+      static_cast<mouse_button_event>(event.button.button * 2 + (event.type == SDL_MOUSEBUTTONDOWN ? 0 : 1));
   for (auto &rend : m_renderers) {
     if (rend->on_mouse_button(button_evt)) {
       break;
@@ -231,7 +232,8 @@ void application::handle_mouse_button_event(const SDL_Event &event) {
 }
 
 void application::handle_mouse_motion_event(const SDL_Event &event) {
-  mouse_move_event move_evt{event.motion.x, event.motion.y, event.motion.xrel, event.motion.yrel};
+  mouse_move_event move_evt{static_cast<float>(event.motion.x), static_cast<float>(event.motion.y),
+                            static_cast<float>(event.motion.xrel), static_cast<float>(event.motion.yrel)};
   for (auto &rend : m_renderers) {
     if (rend->on_mouse_move(move_evt)) {
       break;
@@ -249,93 +251,60 @@ void application::handle_mouse_wheel_event(const SDL_Event &event) {
 }
 
 auto application::create_window(const renderer_properties &properties) -> SDL_Window * {
-  SDL_WindowFlags flags = 0; // Start with no flags
+  Uint32 flags = 0; // Start with no flags
 
   if (properties.resizable) {
-    flags = static_cast<SDL_WindowFlags>(flags | SDL_WINDOW_RESIZABLE);
+    flags |= SDL_WINDOW_RESIZABLE;
   }
 
-  SDL_Window *window = SDL_CreateWindow(properties.title.c_str(), static_cast<int>(properties.width),
-                                        static_cast<int>(properties.height), flags);
+  SDL_Window *window = SDL_CreateWindow(properties.title.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                                        static_cast<int>(properties.width), static_cast<int>(properties.height), flags);
 
   if (window == nullptr) {
     throw std::runtime_error(std::string("Window creation failed: ") + SDL_GetError());
   }
 
   if (properties.fullscreen) {
-    int count_displays = 0;
-    const SDL_DisplayID *displays = SDL_GetDisplays(&count_displays);
-    if (displays == nullptr) {
-      SDL_DestroyWindow(window);
-      throw std::runtime_error(std::string("Failed to get displays: ") + SDL_GetError());
-    }
-
-    const SDL_DisplayMode *display_mode = SDL_GetCurrentDisplayMode(*displays);
-    if (display_mode == nullptr) {
-      SDL_DestroyWindow(window);
-      throw std::runtime_error(std::string("Failed to get current display mode: ") + SDL_GetError());
-    }
-
-    if (SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN) != 0) {
+    if (SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP) != 0) {
       SDL_DestroyWindow(window);
       throw std::runtime_error(std::string("Failed to set fullscreen mode: ") + SDL_GetError());
     }
-
-    SDL_SetWindowSize(window, display_mode->w, display_mode->h);
   }
 
   return window;
 }
 
 auto application::create_surface(SDL_Window *window) -> wgpu::Surface {
-  SDL_PropertiesID properties_id = SDL_GetWindowProperties(window);
-  if (properties_id == 0) {
-    throw std::runtime_error("SDL_GetWindowProperties failed");
-  }
-
   wgpu::SurfaceDescriptor surface_descriptor{};
 
-#if defined(SDL_PLATFORM_WIN32)
-  HWND hwnd = static_cast<HWND>(SDL_GetPointerProperty(properties_id, SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL));
-  HINSTANCE hinstance =
-      static_cast<HINSTANCE>(SDL_GetPointerProperty(properties_id, SDL_PROP_WINDOW_WIN32_INSTANCE_POINTER, NULL));
-  if (hwnd && hinstance) {
-    wgpu::SurfaceDescriptorFromWindowsHWND window_desc{};
-    window_desc.hinstance = hinstance;
-    window_desc.hwnd = hwnd;
+#if defined(_WIN32)
+  SDL_SysWMinfo wmi;
+  SDL_VERSION(&wmi.version);
+  if (!SDL_GetWindowWMInfo(window, &wmi)) {
+    throw std::runtime_error("Failed to get Win32 window info");
+  }
+  wgpu::SurfaceDescriptorFromWindowsHWND window_desc{};
+  window_desc.hinstance = wmi.info.win.hinstance;
+  window_desc.hwnd = wmi.info.win.window;
+  surface_descriptor.nextInChain = &window_desc;
+#elif defined(__linux__)
+  SDL_SysWMinfo wmi;
+  SDL_VERSION(&wmi.version);
+  if (!SDL_GetWindowWMInfo(window, &wmi)) {
+    throw std::runtime_error("Failed to get Linux window info");
+  }
+  if (wmi.subsystem == SDL_SYSWM_X11) {
+    wgpu::SurfaceDescriptorFromXlibWindow window_desc{};
+    window_desc.display = wmi.info.x11.display;
+    window_desc.window = wmi.info.x11.window;
+    surface_descriptor.nextInChain = &window_desc;
+  } else if (wmi.subsystem == SDL_SYSWM_WAYLAND) {
+    wgpu::SurfaceDescriptorFromWaylandSurface window_desc{};
+    window_desc.display = wmi.info.wl.display;
+    window_desc.surface = wmi.info.wl.surface;
     surface_descriptor.nextInChain = &window_desc;
   } else {
-    throw std::runtime_error("Failed to get Win32 window properties");
-  }
-#elif defined(SDL_PLATFORM_LINUX)
-  const char *video_driver = SDL_GetCurrentVideoDriver();
-  if (std::strcmp(video_driver, "x11") == 0) {
-    auto *display =
-        static_cast<Display *>(SDL_GetPointerProperty(properties_id, SDL_PROP_WINDOW_X11_DISPLAY_POINTER, nullptr));
-    auto x11_window = static_cast<Window>(SDL_GetNumberProperty(properties_id, SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0));
-    if ((display != nullptr) && x11_window != 0) {
-      wgpu::SurfaceDescriptorFromXlibWindow window_desc{};
-      window_desc.display = display;
-      window_desc.window = x11_window;
-      surface_descriptor.nextInChain = &window_desc;
-    } else {
-      throw std::runtime_error("Failed to get X11 window properties");
-    }
-  } else if (std::strcmp(video_driver, "wayland") == 0) {
-    auto *display = static_cast<struct wl_display *>(
-        SDL_GetPointerProperty(properties_id, SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER, nullptr));
-    auto *surface = static_cast<struct wl_surface *>(
-        SDL_GetPointerProperty(properties_id, SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, nullptr));
-    if ((display != nullptr) && (surface != nullptr)) {
-      wgpu::SurfaceDescriptorFromWaylandSurface window_desc{};
-      window_desc.display = display;
-      window_desc.surface = surface;
-      surface_descriptor.nextInChain = &window_desc;
-    } else {
-      throw std::runtime_error("Failed to get Wayland window properties");
-    }
-  } else {
-    throw std::runtime_error("Unsupported video driver on Linux");
+    throw std::runtime_error("Unsupported window system on Linux");
   }
 #else
   throw std::runtime_error("Unsupported platform");

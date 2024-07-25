@@ -17,21 +17,21 @@ FetchContent_Declare(
   GIT_SUBMODULES "docs" # workaround for https://gitlab.kitware.com/cmake/cmake/-/issues/20579
 )
 
-# SDL3
+# SDL2
 FetchContent_Declare(
-  SDL3
+  SDL2
   GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-  GIT_TAG main
+  GIT_TAG release-2.30.5
   GIT_SHALLOW ON
   EXCLUDE_FROM_ALL
   GIT_SUBMODULES "docs"
 )
 
-# SDL_image
+# SDL2_image
 FetchContent_Declare(
-  SDL_image
+  SDL2_image
   GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
-  GIT_TAG main
+  GIT_TAG release-2.8.2 
   GIT_SHALLOW ON
   EXCLUDE_FROM_ALL
   GIT_SUBMODULES "docs"
@@ -75,21 +75,21 @@ set(TINT_BUILD_REMOTE_COMPILE OFF)
 # Make Dawn available
 FetchContent_MakeAvailable(dawn)
 
-# Configure SDL3 options
+# Configure SDL2 options
 set(SDL_SHARED ON)
 set(SDL_STATIC OFF)
 
-# Make SDL3 available
-FetchContent_MakeAvailable(SDL3)
+# Make SDL2 available
+FetchContent_MakeAvailable(SDL2)
 
 # Configure SDL_image options
-set(SDL3IMAGE_SAMPLES OFF)
-set(SDL3IMAGE_VENDORED OFF)
-set(SDL3IMAGE_SHARED ON)
-set(SDL3IMAGE_STATIC OFF)
+set(SDL2IMAGE_SAMPLES OFF)
+set(SDL2IMAGE_VENDORED OFF)
+set(SDL2IMAGE_SHARED ON)
+set(SDL2IMAGE_STATIC OFF)
 
 # Make SDL_image available
-FetchContent_MakeAvailable(SDL_image)
+FetchContent_MakeAvailable(SDL2_image)
 
 # Configure SQUINT options
 set(SQUINT_BUILD_TESTS OFF)
@@ -107,7 +107,7 @@ file(GLOB MAREWEB_SOURCES "src/*.cpp" "src/components/*.cpp" "src/entities/*.cpp
 add_library(mareweb ${MAREWEB_SOURCES})
 
 target_include_directories(mareweb PUBLIC include)
-target_link_libraries(mareweb PUBLIC webgpu_cpp webgpu_dawn SDL3::SDL3 SDL3_image::SDL3_image SQUINT::SQUINT)
+target_link_libraries(mareweb PUBLIC webgpu_cpp webgpu_dawn SDL2::SDL2 SDL2_image SQUINT::SQUINT)
 
 # Function to add an example executable
 function(add_example NAME)
@@ -122,8 +122,8 @@ function(add_example NAME)
     # Copy only the necessary shared libraries to the output directory
     add_custom_command(TARGET ${NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            $<TARGET_FILE:SDL3::SDL3>
-            $<TARGET_FILE:SDL3_image::SDL3_image>
+            $<TARGET_FILE:SDL2::SDL2>
+            $<TARGET_FILE:SDL2_image>
             $<TARGET_FILE_DIR:${NAME}>
     )
 endfunction()

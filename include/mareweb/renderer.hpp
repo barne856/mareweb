@@ -1,7 +1,7 @@
 #ifndef MAREWEB_RENDERER_HPP
 #define MAREWEB_RENDERER_HPP
 
-#include <SDL3/SDL.h>
+#include <SDL2/SDL.h>
 #include <cstdint>
 #include <webgpu/webgpu_cpp.h>
 

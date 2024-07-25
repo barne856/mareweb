@@ -2,7 +2,7 @@
 #define MAREWEB_APPLICATION_HPP
 
 #include "mareweb/renderer.hpp"
-#include <SDL3/SDL.h>
+#include <SDL2/SDL.h>
 #include <memory>
 #include <stdexcept>
 #include <vector>
