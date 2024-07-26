@@ -48,9 +48,9 @@ void renderer::resize(uint32_t new_width, uint32_t new_height) {
 
 void renderer::present() { m_surface.Present(); }
 
-auto renderer::create_mesh(const std::vector<float> &vertices,
+auto renderer::create_mesh(wgpu::PrimitiveTopology topology, const std::vector<float> &vertices,
                            const std::vector<uint32_t> &indices) -> std::unique_ptr<mesh> {
-  return std::make_unique<mesh>(m_device, vertices, indices);
+  return std::make_unique<mesh>(m_device, topology, vertices, indices);
 }
 
 std::unique_ptr<material> renderer::create_material(const std::string &vertex_shader_source,
@@ -160,8 +160,8 @@ void renderer::end_frame() {
   m_surface.Present();
 }
 
-void renderer::draw_mesh(const mesh &mesh, const material &material) {
-  material.bind(m_render_pass);
+void renderer::draw_mesh(const mesh &mesh, material &material) {
+  material.bind(m_render_pass, mesh.get_primitive_topology());
   mesh.draw(m_render_pass);
 }
 

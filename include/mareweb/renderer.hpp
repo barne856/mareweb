@@ -133,7 +133,7 @@ public:
   void resize(uint32_t new_width, uint32_t new_height);
   void present();
 
-  auto create_mesh(const std::vector<float> &vertices,
+  auto create_mesh(wgpu::PrimitiveTopology topology, const std::vector<float> &vertices,
                    const std::vector<uint32_t> &indices = {}) -> std::unique_ptr<mesh>;
   auto create_material(const std::string &vertex_shader_source, const std::string &fragment_shader_source,
                        const std::vector<uniform_info> &uniform_infos) -> std::unique_ptr<material>;
@@ -143,7 +143,7 @@ public:
   [[nodiscard]] auto get_clear_color() const -> wgpu::Color { return m_clear_color; }
   void begin_frame();
   void end_frame();
-  void draw_mesh(const mesh &mesh, const material &material);
+  void draw_mesh(const mesh &mesh, material &material);
   void update_model_view_projection(const transform &model_transform, const camera &cam);
 
   [[nodiscard]] auto get_window() const -> SDL_Window * { return m_window; }

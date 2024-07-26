@@ -12,7 +12,7 @@ class pipeline {
 public:
   pipeline(wgpu::Device &device, const shader &vertex_shader, const shader &fragment_shader,
            wgpu::TextureFormat surface_format, uint32_t sample_count,
-           const std::vector<wgpu::BindGroupLayoutEntry> &bind_group_layout_entries);
+           const std::vector<wgpu::BindGroupLayoutEntry> &bind_group_layout_entries, wgpu::PrimitiveTopology topology);
 
   [[nodiscard]] auto get_pipeline() const -> wgpu::RenderPipeline { return m_pipeline; }
   [[nodiscard]] auto get_bind_group_layout() const -> wgpu::BindGroupLayout { return m_bind_group_layout; }

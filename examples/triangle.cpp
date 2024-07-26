@@ -4,6 +4,7 @@
 #include "mareweb/renderer.hpp"
 #include "mareweb/scene.hpp"
 #include "squint/quantity.hpp"
+#include "webgpu/webgpu_cpp.h"
 #include <vector>
 
 using namespace squint;
@@ -70,7 +71,7 @@ public:
     }
 )";
 
-    mesh = scene->create_mesh(vertices);
+    mesh = scene->create_mesh(wgpu::PrimitiveTopology::TriangleList, vertices);
     std::vector<mareweb::uniform_info> uniform_infos = {
         {0, sizeof(mat4), wgpu::ShaderStage::Vertex},  // MVP matrix
         {1, sizeof(vec4), wgpu::ShaderStage::Fragment} // Color
