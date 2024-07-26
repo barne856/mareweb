@@ -53,10 +53,11 @@ auto renderer::create_mesh(const std::vector<float> &vertices,
   return std::make_unique<mesh>(m_device, vertices, indices);
 }
 
-auto renderer::create_material(const std::string &vertex_shader_source,
-                               const std::string &fragment_shader_source) -> std::unique_ptr<material> {
+std::unique_ptr<material> renderer::create_material(const std::string &vertex_shader_source,
+                                                    const std::string &fragment_shader_source,
+                                                    const std::vector<uniform_info> &uniform_infos) {
   return std::make_unique<material>(m_device, vertex_shader_source, fragment_shader_source, m_surface_format,
-                                    m_properties.sample_count);
+                                    m_properties.sample_count, uniform_infos);
 }
 
 void renderer::set_fullscreen(bool fullscreen) {

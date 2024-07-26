@@ -133,10 +133,10 @@ public:
   void resize(uint32_t new_width, uint32_t new_height);
   void present();
 
-  auto create_mesh(const std::vector<float> &vertices, const std::vector<uint32_t> &indices = {})
-      -> std::unique_ptr<mesh>;
-  auto create_material(const std::string &vertex_shader_source, const std::string &fragment_shader_source)
-      -> std::unique_ptr<material>;
+  auto create_mesh(const std::vector<float> &vertices,
+                   const std::vector<uint32_t> &indices = {}) -> std::unique_ptr<mesh>;
+  auto create_material(const std::string &vertex_shader_source, const std::string &fragment_shader_source,
+                       const std::vector<uniform_info> &uniform_infos) -> std::unique_ptr<material>;
   void set_fullscreen(bool fullscreen);
   void set_present_mode(wgpu::PresentMode present_mode);
   void set_clear_color(const wgpu::Color &clear_color) { m_clear_color = clear_color; }

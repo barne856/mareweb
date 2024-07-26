@@ -53,27 +53,34 @@ public:
     std::vector<float> vertices = {0.0F, 0.5F, 0.0F, -0.5F, -0.5F, 0.0F, 0.5F, -0.5F, 0.0F};
 
     const char *vertex_shader_source = R"(
-        @group(0) @binding(0) var<uniform> mvp: mat4x4<f32>;
+    @group(0) @binding(0) var<uniform> mvp: mat4x4<f32>;
 
-            @vertex
-            fn main(@location(0) position: vec3<f32>) -> @builtin(position) vec4<f32> {
-                return mvp * vec4<f32>(position, 1.0);
-            }
-        )";
+    @vertex
+    fn main(@location(0) position: vec3<f32>) -> @builtin(position) vec4<f32> {
+        return mvp * vec4<f32>(position, 1.0);
+    }
+)";
 
     const char *fragment_shader_source = R"(
-            @fragment
-            fn main() -> @location(0) vec4<f32> {
-                return vec4<f32>(1.0, 0.1, 0.05, 1.0);
-            }
-        )";
+    @group(0) @binding(1) var<uniform> color: vec4<f32>;
+
+    @fragment
+    fn main() -> @location(0) vec4<f32> {
+        return color;
+    }
+)";
 
     mesh = scene->create_mesh(vertices);
-    material = scene->create_material(vertex_shader_source, fragment_shader_source);
+    std::vector<mareweb::uniform_info> uniform_infos = {
+        {0, sizeof(mat4), wgpu::ShaderStage::Vertex},  // MVP matrix
+        {1, sizeof(vec4), wgpu::ShaderStage::Fragment} // Color
+    };
 
+    material = scene->create_material(vertex_shader_source, fragment_shader_source, uniform_infos);
+    vec4 color{1.F, 1.F, 0.F, 0.F};
+    material->update_uniform(1, &color);
     // Create and add uniform buffer
     mvp_buffer = std::make_shared<mareweb::uniform_buffer>(device, sizeof(mat4), wgpu::ShaderStage::Vertex);
-    material->add_uniform_buffer(0, mvp_buffer);
 
     attach_system<render_mesh>();
   }
@@ -87,7 +94,52 @@ public:
     mat4 mvp = scene->get_mvp_matrix(*this);
 
     // Update the uniform buffer
-    mvp_buffer->update(&mvp, sizeof(mat4));
+    material->update_uniform(0, &mvp);
+
+    // Update color for rainbow effect
+    static float total_time = 0.0f;
+    total_time += dt.value();
+
+    // Use a simple HSV to RGB conversion for rainbow effect
+    float hue = std::fmod(total_time * 0.2f, 1.0f); // Cycle through hues
+    float saturation = 1.0f;
+    float value = 1.0f;
+
+    float c = value * saturation;
+    float x = c * (1 - std::abs(std::fmod(hue * 6, 2) - 1));
+    float m = value - c;
+
+    float r, g, b;
+    if (hue < 1.0f / 6.0f) {
+      r = c;
+      g = x;
+      b = 0;
+    } else if (hue < 2.0f / 6.0f) {
+      r = x;
+      g = c;
+      b = 0;
+    } else if (hue < 3.0f / 6.0f) {
+      r = 0;
+      g = c;
+      b = x;
+    } else if (hue < 4.0f / 6.0f) {
+      r = 0;
+      g = x;
+      b = c;
+    } else if (hue < 5.0f / 6.0f) {
+      r = x;
+      g = 0;
+      b = c;
+    } else {
+      r = c;
+      g = 0;
+      b = x;
+    }
+
+    vec4 color = {r + m, g + m, b + m, 1.0f};
+
+    // Update the color uniform buffer
+    material->update_uniform(1, &color);
   }
 
   std::unique_ptr<mareweb::mesh> mesh;
