@@ -1,6 +1,7 @@
 #include "mareweb/application.hpp"
 #include "mareweb/components/transform.hpp"
 #include "mareweb/entities/camera.hpp"
+#include "mareweb/meshes/primitive_mesh.hpp"
 #include "mareweb/renderer.hpp"
 #include "mareweb/scene.hpp"
 #include "squint/quantity.hpp"
@@ -71,7 +72,10 @@ public:
     }
 )";
 
-    mesh = scene->create_mesh(wgpu::PrimitiveTopology::TriangleList, vertices);
+    mesh = scene->create_mesh<mareweb::triangle_mesh>(vec3{0.0F, 0.5F, 0.0F},   // Top vertex
+                                                      vec3{-0.5F, -0.5F, 0.0F}, // Bottom-left vertex
+                                                      vec3{0.5F, -0.5F, 0.0F}   // Bottom-right vertex
+    );
     std::vector<mareweb::uniform_info> uniform_infos = {
         {0, sizeof(mat4), wgpu::ShaderStage::Vertex},  // MVP matrix
         {1, sizeof(vec4), wgpu::ShaderStage::Fragment} // Color

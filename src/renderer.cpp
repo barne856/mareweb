@@ -48,11 +48,6 @@ void renderer::resize(uint32_t new_width, uint32_t new_height) {
 
 void renderer::present() { m_surface.Present(); }
 
-auto renderer::create_mesh(wgpu::PrimitiveTopology topology, const std::vector<float> &vertices,
-                           const std::vector<uint32_t> &indices) -> std::unique_ptr<mesh> {
-  return std::make_unique<mesh>(m_device, topology, vertices, indices);
-}
-
 std::unique_ptr<material> renderer::create_material(const std::string &vertex_shader_source,
                                                     const std::string &fragment_shader_source,
                                                     const std::vector<uniform_info> &uniform_infos) {
