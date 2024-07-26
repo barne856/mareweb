@@ -48,13 +48,6 @@ void renderer::resize(uint32_t new_width, uint32_t new_height) {
 
 void renderer::present() { m_surface.Present(); }
 
-std::unique_ptr<material> renderer::create_material(const std::string &vertex_shader_source,
-                                                    const std::string &fragment_shader_source,
-                                                    const std::vector<uniform_info> &uniform_infos) {
-  return std::make_unique<material>(m_device, vertex_shader_source, fragment_shader_source, m_surface_format,
-                                    m_properties.sample_count, uniform_infos);
-}
-
 void renderer::set_fullscreen(bool fullscreen) {
   if (fullscreen != m_properties.fullscreen) {
     m_properties.fullscreen = fullscreen;
@@ -156,7 +149,7 @@ void renderer::end_frame() {
 }
 
 void renderer::draw_mesh(const mesh &mesh, material &material) {
-  material.bind(m_render_pass, mesh.get_primitive_topology());
+  material.bind(m_render_pass, mesh.get_primitive_state());
   mesh.draw(m_render_pass);
 }
 

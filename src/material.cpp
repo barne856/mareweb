@@ -12,20 +12,8 @@ material::material(wgpu::Device &device, const std::string &vertex_shader_source
   create_uniform_buffers();
 }
 
-void material::create_shaders() {
-  m_vertex_shader = std::make_unique<shader>(m_device, m_vertex_shader_source, wgpu::ShaderStage::Vertex);
-  m_fragment_shader = std::make_unique<shader>(m_device, m_fragment_shader_source, wgpu::ShaderStage::Fragment);
-}
-
-void material::create_uniform_buffers() {
-  for (const auto &info : m_uniform_infos) {
-    m_uniform_buffers[info.binding] = std::make_unique<uniform_buffer>(m_device, info.size, info.visibility);
-    m_uniform_sizes[info.binding] = info.size;
-  }
-}
-
-void material::bind(wgpu::RenderPassEncoder &pass_encoder, wgpu::PrimitiveTopology topology) {
-  auto &pipeline = get_or_create_pipeline(topology);
+void material::bind(wgpu::RenderPassEncoder &pass_encoder, const wgpu::PrimitiveState &primitive_state) {
+  auto &pipeline = get_or_create_pipeline(primitive_state);
   pass_encoder.SetPipeline(pipeline.get_pipeline());
   pass_encoder.SetBindGroup(0, pipeline.get_bind_group());
 }
@@ -41,8 +29,23 @@ void material::update_uniform(uint32_t binding, const void *data) {
   buffer_it->second->update(data, size_it->second);
 }
 
-pipeline &material::get_or_create_pipeline(wgpu::PrimitiveTopology topology) {
-  auto it = m_pipelines.find(topology);
+void material::create_shaders() {
+  m_vertex_shader = std::make_unique<shader>(m_device, m_vertex_shader_source, wgpu::ShaderStage::Vertex);
+  m_fragment_shader = std::make_unique<shader>(m_device, m_fragment_shader_source, wgpu::ShaderStage::Fragment);
+}
+
+void material::create_uniform_buffers() {
+  for (const auto &info : m_uniform_infos) {
+    m_uniform_buffers[info.binding] = std::make_unique<uniform_buffer>(m_device, info.size, info.visibility);
+    m_uniform_sizes[info.binding] = info.size;
+  }
+}
+
+pipeline &material::get_or_create_pipeline(const wgpu::PrimitiveState &primitive_state) {
+  pipeline_key key{primitive_state.topology, primitive_state.stripIndexFormat, primitive_state.frontFace,
+                   primitive_state.cullMode};
+
+  auto it = m_pipelines.find(key);
   if (it == m_pipelines.end()) {
     std::vector<wgpu::BindGroupLayoutEntry> bind_group_layout_entries;
     for (const auto &info : m_uniform_infos) {
@@ -56,7 +59,7 @@ pipeline &material::get_or_create_pipeline(wgpu::PrimitiveTopology topology) {
     }
 
     auto new_pipeline = std::make_unique<pipeline>(m_device, *m_vertex_shader, *m_fragment_shader, m_surface_format,
-                                                   m_sample_count, bind_group_layout_entries, topology);
+                                                   m_sample_count, bind_group_layout_entries, primitive_state);
 
     // Create bind group
     std::vector<wgpu::BindGroupEntry> bind_group_entries;
@@ -75,7 +78,7 @@ pipeline &material::get_or_create_pipeline(wgpu::PrimitiveTopology topology) {
     bind_group_desc.entries = bind_group_entries.data();
     new_pipeline->set_bind_group(m_device.CreateBindGroup(&bind_group_desc));
 
-    it = m_pipelines.emplace(topology, std::move(new_pipeline)).first;
+    it = m_pipelines.emplace(key, std::move(new_pipeline)).first;
   }
   return *it->second;
 }

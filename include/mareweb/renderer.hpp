@@ -136,8 +136,10 @@ public:
   template <typename MeshType, typename... Args> std::unique_ptr<MeshType> create_mesh(Args &&...args) {
     return std::make_unique<MeshType>(m_device, std::forward<Args>(args)...);
   }
-  auto create_material(const std::string &vertex_shader_source, const std::string &fragment_shader_source,
-                       const std::vector<uniform_info> &uniform_infos) -> std::unique_ptr<material>;
+  template <typename MaterialType, typename... Args> std::unique_ptr<MaterialType> create_material(Args &&...args) {
+    return std::make_unique<MaterialType>(m_device, m_surface_format, m_properties.sample_count,
+                                          std::forward<Args>(args)...);
+  }
   void set_fullscreen(bool fullscreen);
   void set_present_mode(wgpu::PresentMode present_mode);
   void set_clear_color(const wgpu::Color &clear_color) { m_clear_color = clear_color; }

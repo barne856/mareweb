@@ -4,9 +4,9 @@
 
 namespace mareweb {
 
-mesh::mesh(wgpu::Device &device, wgpu::PrimitiveTopology topology, const std::vector<float> &vertices,
+mesh::mesh(wgpu::Device &device, const wgpu::PrimitiveState &primitive_state, const std::vector<float> &vertices,
            const std::vector<uint32_t> &indices)
-    : m_topology(topology) {
+    : m_primitive_state(primitive_state) {
   if (vertices.empty()) {
     throw std::runtime_error("Vertex data is empty");
   }
@@ -25,8 +25,6 @@ auto mesh::get_vertex_count() const -> uint32_t {
 auto mesh::get_index_count() const -> uint32_t {
   return m_index_buffer ? static_cast<uint32_t>(m_index_buffer->get_size() / sizeof(uint32_t)) : 0;
 }
-
-auto mesh::get_primitive_topology() const -> wgpu::PrimitiveTopology { return m_topology; }
 
 void mesh::draw(wgpu::RenderPassEncoder &pass_encoder) const {
   pass_encoder.SetVertexBuffer(0, m_vertex_buffer->get_buffer(), 0, m_vertex_buffer->get_size());

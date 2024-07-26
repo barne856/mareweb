@@ -10,7 +10,7 @@ namespace mareweb {
 
 class mesh {
 public:
-  mesh(wgpu::Device &device, wgpu::PrimitiveTopology topology, const std::vector<float> &vertices,
+  mesh(wgpu::Device &device, const wgpu::PrimitiveState &primitive_state, const std::vector<float> &vertices,
        const std::vector<uint32_t> &indices = {});
 
   [[nodiscard]] auto get_vertex_buffer() const -> const vertex_buffer & { return *m_vertex_buffer; }
@@ -18,14 +18,14 @@ public:
 
   [[nodiscard]] auto get_vertex_count() const -> uint32_t;
   [[nodiscard]] auto get_index_count() const -> uint32_t;
-  [[nodiscard]] auto get_primitive_topology() const -> wgpu::PrimitiveTopology;
+  [[nodiscard]] auto get_primitive_state() const -> const wgpu::PrimitiveState & { return m_primitive_state; }
 
   void draw(wgpu::RenderPassEncoder &pass_encoder) const;
 
 private:
   std::unique_ptr<vertex_buffer> m_vertex_buffer;
   std::unique_ptr<index_buffer> m_index_buffer;
-  wgpu::PrimitiveTopology m_topology;
+  wgpu::PrimitiveState m_primitive_state;
 };
 
 } // namespace mareweb

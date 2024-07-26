@@ -2,6 +2,7 @@
 #include "mareweb/components/transform.hpp"
 #include "mareweb/entities/camera.hpp"
 #include "mareweb/meshes/primitive_mesh.hpp"
+#include "mareweb/materials/flat_color_material.hpp"
 #include "mareweb/renderer.hpp"
 #include "mareweb/scene.hpp"
 #include "squint/quantity.hpp"
@@ -52,41 +53,12 @@ private:
 class triangle : public mareweb::entity<triangle>, public mareweb::transform {
 public:
   triangle(main_scene *scene, wgpu::Device &device) : scene(scene) {
-    std::vector<float> vertices = {0.0F, 0.5F, 0.0F, -0.5F, -0.5F, 0.0F, 0.5F, -0.5F, 0.0F};
-
-    const char *vertex_shader_source = R"(
-    @group(0) @binding(0) var<uniform> mvp: mat4x4<f32>;
-
-    @vertex
-    fn main(@location(0) position: vec3<f32>) -> @builtin(position) vec4<f32> {
-        return mvp * vec4<f32>(position, 1.0);
-    }
-)";
-
-    const char *fragment_shader_source = R"(
-    @group(0) @binding(1) var<uniform> color: vec4<f32>;
-
-    @fragment
-    fn main() -> @location(0) vec4<f32> {
-        return color;
-    }
-)";
-
     mesh = scene->create_mesh<mareweb::triangle_mesh>(vec3{0.0F, 0.5F, 0.0F},   // Top vertex
                                                       vec3{-0.5F, -0.5F, 0.0F}, // Bottom-left vertex
                                                       vec3{0.5F, -0.5F, 0.0F}   // Bottom-right vertex
     );
-    std::vector<mareweb::uniform_info> uniform_infos = {
-        {0, sizeof(mat4), wgpu::ShaderStage::Vertex},  // MVP matrix
-        {1, sizeof(vec4), wgpu::ShaderStage::Fragment} // Color
-    };
-
-    material = scene->create_material(vertex_shader_source, fragment_shader_source, uniform_infos);
     vec4 color{1.F, 1.F, 0.F, 0.F};
-    material->update_uniform(1, &color);
-    // Create and add uniform buffer
-    mvp_buffer = std::make_shared<mareweb::uniform_buffer>(device, sizeof(mat4), wgpu::ShaderStage::Vertex);
-
+    material = scene->create_material<mareweb::flat_color_material>(color);
     attach_system<render_mesh>();
   }
 
@@ -99,7 +71,7 @@ public:
     mat4 mvp = scene->get_mvp_matrix(*this);
 
     // Update the uniform buffer
-    material->update_uniform(0, &mvp);
+    material->update_mvp(mvp);
 
     // Update color for rainbow effect
     static float total_time = 0.0f;
@@ -148,7 +120,7 @@ public:
   }
 
   std::unique_ptr<mareweb::mesh> mesh;
-  std::unique_ptr<mareweb::material> material;
+  std::unique_ptr<mareweb::flat_color_material> material;
   std::shared_ptr<mareweb::uniform_buffer> mvp_buffer;
   main_scene *scene;
 };

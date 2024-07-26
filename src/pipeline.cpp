@@ -8,7 +8,7 @@ constexpr uint32_t kAllSamplesMask = 0xFFFFFFFF;
 pipeline::pipeline(wgpu::Device &device, const shader &vertex_shader, const shader &fragment_shader,
                    wgpu::TextureFormat surface_format, uint32_t sample_count,
                    const std::vector<wgpu::BindGroupLayoutEntry> &bind_group_layout_entries,
-                   wgpu::PrimitiveTopology topology) {
+                   const wgpu::PrimitiveState &primitive_state) {
   // Create bind group layout
   wgpu::BindGroupLayoutDescriptor bind_group_layout_desc{};
   bind_group_layout_desc.entryCount = bind_group_layout_entries.size();
@@ -53,10 +53,7 @@ pipeline::pipeline(wgpu::Device &device, const shader &vertex_shader, const shad
   pipeline_desc.vertex.bufferCount = 1;
   pipeline_desc.vertex.buffers = &vertex_buffer_layout;
 
-  pipeline_desc.primitive.topology = topology;
-  pipeline_desc.primitive.stripIndexFormat = wgpu::IndexFormat::Undefined;
-  pipeline_desc.primitive.frontFace = wgpu::FrontFace::CCW;
-  pipeline_desc.primitive.cullMode = wgpu::CullMode::None;
+  pipeline_desc.primitive = primitive_state;
 
   pipeline_desc.fragment = &fragment_state;
 
