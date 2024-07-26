@@ -1,8 +1,8 @@
 #include "mareweb/application.hpp"
 #include "mareweb/components/transform.hpp"
 #include "mareweb/entities/camera.hpp"
+#include "mareweb/materials/simple_lit_material.hpp"
 #include "mareweb/meshes/primitive_mesh.hpp"
-#include "mareweb/materials/flat_color_material.hpp"
 #include "mareweb/renderer.hpp"
 #include "mareweb/scene.hpp"
 #include "squint/quantity.hpp"
@@ -58,7 +58,8 @@ public:
                                                       vec3{0.5F, -0.5F, 0.0F}   // Bottom-right vertex
     );
     vec4 color{1.F, 1.F, 0.F, 0.F};
-    material = scene->create_material<mareweb::flat_color_material>(color);
+    vec3 light_direction{1.f, 1.f, 1.f};
+    material = scene->create_material<mareweb::simple_lit_material>(color, light_direction);
     attach_system<render_mesh>();
   }
 
@@ -120,7 +121,7 @@ public:
   }
 
   std::unique_ptr<mareweb::mesh> mesh;
-  std::unique_ptr<mareweb::flat_color_material> material;
+  std::unique_ptr<mareweb::simple_lit_material> material;
   std::shared_ptr<mareweb::uniform_buffer> mvp_buffer;
   main_scene *scene;
 };
