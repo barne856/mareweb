@@ -46,7 +46,7 @@ material::material(wgpu::Device &device, const std::string &vertex_shader_source
   m_pipeline->set_bind_group(device.CreateBindGroup(&bind_group_desc));
 }
 
-void material::bind(wgpu::RenderPassEncoder &pass_encoder) const {
+void material::bind(wgpu::RenderPassEncoder &pass_encoder, wgpu::PrimitiveTopology topology) const {
   pass_encoder.SetPipeline(m_pipeline->get_pipeline());
   pass_encoder.SetBindGroup(0, m_pipeline->get_bind_group());
 }
