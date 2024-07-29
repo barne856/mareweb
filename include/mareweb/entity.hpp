@@ -11,7 +11,8 @@ using namespace squint;
 
 template <typename derived> class entity : public object {
 public:
-  void update(const units::time& dt) override {
+  entity(object *root) : object(root) {}
+  void update(const units::time &dt) override {
     if (!is_disabled()) {
       for (auto &system : m_physics_systems) {
         system->update(dt, static_cast<derived &>(*this));
@@ -20,7 +21,7 @@ public:
     }
   }
 
-  void render(const units::time& dt) override {
+  void render(const units::time &dt) override {
     if (!is_disabled()) {
       for (auto &system : m_render_systems) {
         system->render(dt, static_cast<derived &>(*this));
@@ -98,6 +99,8 @@ public:
       m_render_systems.push_back(std::make_unique<system_type<derived>>(std::forward<args>(a)...));
     }
   }
+
+  auto command() -> object * { return get_root(); }
 
 private:
   std::vector<std::unique_ptr<controls_system<derived>>> m_controls_systems;

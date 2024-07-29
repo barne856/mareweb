@@ -1,6 +1,6 @@
 #include "mareweb/application.hpp"
-#include "mareweb/components/transform.hpp"
 #include "mareweb/components/camera.hpp"
+#include "mareweb/components/transform.hpp"
 #include "mareweb/materials/flat_color_material.hpp"
 #include "mareweb/meshes/primitive_mesh.hpp"
 #include "mareweb/renderer.hpp"
@@ -37,7 +37,7 @@ public:
       : scene(device, surface, window, properties, type) {
     set_clear_color({0.05F, 0.05F, 0.05F, 1.0F});
     set_position(vec3_t<units::length>{units::length(0.0F), units::length(0.0F), units::length(2.0F)});
-    m_triangle = create_object<triangle>(this);
+    m_triangle = create_object<triangle>();
   }
 
   mat4 get_mvp_matrix(const mareweb::transform &model_transform) {
@@ -52,7 +52,7 @@ private:
 
 class triangle : public mareweb::entity<triangle>, public mareweb::transform {
 public:
-  triangle(main_scene *scene) : scene(scene) {
+  triangle(main_scene *scene) : scene(scene), mareweb::entity<triangle>(scene) {
     mesh = scene->create_mesh<mareweb::triangle_mesh>(vec3{0.0F, 0.5F, 0.0F},   // Top vertex
                                                       vec3{-0.5F, -0.5F, 0.0F}, // Bottom-left vertex
                                                       vec3{0.5F, -0.5F, 0.0F}   // Bottom-right vertex
