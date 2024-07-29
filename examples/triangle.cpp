@@ -37,7 +37,7 @@ public:
       : scene(device, surface, window, properties, type) {
     set_clear_color({0.05F, 0.05F, 0.05F, 1.0F});
     set_position(vec3_t<units::length>{units::length(0.0F), units::length(0.0F), units::length(2.0F)});
-    m_triangle = create_object<triangle>();
+    m_triangle = create_object<triangle>(this);
   }
 
   mat4 get_mvp_matrix(const mareweb::transform &model_transform) {
@@ -126,7 +126,7 @@ public:
   main_scene *scene;
 };
 
-auto main() -> int {
+int main()  {
   mareweb::application &app = mareweb::application::get_instance();
   app.initialize();
 

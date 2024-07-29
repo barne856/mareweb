@@ -16,7 +16,7 @@ concept transformable = requires(T t) {
     { t.get_rotation_matrix() } -> std::same_as<const mat4&>;
     { t.get_scale_matrix() } -> std::same_as<const mat4&>;
     { t.get_transformation_matrix() } -> std::same_as<mat4>;
-    { t.get_normal_matrix() } -> std::same_as<mat3>;
+    { t.get_normal_matrix() } -> std::same_as<mat4>;
     { t.get_view_matrix() } -> std::same_as<mat4>;
     { t.face_towards(std::declval<vec3_t<units::length>>(), std::declval<vec3>()) } -> std::same_as<void>;
     { t.translate(std::declval<vec3_t<units::length>>()) } -> std::same_as<void>;
@@ -41,7 +41,7 @@ public:
     [[nodiscard]] auto get_rotation_matrix() const -> const mat4&;
     [[nodiscard]] auto get_scale_matrix() const -> const mat4&;
     [[nodiscard]] auto get_transformation_matrix() const -> mat4;
-    [[nodiscard]] auto get_normal_matrix() const -> mat3;
+    [[nodiscard]] auto get_normal_matrix() const -> mat4;
     [[nodiscard]] auto get_view_matrix() const -> mat4;
     void face_towards(const vec3_t<units::length>& point, const vec3& up);
     void translate(const vec3_t<units::length>& offset);

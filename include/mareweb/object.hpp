@@ -12,6 +12,7 @@ using namespace squint;
 
 class object {
 public:
+  object() = default;
   virtual ~object() = default;
 
   // Delete copy constructor and copy assignment operator
@@ -32,7 +33,7 @@ public:
   virtual auto on_resize(const window_resize_event & /*event*/) -> bool { return false; }
 
   template <typename T, typename... args> auto create_object(args &&...a) -> T * {
-    auto obj = std::make_unique<T>(m_root, std::forward<args>(a)...);
+    auto obj = std::make_unique<T>(std::forward<args>(a)...);
     T *obj_ptr = obj.get();
     m_children.push_back(std::move(obj));
     return obj_ptr;

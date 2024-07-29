@@ -293,19 +293,19 @@ auto application::create_surface(SDL_Window *window) -> wgpu::Surface {
   if (SDL_GetWindowWMInfo(window, &wmi) == 0U) {
     throw std::runtime_error("Failed to get Linux window info");
   }
-  if (wmi.subsystem == SDL_SYSWM_X11) {
+  #ifdef SDL_VIDEO_DRIVER_X11
     wgpu::SurfaceDescriptorFromXlibWindow window_desc{};
     window_desc.display = wmi.info.x11.display;
     window_desc.window = wmi.info.x11.window;
     surface_descriptor.nextInChain = &window_desc;
-  } else if (wmi.subsystem == SDL_SYSWM_WAYLAND) {
+  #elif defined(SDL_VIDEO_DRIVER_WAYLAND)
     wgpu::SurfaceDescriptorFromWaylandSurface window_desc{};
-    window_desc.display = wmi.info.wl.display;
-    window_desc.surface = wmi.info.wl.surface;
+    window_desc.display = wmi.info.wl_display;
+    window_desc.surface = wmi.info.wl_surface;
     surface_descriptor.nextInChain = &window_desc;
-  } else {
+  #else
     throw std::runtime_error("Unsupported window system on Linux");
-  }
+  #endif
 #else
   throw std::runtime_error("Unsupported platform");
 #endif

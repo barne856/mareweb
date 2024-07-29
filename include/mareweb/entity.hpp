@@ -11,7 +11,6 @@ using namespace squint;
 
 template <typename derived> class entity : public object {
 public:
-  entity(object *root) : object(root) {}
   void update(const units::time &dt) override {
     if (!is_disabled()) {
       for (auto &system : m_physics_systems) {

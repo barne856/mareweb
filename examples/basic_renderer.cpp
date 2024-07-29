@@ -21,7 +21,7 @@ private:
   units::time m_time{};
 };
 
-auto main() -> int {
+int main() {
   try {
     mareweb::application &app = mareweb::application::get_instance();
     app.initialize();
