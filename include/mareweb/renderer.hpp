@@ -6,7 +6,7 @@
 #include <webgpu/webgpu_cpp.h>
 
 #include "mareweb/components/transform.hpp"
-#include "mareweb/entities/camera.hpp"
+#include "mareweb/components/camera.hpp"
 #include "mareweb/entity.hpp"
 #include "mareweb/material.hpp"
 #include "mareweb/mesh.hpp"

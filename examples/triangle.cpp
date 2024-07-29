@@ -1,6 +1,6 @@
 #include "mareweb/application.hpp"
 #include "mareweb/components/transform.hpp"
-#include "mareweb/entities/camera.hpp"
+#include "mareweb/components/camera.hpp"
 #include "mareweb/materials/flat_color_material.hpp"
 #include "mareweb/meshes/primitive_mesh.hpp"
 #include "mareweb/renderer.hpp"
@@ -36,13 +36,13 @@ public:
              mareweb::projection_type type = mareweb::projection_type::perspective)
       : scene(device, surface, window, properties, type) {
     set_clear_color({0.05F, 0.05F, 0.05F, 1.0F});
-    get_camera()->set_position(vec3_t<units::length>{units::length(0.0F), units::length(0.0F), units::length(2.0F)});
-    m_triangle = create_object<triangle>(this, device);
+    set_position(vec3_t<units::length>{units::length(0.0F), units::length(0.0F), units::length(2.0F)});
+    m_triangle = create_object<triangle>(this);
   }
 
   mat4 get_mvp_matrix(const mareweb::transform &model_transform) {
     mat4 model_matrix = model_transform.get_transformation_matrix();
-    mat4 view_projection_matrix = get_camera()->get_view_projection_matrix();
+    mat4 view_projection_matrix = get_view_projection_matrix();
     return view_projection_matrix * model_matrix;
   }
 
@@ -52,7 +52,7 @@ private:
 
 class triangle : public mareweb::entity<triangle>, public mareweb::transform {
 public:
-  triangle(main_scene *scene, wgpu::Device &device) : scene(scene) {
+  triangle(main_scene *scene) : scene(scene) {
     mesh = scene->create_mesh<mareweb::triangle_mesh>(vec3{0.0F, 0.5F, 0.0F},   // Top vertex
                                                       vec3{-0.5F, -0.5F, 0.0F}, // Bottom-left vertex
                                                       vec3{0.5F, -0.5F, 0.0F}   // Bottom-right vertex

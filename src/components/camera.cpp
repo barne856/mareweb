@@ -1,4 +1,4 @@
-#include "mareweb/entities/camera.hpp"
+#include "mareweb/components/camera.hpp"
 #include <squint/geometry.hpp>
 
 using namespace squint::units;
