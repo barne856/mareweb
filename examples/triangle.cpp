@@ -52,7 +52,7 @@ private:
 
 class triangle : public mareweb::entity<triangle>, public mareweb::transform {
 public:
-  triangle(main_scene *scene) : scene(scene), mareweb::entity<triangle>(scene) {
+  triangle(main_scene *scene) : scene(scene) {
     mesh = scene->create_mesh<mareweb::triangle_mesh>(vec3{0.0F, 0.5F, 0.0F},   // Top vertex
                                                       vec3{-0.5F, -0.5F, 0.0F}, // Bottom-left vertex
                                                       vec3{0.5F, -0.5F, 0.0F}   // Bottom-right vertex

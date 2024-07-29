@@ -12,7 +12,6 @@ using namespace squint;
 
 class object {
 public:
-  object(object *root) : m_root(root) {}
   virtual ~object() = default;
 
   // Delete copy constructor and copy assignment operator
@@ -53,12 +52,9 @@ public:
   void set_disabled(bool disabled) { m_disabled = disabled; }
   [[nodiscard]] auto is_disabled() const -> bool { return m_disabled; }
 
-  auto get_root() -> object * { return m_root; }
-
 private:
   std::vector<std::unique_ptr<object>> m_children;
   bool m_disabled = false;
-  object *m_root;
 };
 
 } // namespace mareweb

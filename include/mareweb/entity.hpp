@@ -100,8 +100,6 @@ public:
     }
   }
 
-  auto command() -> object * { return get_root(); }
-
 private:
   std::vector<std::unique_ptr<controls_system<derived>>> m_controls_systems;
   std::vector<std::unique_ptr<physics_system<derived>>> m_physics_systems;

@@ -9,7 +9,7 @@ namespace mareweb {
 
 renderer::renderer(wgpu::Device &device, wgpu::Surface surface, SDL_Window *window, renderer_properties properties)
     : m_device(device), m_surface(std::move(surface)), m_window(window), m_properties(std::move(properties)),
-      m_clear_color({0.0F, 0.0F, 0.0F, 1.0F}), entity<renderer>(this) {
+      m_clear_color({0.0F, 0.0F, 0.0F, 1.0F}) {
   wgpu::SurfaceCapabilities capabilities{};
   m_surface.GetCapabilities(m_device.GetAdapter(), &capabilities);
   // m_surface_format = *capabilities.formats;
