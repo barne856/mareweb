@@ -64,7 +64,7 @@ auto transform::get_transformation_matrix() const -> mat4 {
 }
 
 auto transform::get_normal_matrix() const -> mat3 {
-  auto normal_matrix = mat3{(m_rotation_matrix * m_scale_matrix).subview<3, 3>(slice{0, 3}, slice{0, 3})};
+  auto normal_matrix = mat3{(m_rotation_matrix * m_scale_matrix).subview<3, 3>(0, 0)};
   return mat3{normal_matrix.inv().transpose()};
 }
 
