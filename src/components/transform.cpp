@@ -1,5 +1,5 @@
 #include "mareweb/components/transform.hpp"
-#include "squint/fixed_tensor.hpp"
+#include "squint/tensor.hpp"
 #include "squint/geometry.hpp"
 #include <cmath>
 
@@ -9,7 +9,7 @@ transform::transform()
     : m_translation_matrix(mat4::eye()), m_rotation_matrix(mat4::eye()), m_scale_matrix(mat4::eye()),
       m_unit_length(units::length::meters(1)) {}
 
-transform::transform(const mat4 &transform_matrix) : m_unit_length(units::length::meters(1)) {
+transform::transform(const mat4 &transform_matrix) : m_unit_length(squint::length::meters(1)) {
   // Decompose the transform matrix into translation, rotation, and scale
   m_translation_matrix = mat4::eye();
   m_translation_matrix.subview<3, 1>(0, 3) = transform_matrix.subview<3, 1>(0, 3);
@@ -30,7 +30,7 @@ transform::transform(const mat4 &transform_matrix) : m_unit_length(units::length
   m_rotation_matrix.subview<3, 1>(0, 3).reshape<3>() = vec3{0.0F, 0.0F, 0.0F};
 }
 
-auto transform::get_position() const -> vec3_t<units::length> {
+auto transform::get_position() const -> vec3_t<squint::length> {
   return m_translation_matrix.subview<3, 1>(0, 3).reshape<3>() * m_unit_length;
 }
 
@@ -55,7 +55,7 @@ auto transform::get_normal_matrix() const -> mat4 {
 
 auto transform::get_view_matrix() const -> mat4 { return get_transformation_matrix().inv(); }
 
-void transform::face_towards(const vec3_t<units::length> &point, const vec3 &up) {
+void transform::face_towards(const vec3_t<squint::length> &point, const vec3 &up) {
   const auto eye = get_position();
   vec3 z = squint::normalize(eye - point);
   vec3 x = squint::normalize(squint::cross(up, z));
@@ -68,11 +68,11 @@ void transform::face_towards(const vec3_t<units::length> &point, const vec3 &up)
   m_rotation_matrix.subview<1, 4>(3, 0).reshape<4>() = vec4{0.0F, 0.0F, 0.0F, 1.0F};
 }
 
-void transform::translate(const vec3_t<units::length> &offset) {
+void transform::translate(const vec3_t<squint::length> &offset) {
   m_translation_matrix.subview<3, 1>(0, 3).reshape<3>() += offset / m_unit_length;
 }
 
-void transform::set_position(const vec3_t<units::length> &position) {
+void transform::set_position(const vec3_t<squint::length> &position) {
   m_translation_matrix.subview<3, 1>(0, 3).reshape<3>() = position / m_unit_length;
 }
 

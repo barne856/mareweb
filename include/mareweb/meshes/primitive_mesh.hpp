@@ -2,13 +2,13 @@
 #define MAREWEB_PRIMITIVE_MESH_HPP
 
 #include "mareweb/mesh.hpp"
-#include "squint/fixed_tensor.hpp"
+#include "squint/tensor.hpp"
 #include "squint/quantity.hpp"
 
 namespace mareweb {
 
 using vec3 = squint::vec3;
-using length = squint::units::length;
+using length = squint::length;
 
 class triangle_mesh : public mesh {
 public:

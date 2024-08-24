@@ -93,6 +93,8 @@ FetchContent_MakeAvailable(SDL2_image)
 
 # Configure SQUINT options
 set(SQUINT_BUILD_TESTS OFF)
+set(SQUINT_BUILD_DOCUMENTATION OFF)
+set(SQUINT_BLAS_BACKEND NONE)
 
 # Make squint available
 FetchContent_MakeAvailable(SQUINT)
@@ -115,7 +117,7 @@ function(add_example NAME)
     target_link_libraries(${NAME} PRIVATE mareweb)
     
     # Link gfortran only if SQUINT_BLAS_BACKEND is OpenBLAS
-    if(UNIX)
+    if(UNIX AND SQUINT_BLAS_BACKEND STREQUAL "OpenBLAS")
         target_link_libraries(${NAME} PRIVATE gfortran)
     endif()
     

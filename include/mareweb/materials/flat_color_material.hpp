@@ -2,7 +2,7 @@
 #define MAREWEB_FLAT_COLOR_MATERIAL_HPP
 
 #include "mareweb/material.hpp"
-#include <squint/fixed_tensor.hpp>
+#include <squint/tensor.hpp>
 #include <string>
 #include <vector>
 

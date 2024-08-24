@@ -23,8 +23,8 @@ public:
   object(object &&) noexcept = default;
   auto operator=(object &&) noexcept -> object & = default;
 
-  virtual void update(const units::time &dt) {}
-  virtual void render(const units::time &dt) {}
+  virtual void update(const squint::time &dt) {}
+  virtual void render(const squint::time &dt) {}
 
   virtual auto on_key(const key_event & /*event*/) -> bool { return false; }
   virtual auto on_mouse_button(const mouse_button_event & /*event*/) -> bool { return false; }

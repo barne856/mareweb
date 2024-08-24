@@ -1,7 +1,7 @@
 #include "mareweb/components/camera.hpp"
 #include <squint/geometry.hpp>
 
-using namespace squint::units;
+using namespace squint;
 
 namespace mareweb {
 

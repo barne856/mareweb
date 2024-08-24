@@ -266,7 +266,7 @@ public:
   physics_system(physics_system &&) = delete;
   auto operator=(physics_system &&) -> physics_system & = delete;
 
-  virtual void update(const units::time& dt, T &entity) {}
+  virtual void update(const squint::time& dt, T &entity) {}
 };
 
 template <typename T> class render_system {
@@ -278,7 +278,7 @@ public:
   render_system(render_system &&) = delete;
   auto operator=(render_system &&) -> render_system & = delete;
 
-  virtual void render(const units::time& dt, T &entity) {}
+  virtual void render(const squint::time& dt, T &entity) {}
 };
 
 } // namespace mareweb

@@ -9,7 +9,7 @@ class basic_renderer : public mareweb::renderer {
 public:
   using mareweb::renderer::renderer; // Inherit constructor
 
-  void render(const units::time& dt) override {
+  void render(const squint::time& dt) override {
     begin_frame();
     // set clear color based on time
     m_time += dt;
@@ -18,7 +18,7 @@ public:
   }
 
 private:
-  units::time m_time{};
+  squint::time m_time{};
 };
 
 int main() {

@@ -4,7 +4,7 @@
 #include <squint/quantity.hpp>
 #include <squint/tensor.hpp>
 
-using namespace squint::units;
+using namespace squint;
 
 namespace mareweb {
 

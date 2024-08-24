@@ -1,6 +1,7 @@
 #define SDL_MAIN_HANDLED
 #include "mareweb/application.hpp"
 #include "mareweb/renderer.hpp"
+#include "squint/quantity.hpp"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_main.h>
 #include <SDL2/SDL_syswm.h>
@@ -46,12 +47,12 @@ void application::run() {
     throw std::runtime_error("Application not initialized");
   }
 
-  static units::time dt_seconds{0.0F};
+  static squint::time dt_seconds{0.0F};
   static auto last_time = std::chrono::high_resolution_clock::now();
 
   while (!m_quit) {
     auto current_time = std::chrono::high_resolution_clock::now();
-    dt_seconds = units::time(std::chrono::duration<float>(current_time - last_time).count());
+    dt_seconds = squint::time(std::chrono::duration<float>(current_time - last_time).count());
     last_time = current_time;
 
     handle_events();

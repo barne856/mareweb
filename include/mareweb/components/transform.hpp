@@ -35,7 +35,7 @@ public:
     transform();
     explicit transform(const mat4& transform_matrix);
 
-    [[nodiscard]] auto get_position() const -> vec3_t<units::length>;
+    [[nodiscard]] auto get_position() const -> vec3_t<length>;
     [[nodiscard]] auto get_scale() const -> vec3;
     [[nodiscard]] auto get_translation_matrix() const -> const mat4&;
     [[nodiscard]] auto get_rotation_matrix() const -> const mat4&;
@@ -43,9 +43,9 @@ public:
     [[nodiscard]] auto get_transformation_matrix() const -> mat4;
     [[nodiscard]] auto get_normal_matrix() const -> mat4;
     [[nodiscard]] auto get_view_matrix() const -> mat4;
-    void face_towards(const vec3_t<units::length>& point, const vec3& up);
-    void translate(const vec3_t<units::length>& offset);
-    void set_position(const vec3_t<units::length>& position);
+    void face_towards(const vec3_t<length>& point, const vec3& up);
+    void translate(const vec3_t<length>& offset);
+    void set_position(const vec3_t<length>& position);
     void rotate(const vec3& axis, float angle);
     void set_rotation(const vec3& axis, float angle);
     void set_rotation_matrix(const mat4& rotation_matrix);

@@ -23,7 +23,7 @@ template <typename T>
   requires renderable_mesh<T>
 class render_mesh : public mareweb::render_system<T> {
 public:
-  void render(const units::time &dt, T &ent) override {
+  void render(const squint::time &dt, T &ent) override {
     ent.update_mvp(dt);
     ent.scene->draw_mesh(*ent.mesh.get(), *ent.material.get());
   }
@@ -36,7 +36,7 @@ public:
              mareweb::projection_type type = mareweb::projection_type::perspective)
       : scene(device, surface, window, properties, type) {
     set_clear_color({0.05F, 0.05F, 0.05F, 1.0F});
-    set_position(vec3_t<units::length>{units::length(0.0F), units::length(0.0F), units::length(2.0F)});
+    set_position(vec3_t<length>{length(0.0F), length(0.0F), length(2.0F)});
     m_triangle = create_object<triangle>(this);
   }
 
@@ -63,9 +63,9 @@ public:
     attach_system<render_mesh>();
   }
 
-  void update_mvp(const units::time &dt) {
+  void update_mvp(const squint::time &dt) {
     // Rotate the triangle
-    units::frequency f(1.0f);
+    frequency f(1.0f);
     rotate(vec3{0, 1, 0}, f * dt);
 
     // Get the updated MVP matrix from the renderer
