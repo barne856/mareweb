@@ -21,16 +21,18 @@
 		}
 	},
 	"mounts": [
-		"source=mare-web-build,target=${containerWorkspaceFolder}/build,type=volume"
+		"source=mare-web-build,target=${containerWorkspaceFolder}/build,type=volume",
+		"source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind"
 	],
 	"runArgs": [
 		"--gpus", // enable GPU support
 		"all", // enable all GPUs
-		"--add-host", // enable X11 forwarding
-		"host.docker.internal:host-gateway" // enable X11 forwarding
+		"--net", // enable network access
+		"host" // use host network
 	],
+	// environment variables to forward to the container
 	"remoteEnv": {
-		"DISPLAY": "host.docker.internal:0" // enable X11 forwarding
+		"DISPLAY": ":0" // enable X11 forwarding
 	},
 	// make vscode user own the workspace and all mounts
 	"postCreateCommand": "sudo chown -R vscode:vscode ${containerWorkspaceFolder}",

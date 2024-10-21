@@ -123,11 +123,11 @@ void camera::update_projection_matrix() {
   switch (m_type) {
   case projection_type::perspective:
     m_projection_matrix =
-        squint::perspective(m_fov, m_aspect_ratio, m_perspective_near, m_perspective_far, m_unit_length);
+        geometry::perspective(m_fov, m_aspect_ratio, m_perspective_near, m_perspective_far, m_unit_length);
     break;
   case projection_type::orthographic:
     m_projection_matrix =
-        squint::ortho(m_left, m_right, m_bottom, m_top, m_orthographic_near, m_orthographic_far, m_unit_length);
+        geometry::ortho(m_left, m_right, m_bottom, m_top, m_orthographic_near, m_orthographic_far, m_unit_length);
     break;
   }
 }
