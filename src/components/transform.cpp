@@ -2,6 +2,7 @@
 #include "squint/geometry.hpp"
 #include "squint/quantity.hpp"
 #include "squint/tensor.hpp"
+#include "squint/tensor/tensor_types.hpp"
 #include <cmath>
 
 using namespace squint;
@@ -51,7 +52,22 @@ auto transform::get_normal_matrix() const -> mat4 {
   return mat4{inv(normal_matrix).transpose()};
 }
 
-auto transform::get_view_matrix() const -> mat4 { return inv(get_transformation_matrix()); }
+auto transform::get_view_matrix() const -> mat4 {
+  mat4 result = mat4::eye();
+
+  mat4 transformation_matrix = get_transformation_matrix();
+  mat3 P = transformation_matrix.subview<3, 3>(0, 0);
+  vec3 v = transformation_matrix.subview<3, 1>(0, 3);
+  mat3 P_inv = inv(P);
+  vec3 v_prime = -P_inv * v;
+  result.subview<3, 1>(0, 3) = v_prime;
+  result.subview<3, 3>(0, 0) = P_inv;
+
+  return result;
+
+  // or simply:
+  // return inv(get_transformation_matrix());
+}
 
 void transform::face_towards(const vec3_t<squint::length> &point, const vec3 &up) {
   const auto eye = get_position();

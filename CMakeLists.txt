@@ -94,7 +94,7 @@ FetchContent_MakeAvailable(SDL2_image)
 # Configure SQUINT options
 set(SQUINT_BUILD_TESTS OFF)
 set(SQUINT_BUILD_DOCUMENTATION OFF)
-set(SQUINT_BLAS_BACKEND NONE)
+set(SQUINT_BLAS_BACKEND MKL)
 
 # Make squint available
 FetchContent_MakeAvailable(SQUINT)
