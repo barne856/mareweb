@@ -38,6 +38,8 @@ public:
     set_clear_color({0.05F, 0.05F, 0.05F, 1.0F});
     set_position(vec3_t<length>{length(0.0F), length(0.0F), length(2.0F)});
     m_triangle = create_object<triangle>(this);
+    float aspect_ratio = static_cast<float>(properties.width) / static_cast<float>(properties.height);
+    set_aspect_ratio(aspect_ratio);
   }
 
   mat4 get_mvp_matrix(const mareweb::transform &model_transform) {
@@ -126,7 +128,7 @@ public:
   main_scene *scene;
 };
 
-int main()  {
+int main() {
   mareweb::application &app = mareweb::application::get_instance();
   app.initialize();
 
