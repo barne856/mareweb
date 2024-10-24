@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ..:/workspaces/mareweb:cached
+      - mare-web-build:/workspaces/mareweb/build
+    command: sleep infinity
+    environment:
+      - DISPLAY=novnc:0
+    networks:
+      - x11-network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  novnc:
+    image: theasp/novnc:latest
+    environment:
+      - DISPLAY_WIDTH=1920
+      - DISPLAY_HEIGHT=1080
+      - RUN_XTERM=yes
+    ports:
+      - "6080:8080"
+    hostname: novnc
+    networks:
+      - x11-network
+
+volumes:
+  mare-web-build:
+
+networks:
+  x11-network:
+    driver: bridge
