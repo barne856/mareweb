@@ -62,10 +62,10 @@ public:
     //     squint::vec3_t<length>{length(0.5), length(-0.5), length(0.0)}   // Bottom-right vertex
     // );
     // mesh = scene->create_mesh<mareweb::circle_mesh>(length(0.5), 50);
-    // mesh = scene->create_mesh<mareweb::sphere_mesh>(length(0.5), 0);
+    mesh = scene->create_mesh<mareweb::sphere_mesh>(length(0.5), 0);
     // mesh = scene->create_mesh<mareweb::sphere_mesh>(length(0.5), 10, 10);
     // mesh = scene->create_mesh<mareweb::cube_mesh>(length(0.5));
-    mesh = scene->create_mesh<mareweb::square_mesh>(length(0.5));
+    // mesh = scene->create_mesh<mareweb::square_mesh>(length(0.5));
     vec4 color{1.F, 1.F, 0.F, 0.F};
     vec3 light_direction{1.f, 1.f, -1.f};
     material = scene->create_material<mareweb::flat_color_material>(color);

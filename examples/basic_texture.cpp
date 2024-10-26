@@ -6,6 +6,7 @@
 #include "mareweb/renderer.hpp"
 #include "mareweb/scene.hpp"
 #include "squint/quantity.hpp"
+#include "squint/quantity/quantity_types.hpp"
 #include "webgpu/webgpu_cpp.h"
 #include <vector>
 
@@ -56,13 +57,14 @@ class basic_entity : public mareweb::entity<basic_entity>, public mareweb::trans
 public:
   basic_entity(main_scene *scene) : scene(scene) {
     // Create a square mesh with proper texture coordinates
-    mesh = scene->create_mesh<mareweb::square_mesh>(length(1.0));
+    // mesh = scene->create_mesh<mareweb::square_mesh>(length(1.0));
+    mesh = scene->create_mesh<mareweb::sphere_mesh>(length(0.5), 32, 32);
 
     // Create a textured material (provide path to your texture)
-    material = scene->create_material<mareweb::textured_material>("assets/checkerboard-pattern.jpg");
+    material = scene->create_material<mareweb::textured_material>("assets/soccer_sph.png");
 
     // Set initial light direction
-    vec3 light_direction{0.f, 0.f, -1.f};
+    vec3 light_direction{1.f, 1.f, 1.f};
     material->update_light_direction(light_direction);
 
     // rotate 180 degrees around the y-axis
@@ -72,6 +74,10 @@ public:
   }
 
   void update_transforms(const squint::time &dt) {
+    // Rotate the entity
+    auto freq = frequency(1);
+    rotate(vec3{0, 1, 0}, units::degrees(90) * dt * freq);
+
     // Get the updated MVP matrix from the renderer
     mat4 mvp = scene->get_mvp_matrix(*this);
     mat3 normal_mat = get_normal_matrix();
