@@ -118,6 +118,7 @@ void application::setup_webgpu_callbacks(wgpu::DeviceDescriptor &device_desc) {
   device_desc.SetUncapturedErrorCallback(
       [](const wgpu::Device & /*device*/, wgpu::ErrorType type, wgpu::StringView message, application *app) {
         std::cerr << "Uncaptured error: " << message.data << std::endl;
+        throw std::runtime_error("Uncaptured error: " + std::string(message.data));
         if (type == wgpu::ErrorType::DeviceLost) {
           app->m_quit = true;
         }

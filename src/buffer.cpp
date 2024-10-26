@@ -29,8 +29,21 @@ buffer::~buffer() {
   }
 }
 
-vertex_buffer::vertex_buffer(wgpu::Device &device, const std::vector<float> &vertices)
-    : buffer(device, vertices.data(), vertices.size() * sizeof(float), wgpu::BufferUsage::Vertex) {}
+vertex_buffer::vertex_buffer(wgpu::Device &device, const void *data, size_t size, const vertex_layout &layout)
+    : buffer(device, data, size, wgpu::BufferUsage::Vertex), m_layout(layout) {}
+
+auto vertex_buffer::get_buffer_layout() const -> wgpu::VertexBufferLayout {
+  wgpu::VertexBufferLayout layout;
+
+  auto attributes = m_layout.get_wgpu_attributes();
+
+  layout.arrayStride = m_layout.get_stride();
+  layout.stepMode = wgpu::VertexStepMode::Vertex;
+  layout.attributeCount = static_cast<uint32_t>(attributes.size());
+  layout.attributes = attributes.data();
+
+  return layout;
+}
 
 index_buffer::index_buffer(wgpu::Device &device, const std::vector<uint32_t> &indices)
     : buffer(device, indices.data(), indices.size() * sizeof(uint32_t), wgpu::BufferUsage::Index) {}

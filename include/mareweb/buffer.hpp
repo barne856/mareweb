@@ -1,6 +1,7 @@
 #ifndef MAREWEB_BUFFER_HPP
 #define MAREWEB_BUFFER_HPP
 
+#include "mareweb/vertex_attributes.hpp"
 #include <utility>
 #include <vector>
 #include <webgpu/webgpu_cpp.h>
@@ -48,7 +49,13 @@ protected:
 
 class vertex_buffer : public buffer {
 public:
-  vertex_buffer(wgpu::Device &device, const std::vector<float> &vertices);
+  vertex_buffer(wgpu::Device &device, const void *data, size_t size, const vertex_layout &layout);
+
+  [[nodiscard]] auto get_layout() const -> const vertex_layout & { return m_layout; }
+  [[nodiscard]] auto get_buffer_layout() const -> wgpu::VertexBufferLayout;
+
+private:
+  vertex_layout m_layout;
 };
 
 class index_buffer : public buffer {
@@ -58,12 +65,12 @@ public:
 
 class uniform_buffer : public buffer {
 public:
-    uniform_buffer(wgpu::Device &device, size_t size, wgpu::ShaderStage visibility);
+  uniform_buffer(wgpu::Device &device, size_t size, wgpu::ShaderStage visibility);
 
-    [[nodiscard]] auto get_visibility() const -> wgpu::ShaderStage { return m_visibility; }
+  [[nodiscard]] auto get_visibility() const -> wgpu::ShaderStage { return m_visibility; }
 
 private:
-    wgpu::ShaderStage m_visibility;
+  wgpu::ShaderStage m_visibility;
 };
 
 } // namespace mareweb
