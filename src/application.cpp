@@ -1,3 +1,4 @@
+#include "webgpu/webgpu_cpp.h"
 #define SDL_MAIN_HANDLED
 #include "mareweb/application.hpp"
 #include "mareweb/renderer.hpp"
@@ -16,6 +17,7 @@
 #elif defined(SDL_PLATFORM_LINUX)
 #include <X11/Xlib.h>
 #endif
+#undef Success // Xlib.h defines this dumb macro, which conflicts with the enum value in dawn
 
 namespace mareweb {
 using namespace squint;
@@ -86,81 +88,106 @@ void application::init_sdl() {
 
 void application::setup_webgpu_callbacks(wgpu::DeviceDescriptor &device_desc) {
   // Device lost callback
-  wgpu::DeviceLostCallbackInfo device_lost_callback_info{};
-  device_lost_callback_info.callback = [](WGPUDeviceImpl *const * /*device*/, WGPUDeviceLostReason reason,
-                                          char const *message, void *userdata) {
-    auto *self = static_cast<application *>(userdata);
-    std::cerr << "Device lost: " << message << std::endl;
+  device_desc.SetDeviceLostCallback(
+      wgpu::CallbackMode::WaitAnyOnly,
+      [](const wgpu::Device & /*device*/, wgpu::DeviceLostReason reason, wgpu::StringView message,
+         application * /*app*/) {
+        std::cerr << "Device lost: " << message.data << std::endl;
 
-    std::string reason_str;
-    switch (reason) {
-    case WGPUDeviceLostReason_Destroyed:
-      reason_str = "The device was explicitly destroyed";
-      break;
-    case WGPUDeviceLostReason_Unknown:
-      reason_str = "The device was lost for an unknown reason";
-      break;
-    case WGPUDeviceLostReason_FailedCreation:
-      reason_str = "The device was lost due to a failed creation";
-      break;
-    case WGPUDeviceLostReason_InstanceDropped:
-      reason_str = "The instance was dropped";
-      break;
-    case WGPUDeviceLostReason_Force32:
-      reason_str = "Force32";
-      break;
-    default:
-      reason_str = "Unknown reason code: " + std::to_string(static_cast<int>(reason));
-    }
+        std::string reason_str;
+        switch (reason) {
+        case wgpu::DeviceLostReason::Destroyed:
+          reason_str = "The device was explicitly destroyed";
+          break;
+        case wgpu::DeviceLostReason::Unknown:
+          reason_str = "The device was lost for an unknown reason";
+          break;
+        case wgpu::DeviceLostReason::FailedCreation:
+          reason_str = "The device was lost due to a failed creation";
+          break;
+        case wgpu::DeviceLostReason::InstanceDropped:
+          reason_str = "The instance was dropped";
+          break;
+        default:
+          reason_str = "Unknown reason code: " + std::to_string(static_cast<int>(reason));
+        }
+        std::cerr << "Reason: " << reason_str << std::endl;
+      },
+      this);
 
-    std::cerr << "Reason: " << reason_str << std::endl;
-  };
-  device_lost_callback_info.userdata = this;
-
-  // Uncaptured error callback
-  wgpu::UncapturedErrorCallbackInfo uncaptured_error_callback_info{};
-  uncaptured_error_callback_info.callback = [](WGPUErrorType type, const char *message, void *userdata) {
-    auto *self = static_cast<application *>(userdata);
-    std::cerr << "Uncaptured error: " << message << std::endl;
-    if (type == WGPUErrorType_DeviceLost) {
-      self->m_quit = true;
-    }
-  };
-  uncaptured_error_callback_info.userdata = this;
-
-  // Set up the device descriptor with the callbacks
-  device_desc.deviceLostCallbackInfo = device_lost_callback_info;
-  device_desc.uncapturedErrorCallbackInfo = uncaptured_error_callback_info;
+  device_desc.SetUncapturedErrorCallback(
+      [](const wgpu::Device & /*device*/, wgpu::ErrorType type, wgpu::StringView message, application *app) {
+        std::cerr << "Uncaptured error: " << message.data << std::endl;
+        if (type == wgpu::ErrorType::DeviceLost) {
+          app->m_quit = true;
+        }
+      },
+      this);
 }
 
 void application::init_webgpu() {
   m_instance = wgpu::CreateInstance();
 
-  m_instance.RequestAdapter(
-      nullptr,
-      [](WGPURequestAdapterStatus status, WGPUAdapter c_adapter, const char * /*message*/, void *userdata) {
-        auto *self = static_cast<application *>(userdata);
-        if (status != WGPURequestAdapterStatus_Success) {
-          throw std::runtime_error("Failed to request adapter");
+  wgpu::Future adapter_future = m_instance.RequestAdapter(
+      nullptr, wgpu::CallbackMode::WaitAnyOnly,
+      [](wgpu::RequestAdapterStatus status, wgpu::Adapter adapter, wgpu::StringView message, application *app) {
+        if (status != wgpu::RequestAdapterStatus::Success) {
+          throw std::runtime_error("Failed to request adapter: " + std::string(message.data));
         }
-        wgpu::Adapter adapter = wgpu::Adapter::Acquire(c_adapter);
 
         // Create device descriptor with device lost callback info
         wgpu::DeviceDescriptor device_desc{};
-        self->setup_webgpu_callbacks(device_desc);
+        app->setup_webgpu_callbacks(device_desc);
 
-        adapter.RequestDevice(
-            &device_desc,
-            [](WGPURequestDeviceStatus status, WGPUDevice c_device, const char * /*message*/, void *userdata) {
-              auto *self = static_cast<application *>(userdata);
-              if (status != WGPURequestDeviceStatus_Success) {
-                throw std::runtime_error("Failed to request device");
+        wgpu::Future device_future = adapter.RequestDevice(
+            &device_desc, wgpu::CallbackMode::WaitAnyOnly,
+            [](wgpu::RequestDeviceStatus status, wgpu::Device device, wgpu::StringView message, application *app) {
+              if (status != wgpu::RequestDeviceStatus::Success) {
+                throw std::runtime_error("Failed to request device: " + std::string(message.data));
               }
-              self->m_device = wgpu::Device::Acquire(c_device);
+              app->m_device = device;
             },
-            self);
+            app);
+        auto device_wait_status = app->m_instance.WaitAny(device_future, 0);
+        if (device_wait_status != wgpu::WaitStatus::Success) {
+          if (device_wait_status == wgpu::WaitStatus::TimedOut) {
+            throw std::runtime_error("Device creation timed out");
+          }
+          if (device_wait_status == wgpu::WaitStatus::UnsupportedTimeout) {
+            throw std::runtime_error("Device creation timeout not supported");
+          }
+          if (device_wait_status == wgpu::WaitStatus::UnsupportedCount) {
+            throw std::runtime_error("Device creation count not supported");
+          }
+          if (device_wait_status == wgpu::WaitStatus::UnsupportedMixedSources) {
+            throw std::runtime_error("Device creation mixed sources not supported");
+          }
+          if (device_wait_status == wgpu::WaitStatus::Unknown) {
+            throw std::runtime_error("Device creation unknown error");
+          }
+          throw std::runtime_error("Failed to wait for device creation");
+        }
       },
       this);
+  auto adapter_wait_status = m_instance.WaitAny(adapter_future, 0);
+  if (adapter_wait_status != wgpu::WaitStatus::Success) {
+    if (adapter_wait_status == wgpu::WaitStatus::TimedOut) {
+      throw std::runtime_error("Adapter creation timed out");
+    }
+    if (adapter_wait_status == wgpu::WaitStatus::UnsupportedTimeout) {
+      throw std::runtime_error("Adapter creation timeout not supported");
+    }
+    if (adapter_wait_status == wgpu::WaitStatus::UnsupportedCount) {
+      throw std::runtime_error("Adapter creation count not supported");
+    }
+    if (adapter_wait_status == wgpu::WaitStatus::UnsupportedMixedSources) {
+      throw std::runtime_error("Adapter creation mixed sources not supported");
+    }
+    if (adapter_wait_status == wgpu::WaitStatus::Unknown) {
+      throw std::runtime_error("Adapter creation unknown error");
+    }
+    throw std::runtime_error("Failed to wait for adapter creation");
+  }
 }
 
 void application::handle_events() {

@@ -11,7 +11,7 @@ include(FetchContent)
 FetchContent_Declare(
   dawn
   GIT_REPOSITORY https://dawn.googlesource.com/dawn
-  GIT_TAG chromium/6554
+  GIT_TAG chromium/6799
   GIT_SHALLOW ON
   EXCLUDE_FROM_ALL # new in CMake 3.28
   GIT_SUBMODULES "docs" # workaround for https://gitlab.kitware.com/cmake/cmake/-/issues/20579
@@ -94,7 +94,7 @@ FetchContent_MakeAvailable(SDL2_image)
 # Configure SQUINT options
 set(SQUINT_BUILD_TESTS OFF)
 set(SQUINT_BUILD_DOCUMENTATION OFF)
-set(SQUINT_BLAS_BACKEND MKL)
+set(SQUINT_BLAS_BACKEND NONE)
 
 # Make squint available
 FetchContent_MakeAvailable(SQUINT)
