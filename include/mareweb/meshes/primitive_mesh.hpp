@@ -2,8 +2,8 @@
 #define MAREWEB_PRIMITIVE_MESH_HPP
 
 #include "mareweb/mesh.hpp"
-#include "squint/tensor.hpp"
 #include "squint/quantity.hpp"
+#include "squint/tensor.hpp"
 
 namespace mareweb {
 
@@ -12,11 +12,14 @@ using length = squint::length;
 
 class triangle_mesh : public mesh {
 public:
-  triangle_mesh(wgpu::Device &device, const vec3 &v1, const vec3 &v2, const vec3 &v3)
-      : mesh(device, get_primitive_state(), {v1[0], v1[1], v1[2], v2[0], v2[1], v2[2], v3[0], v3[1], v3[2]}) {}
+  triangle_mesh(wgpu::Device &device, const squint::vec3_t<length> &v1, const squint::vec3_t<length> &v2,
+                const squint::vec3_t<length> &v3)
+      : mesh(device, get_primitive_state(),
+             {v1[0].value(), v1[1].value(), v1[2].value(), v2[0].value(), v2[1].value(), v2[2].value(), v3[0].value(),
+              v3[1].value(), v3[2].value()}) {}
 
 private:
-  static wgpu::PrimitiveState get_primitive_state() {
+  static auto get_primitive_state() -> wgpu::PrimitiveState {
     wgpu::PrimitiveState state;
     state.topology = wgpu::PrimitiveTopology::TriangleList;
     state.stripIndexFormat = wgpu::IndexFormat::Undefined;
@@ -26,16 +29,16 @@ private:
   }
 };
 
-class rectangle_mesh : public mesh {
+class square_mesh : public mesh {
 public:
-  rectangle_mesh(wgpu::Device &device, length width, length height)
+  square_mesh(wgpu::Device &device, length size)
       : mesh(device, get_primitive_state(),
-             {-width.value() / 2, -height.value() / 2, 0.0f, width.value() / 2, -height.value() / 2, 0.0f,
-              width.value() / 2, height.value() / 2, 0.0f, -width.value() / 2, height.value() / 2, 0.0f},
+             {-size.value() / 2, -size.value() / 2, 0.0f, size.value() / 2, -size.value() / 2, 0.0f, size.value() / 2,
+              size.value() / 2, 0.0f, -size.value() / 2, size.value() / 2, 0.0f},
              {0, 1, 2, 2, 3, 0}) {}
 
 private:
-  static wgpu::PrimitiveState get_primitive_state() {
+  static auto get_primitive_state() -> wgpu::PrimitiveState {
     wgpu::PrimitiveState state;
     state.topology = wgpu::PrimitiveTopology::TriangleList;
     state.stripIndexFormat = wgpu::IndexFormat::Undefined;
@@ -67,7 +70,7 @@ public:
              }) {}
 
 private:
-  static wgpu::PrimitiveState get_primitive_state() {
+  static auto get_primitive_state() -> wgpu::PrimitiveState {
     wgpu::PrimitiveState state;
     state.topology = wgpu::PrimitiveTopology::TriangleList;
     state.stripIndexFormat = wgpu::IndexFormat::Undefined;
@@ -79,11 +82,12 @@ private:
 
 class line_mesh : public mesh {
 public:
-  line_mesh(wgpu::Device &device, const vec3 &start, const vec3 &end)
-      : mesh(device, get_primitive_state(), {start[0], start[1], start[2], end[0], end[1], end[2]}) {}
+  line_mesh(wgpu::Device &device, const squint::vec3_t<length> &start, const squint::vec3_t<length> &end)
+      : mesh(device, get_primitive_state(),
+             {start[0].value(), start[1].value(), start[2].value(), end[0].value(), end[1].value(), end[2].value()}) {}
 
 private:
-  static wgpu::PrimitiveState get_primitive_state() {
+  static auto get_primitive_state() -> wgpu::PrimitiveState {
     wgpu::PrimitiveState state;
     state.topology = wgpu::PrimitiveTopology::LineList;
     state.stripIndexFormat = wgpu::IndexFormat::Undefined;
@@ -95,11 +99,11 @@ private:
 
 class point_mesh : public mesh {
 public:
-  point_mesh(wgpu::Device &device, const vec3 &point)
-      : mesh(device, get_primitive_state(), {point[0], point[1], point[2]}) {}
+  point_mesh(wgpu::Device &device, const squint::vec3_t<length> &point)
+      : mesh(device, get_primitive_state(), {point[0].value(), point[1].value(), point[2].value()}) {}
 
 private:
-  static wgpu::PrimitiveState get_primitive_state() {
+  static auto get_primitive_state() -> wgpu::PrimitiveState {
     wgpu::PrimitiveState state;
     state.topology = wgpu::PrimitiveTopology::PointList;
     state.stripIndexFormat = wgpu::IndexFormat::Undefined;

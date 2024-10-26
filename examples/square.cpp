@@ -34,7 +34,7 @@ public:
 class square : public mareweb::entity<square>, public mareweb::transform {
 public:
   square(mareweb::scene *scene) : scene(scene) {
-    mesh = scene->create_mesh<mareweb::rectangle_mesh>(length(1), length(1));
+    mesh = scene->create_mesh<mareweb::square_mesh>(length(1));
     vec4 color{0.9F, 0.9F, 0.9F, 0.F};
     material = scene->create_material<mareweb::flat_color_material>(color);
     attach_system<render_mesh>();
