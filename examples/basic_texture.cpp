@@ -1,7 +1,7 @@
 #include "mareweb/application.hpp"
 #include "mareweb/components/camera.hpp"
 #include "mareweb/components/transform.hpp"
-#include "mareweb/materials/flat_color_material.hpp"
+#include "mareweb/materials/textured_material.hpp"
 #include "mareweb/meshes/primitive_mesh.hpp"
 #include "mareweb/renderer.hpp"
 #include "mareweb/scene.hpp"
@@ -24,7 +24,7 @@ template <typename T>
 class render_mesh : public mareweb::render_system<T> {
 public:
   void render(const squint::time &dt, T &ent) override {
-    ent.update_mvp(dt);
+    ent.update_transforms(dt);
     ent.scene->draw_mesh(*ent.mesh.get(), *ent.material.get());
   }
 };
@@ -55,85 +55,34 @@ private:
 class basic_entity : public mareweb::entity<basic_entity>, public mareweb::transform {
 public:
   basic_entity(main_scene *scene) : scene(scene) {
-    // -- try out different meshes --
-    // mesh = scene->create_mesh<mareweb::triangle_mesh>(
-    //     squint::vec3_t<length>{length(0), length(0.5), length(0.0)},     // Top vertex
-    //     squint::vec3_t<length>{length(-0.5), length(-0.5), length(0.0)}, // Bottom-left vertex
-    //     squint::vec3_t<length>{length(0.5), length(-0.5), length(0.0)}   // Bottom-right vertex
-    // );
-    // mesh = scene->create_mesh<mareweb::circle_mesh>(length(0.5), 50);
-    // mesh = scene->create_mesh<mareweb::sphere_mesh>(length(0.5), 0);
-    // mesh = scene->create_mesh<mareweb::sphere_mesh>(length(0.5), 10, 10);
-    // mesh = scene->create_mesh<mareweb::cube_mesh>(length(0.5));
-    mesh = scene->create_mesh<mareweb::square_mesh>(length(0.5));
-    vec4 color{1.F, 1.F, 0.F, 0.F};
-    vec3 light_direction{1.f, 1.f, -1.f};
-    material = scene->create_material<mareweb::flat_color_material>(color);
+    // Create a square mesh with proper texture coordinates
+    mesh = scene->create_mesh<mareweb::square_mesh>(length(1.0));
+
+    // Create a textured material (provide path to your texture)
+    material = scene->create_material<mareweb::textured_material>("assets/checkerboard-pattern.jpg");
+
+    // Set initial light direction
+    vec3 light_direction{0.f, 0.f, -1.f};
     material->update_light_direction(light_direction);
+
+    // rotate 180 degrees around the y-axis
+    rotate(vec3{0, 1, 0}, units::degrees(180));
+
     attach_system<render_mesh>();
   }
 
-  void update_mvp(const squint::time &dt) {
-    // Rotate the mesh
-    frequency f(1.0f);
-    rotate(vec3{0, 1, 0}, f * dt);
-
+  void update_transforms(const squint::time &dt) {
     // Get the updated MVP matrix from the renderer
     mat4 mvp = scene->get_mvp_matrix(*this);
+    mat3 normal_mat = get_normal_matrix();
 
-    // Update the uniform buffer
+    // Update the transforms
     material->update_mvp(mvp);
-    material->update_normal_matrix(get_normal_matrix());
-
-    // Update color for rainbow effect
-    static float total_time = 0.0f;
-    total_time += dt.value();
-
-    // Use a simple HSV to RGB conversion for rainbow effect
-    float hue = std::fmod(total_time * 0.2f, 1.0f); // Cycle through hues
-    float saturation = 1.0f;
-    float value = 1.0f;
-
-    float c = value * saturation;
-    float x = c * (1 - std::abs(std::fmod(hue * 6, 2) - 1));
-    float m = value - c;
-
-    float r, g, b;
-    if (hue < 1.0f / 6.0f) {
-      r = c;
-      g = x;
-      b = 0;
-    } else if (hue < 2.0f / 6.0f) {
-      r = x;
-      g = c;
-      b = 0;
-    } else if (hue < 3.0f / 6.0f) {
-      r = 0;
-      g = c;
-      b = x;
-    } else if (hue < 4.0f / 6.0f) {
-      r = 0;
-      g = x;
-      b = c;
-    } else if (hue < 5.0f / 6.0f) {
-      r = x;
-      g = 0;
-      b = c;
-    } else {
-      r = c;
-      g = 0;
-      b = x;
-    }
-
-    vec4 color = {r + m, g + m, b + m, 1.0f};
-
-    // Update the color uniform buffer
-    material->update_uniform(1, &color);
+    material->update_normal_matrix(normal_mat);
   }
 
   std::unique_ptr<mareweb::mesh> mesh;
-  std::unique_ptr<mareweb::flat_color_material> material;
-  std::shared_ptr<mareweb::uniform_buffer> mvp_buffer;
+  std::unique_ptr<mareweb::textured_material> material;
   main_scene *scene;
 };
 
@@ -143,14 +92,13 @@ int main() {
 
   mareweb::renderer_properties props = {.width = 800,
                                         .height = 600,
-                                        .title = "Basic Mesh",
+                                        .title = "Basic Texture",
                                         .fullscreen = false,
                                         .resizable = true,
                                         .present_mode = wgpu::PresentMode::Fifo,
                                         .sample_count = 4};
 
   app.create_renderer<main_scene>(props);
-
   app.run();
 
   return 0;

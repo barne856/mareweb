@@ -47,9 +47,11 @@ auto transform::get_transformation_matrix() const -> mat4 {
   return m_translation_matrix * m_rotation_matrix * m_scale_matrix;
 }
 
-auto transform::get_normal_matrix() const -> mat4 {
-  auto normal_matrix = m_rotation_matrix * m_scale_matrix;
-  return mat4{inv(normal_matrix).transpose()};
+auto transform::get_normal_matrix() const -> mat3 {
+  // auto normal_matrix = m_rotation_matrix * m_scale_matrix;
+  // return mat4{inv(normal_matrix).transpose()};
+  auto A = m_rotation_matrix.subview<3, 3>(0, 0) * m_scale_matrix.subview<3, 3>(0, 0);
+  return mat3{inv(A).transpose()};
 }
 
 auto transform::get_view_matrix() const -> mat4 {
