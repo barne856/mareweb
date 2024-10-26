@@ -32,6 +32,11 @@ services:
     hostname: novnc
     networks:
       - x11-network
+    # https://github.com/SeleniumHQ/docker-selenium/issues/2045
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
 
 volumes:
   mare-web-build:
