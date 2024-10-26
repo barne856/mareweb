@@ -55,11 +55,14 @@ private:
 class triangle : public mareweb::entity<triangle>, public mareweb::transform {
 public:
   triangle(main_scene *scene) : scene(scene) {
-    mesh = scene->create_mesh<mareweb::triangle_mesh>(
-        squint::vec3_t<length>{length(0), length(0.5), length(0.0)},     // Top vertex
-        squint::vec3_t<length>{length(-0.5), length(-0.5), length(0.0)}, // Bottom-left vertex
-        squint::vec3_t<length>{length(0.5), length(-0.5), length(0.0)}   // Bottom-right vertex
-    );
+    // mesh = scene->create_mesh<mareweb::triangle_mesh>(
+    //     squint::vec3_t<length>{length(0), length(0.5), length(0.0)},     // Top vertex
+    //     squint::vec3_t<length>{length(-0.5), length(-0.5), length(0.0)}, // Bottom-left vertex
+    //     squint::vec3_t<length>{length(0.5), length(-0.5), length(0.0)}   // Bottom-right vertex
+    // );
+    // mesh = scene->create_mesh<mareweb::circle_mesh>(length(0.5), 50);
+    // mesh = scene->create_mesh<mareweb::sphere_mesh>(length(0.5), 3);
+    mesh = scene->create_mesh<mareweb::sphere_mesh>(length(0.5), 10, 10);
     vec4 color{1.F, 1.F, 0.F, 0.F};
     vec3 light_direction{1.f, 1.f, 1.f};
     material = scene->create_material<mareweb::flat_color_material>(color);
