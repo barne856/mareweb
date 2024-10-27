@@ -37,7 +37,8 @@ public:
              mareweb::projection_type type = mareweb::projection_type::perspective)
       : scene(device, surface, window, properties, type) {
     set_clear_color({0.05F, 0.05F, 0.05F, 1.0F});
-    set_position(vec3_t<length>{length(0.0F), length(0.0F), length(2.0F)});
+    set_position(vec3_t<length>{length(0.0F), length(-2.0F), length(0.0F)});
+    face_towards(vec3_t<length>{length(0.0F), length(0.0F), length(0.0F)}, vec3{0.0F, 0.0F, -1.0F});
     m_basic_entity = create_object<basic_entity>(this);
     float aspect_ratio = static_cast<float>(properties.width) / static_cast<float>(properties.height);
     set_aspect_ratio(aspect_ratio);
@@ -61,10 +62,10 @@ public:
     mesh = scene->create_mesh<mareweb::sphere_mesh>(length(0.5), 32, 32);
 
     // Create a textured material (provide path to your texture)
-    material = scene->create_material<mareweb::textured_material>("assets/soccer_sph.png");
+    material = scene->create_material<mareweb::textured_material>("assets/2k_earth_daymap.jpg");
 
     // Set initial light direction
-    vec3 light_direction{1.f, 1.f, 1.f};
+    vec3 light_direction{1.f, -1.f, 0.f};
     material->update_light_direction(light_direction);
 
     attach_system<render_mesh>();
@@ -73,7 +74,7 @@ public:
   void update_transforms(const squint::duration &dt) {
     // Rotate the entity
     auto freq = frequency(1);
-    rotate(vec3{0, 1, 0}, units::degrees(90) * dt * freq);
+    rotate(vec3{0, 0, 1}, -units::degrees(25) * dt * freq);
 
     // Get the updated MVP matrix from the renderer
     mat4 mvp = scene->get_mvp_matrix(*this);

@@ -10,7 +10,7 @@ cmake --build build-web
 Host on :8080 with:
 
 ```bash
-python -m http.server -d build-web
+python3 -m http.server -d build-web
 ```
 
 ## Build for Native
