@@ -10,8 +10,8 @@ namespace mareweb {
 
 class scene : public renderer, public camera {
 public:
-  scene(wgpu::Device &device, wgpu::Surface surface, SDL_Window *window,
-        const renderer_properties &properties, projection_type type = projection_type::perspective);
+  scene(wgpu::Device &device, wgpu::Surface surface, SDL_Window *window, const renderer_properties &properties,
+        projection_type type = projection_type::perspective);
 };
 
 } // namespace mareweb

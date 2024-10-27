@@ -44,6 +44,12 @@ public:
     set_aspect_ratio(aspect_ratio);
   }
 
+  auto on_resize(const mareweb::window_resize_event &event) -> bool override {
+    auto aspect_ratio = static_cast<float>(event.width) / static_cast<float>(event.height);
+    set_aspect_ratio(aspect_ratio);
+    return true;
+  }
+
   mat4 get_mvp_matrix(const mareweb::transform &model_transform) {
     mat4 model_matrix = model_transform.get_transformation_matrix();
     mat4 view_projection_matrix = get_view_projection_matrix();

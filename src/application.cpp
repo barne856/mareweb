@@ -345,6 +345,9 @@ void application::handle_window_resize(const SDL_Event &event) {
   for (auto &rend : m_renderers) {
     if (event.window.windowID == SDL_GetWindowID(rend->get_window())) {
       rend->resize(event.window.data1, event.window.data2);
+      window_resize_event resize_evt{static_cast<uint64_t>(event.window.data1),
+                                     static_cast<uint64_t>(event.window.data2)};
+      rend->on_resize(resize_evt);
       break;
     }
   }
