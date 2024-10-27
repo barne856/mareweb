@@ -94,8 +94,8 @@ int main() {
   mareweb::application &app = mareweb::application::get_instance();
   app.initialize();
 
-  mareweb::renderer_properties props = {.width = 800,
-                                        .height = 600,
+  mareweb::renderer_properties props = {.width = 1920,
+                                        .height = 1080,
                                         .title = "Basic Texture",
                                         .fullscreen = false,
                                         .resizable = true,
