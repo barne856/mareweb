@@ -67,9 +67,6 @@ public:
     vec3 light_direction{1.f, 1.f, 1.f};
     material->update_light_direction(light_direction);
 
-    // rotate 180 degrees around the y-axis
-    rotate(vec3{0, 1, 0}, units::degrees(180));
-
     attach_system<render_mesh>();
   }
 

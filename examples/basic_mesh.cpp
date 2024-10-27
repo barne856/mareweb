@@ -62,7 +62,7 @@ public:
     //     squint::vec3_t<length>{length(0.5), length(-0.5), length(0.0)}   // Bottom-right vertex
     // );
     // mesh = scene->create_mesh<mareweb::circle_mesh>(length(0.5), 50);
-    mesh = scene->create_mesh<mareweb::sphere_mesh>(length(0.5), 0);
+    mesh = scene->create_mesh<mareweb::sphere_mesh>(length(0.5), 3);
     // mesh = scene->create_mesh<mareweb::sphere_mesh>(length(0.5), 10, 10);
     // mesh = scene->create_mesh<mareweb::cube_mesh>(length(0.5));
     // mesh = scene->create_mesh<mareweb::square_mesh>(length(0.5));
@@ -74,10 +74,6 @@ public:
   }
 
   void update_mvp(const squint::time &dt) {
-    // Rotate the mesh
-    frequency f(1.0f);
-    rotate(vec3{0, 1, 0}, f * dt);
-
     // Get the updated MVP matrix from the renderer
     mat4 mvp = scene->get_mvp_matrix(*this);
 

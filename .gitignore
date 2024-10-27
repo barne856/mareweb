@@ -4,3 +4,4 @@ build/
 combined_files.txt
 .env
 .aider*
+build-web/

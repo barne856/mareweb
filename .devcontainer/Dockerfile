@@ -58,6 +58,12 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends \
     intel-oneapi-mkl-devel
 
+
+# install Emscripten tools
+RUN git clone https://github.com/emscripten-core/emsdk.git /emsdk \
+    && cd /emsdk \
+    && ./emsdk install latest
+
 # set XDG_RUNTIME_DIR environment variable
 ENV XDG_RUNTIME_DIR=/tmp
 

@@ -1,8 +1,8 @@
 {
 	"name": "C++ WebGPU",
-    "dockerComposeFile": "docker-compose.yml",
-    "service": "dev",
-    "workspaceFolder": "/workspaces/mareweb",
+	"dockerComposeFile": "docker-compose.yml",
+	"service": "dev",
+	"workspaceFolder": "/workspaces/mareweb",
 	"features": {
 		"ghcr.io/devcontainers/features/git:1": {},
 		"ghcr.io/adamlm/devcontainer-features/cmake": {
@@ -23,5 +23,5 @@
 	// make vscode user own the workspace and all mounts
 	"postCreateCommand": "sudo chown -R vscode:vscode ${containerWorkspaceFolder}",
 	// prevent git dubious ownership
-	"postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} && echo 'source /opt/intel/oneapi/setvars.sh' >> ~/.bashrc"
+	"postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} && echo 'source /opt/intel/oneapi/setvars.sh' >> ~/.bashrc && sudo /emsdk/emsdk activate latest && echo \"source /emsdk/emsdk_env.sh\" >> ~/.bashrc"
 }

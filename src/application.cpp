@@ -7,6 +7,7 @@
 #include <SDL2/SDL_main.h>
 #include <SDL2/SDL_syswm.h>
 #include <SDL2/SDL_video.h>
+#include <SDL_image.h>
 #include <chrono>
 #include <cstring>
 #include <iostream>
@@ -83,6 +84,10 @@ void application::init_sdl() {
   SDL_SetMainReady();
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     throw std::runtime_error(std::string("SDL initialization failed: ") + SDL_GetError());
+  }
+  // init sdl image for png and jpg support
+  if ((IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG) & (IMG_INIT_JPG | IMG_INIT_PNG)) != (IMG_INIT_JPG | IMG_INIT_PNG)) {
+    throw std::runtime_error(std::string("SDL image initialization failed: ") + IMG_GetError());
   }
 }
 
