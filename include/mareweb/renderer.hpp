@@ -15,7 +15,7 @@
 namespace mareweb {
 using namespace squint;
 
-constexpr squint::time DEFAULT_FIXED_TIME_STEP = units::seconds(1.0F / 60.0F);
+constexpr squint::duration DEFAULT_FIXED_TIME_STEP = units::seconds(1.0F / 60.0F);
 
 struct renderer_properties {
   uint32_t width;
@@ -26,12 +26,12 @@ struct renderer_properties {
   wgpu::PresentMode present_mode = wgpu::PresentMode::Fifo; // Fifo is equivalent to VSync
   uint32_t sample_count = 1;                                // MSAA sample count
   wgpu::Color clear_color = {0.0F, 0.0F, 0.0F, 1.0F};
-  squint::time fixed_time_step = DEFAULT_FIXED_TIME_STEP;
+  squint::duration fixed_time_step = DEFAULT_FIXED_TIME_STEP;
 };
 
 template <typename T> class renderer_render_system : public render_system<T> {
 public:
-  void render(const squint::time &dt, T &rend) override {
+  void render(const squint::duration &dt, T &rend) override {
     if (rend.is_disabled()) {
       return;
     }
@@ -45,7 +45,7 @@ public:
 
 template <typename T> class renderer_physics_system : public physics_system<T> {
 public:
-  void update(const squint::time &dt, T &rend) override {
+  void update(const squint::duration &dt, T &rend) override {
     if (rend.is_disabled()) {
       return;
     }

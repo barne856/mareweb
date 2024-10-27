@@ -37,13 +37,14 @@ private:
   static void init_sdl();
   void init_webgpu();
   void handle_events();
-  void handle_window_close(const SDL_Event& event);
-  void handle_window_resize(const SDL_Event& event);
-  void handle_key_event(const SDL_Event& event);
-  void handle_mouse_button_event(const SDL_Event& event);
-  void handle_mouse_motion_event(const SDL_Event& event);
-  void handle_mouse_wheel_event(const SDL_Event& event);
+  void handle_window_close(const SDL_Event &event);
+  void handle_window_resize(const SDL_Event &event);
+  void handle_key_event(const SDL_Event &event);
+  void handle_mouse_button_event(const SDL_Event &event);
+  void handle_mouse_motion_event(const SDL_Event &event);
+  void handle_mouse_wheel_event(const SDL_Event &event);
   void setup_webgpu_callbacks(wgpu::DeviceDescriptor &device_desc);
+  void on_frame();
 
   static auto create_window(const renderer_properties &properties) -> SDL_Window *;
   auto create_surface(SDL_Window *window) -> wgpu::Surface;

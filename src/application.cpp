@@ -20,6 +20,10 @@
 #endif
 #undef Success // Xlib.h defines this dumb macro, which conflicts with the enum value in dawn
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten/html5.h>
+#endif
+
 namespace mareweb {
 using namespace squint;
 
@@ -48,39 +52,53 @@ application::~application() {
   }
 }
 
+void application::on_frame() {
+  static squint::duration dt_seconds{0.0F};
+  static auto last_time = std::chrono::high_resolution_clock::now();
+  auto current_time = std::chrono::high_resolution_clock::now();
+  dt_seconds = squint::duration(std::chrono::duration<float>(current_time - last_time).count());
+  last_time = current_time;
+
+  handle_events();
+
+  // Update all renderers and their object hierarchies
+  for (auto &rend : m_renderers) {
+    // physics updates use a fixed time step
+    rend->update(rend->get_properties().fixed_time_step);
+  }
+
+  // Render all renderers and their object hierarchies
+  for (auto &rend : m_renderers) {
+    // render updates use the actual time step
+    rend->render(dt_seconds);
+  }
+}
+
 void application::run() {
   if (!m_initialized) {
     throw std::runtime_error("Application not initialized");
   }
 
-  static squint::time dt_seconds{0.0F};
-  static auto last_time = std::chrono::high_resolution_clock::now();
-
+#ifdef __EMSCRIPTEN__
+  emscripten_set_main_loop_arg(
+      [](void *userData) {
+        application &app = *reinterpret_cast<application *>(userData);
+        app.on_frame();
+      },
+      (void *)this, 0, true);
+#else
   while (!m_quit) {
-    auto current_time = std::chrono::high_resolution_clock::now();
-    dt_seconds = squint::time(std::chrono::duration<float>(current_time - last_time).count());
-    last_time = current_time;
-
-    handle_events();
-
-    // Update all renderers and their object hierarchies
-    for (auto &rend : m_renderers) {
-      // physics updates use a fixed time step
-      rend->update(rend->get_properties().fixed_time_step);
-    }
-
-    // Render all renderers and their object hierarchies
-    for (auto &rend : m_renderers) {
-      // render updates use the actual time step
-      rend->render(dt_seconds);
-    }
+    on_frame();
   }
+#endif
 }
 
 void application::quit() { m_quit = true; }
 
 void application::init_sdl() {
+#ifndef __EMSCRIPTEN__
   SDL_SetHint(SDL_HINT_VIDEODRIVER, "x11,wayland,windows");
+#endif
   SDL_SetMainReady();
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     throw std::runtime_error(std::string("SDL initialization failed: ") + SDL_GetError());
@@ -92,6 +110,54 @@ void application::init_sdl() {
 }
 
 void application::setup_webgpu_callbacks(wgpu::DeviceDescriptor &device_desc) {
+#ifdef __EMSCRIPTEN__
+  // // Device lost callback
+  // wgpu::DeviceLostCallbackInfo device_lost_callback_info{};
+  // device_lost_callback_info.callback = [](WGPUDeviceImpl *const * /*device*/, WGPUDeviceLostReason reason,
+  //                                         char const *message, void *userdata) {
+  //   auto *self = static_cast<application *>(userdata);
+  //   std::cerr << "Device lost: " << message << std::endl;
+  //
+  //   std::string reason_str;
+  //   switch (reason) {
+  //   case WGPUDeviceLostReason_Destroyed:
+  //     reason_str = "The device was explicitly destroyed";
+  //     break;
+  //   case WGPUDeviceLostReason_Unknown:
+  //     reason_str = "The device was lost for an unknown reason";
+  //     break;
+  //   case WGPUDeviceLostReason_FailedCreation:
+  //     reason_str = "The device was lost due to a failed creation";
+  //     break;
+  //   case WGPUDeviceLostReason_InstanceDropped:
+  //     reason_str = "The instance was dropped";
+  //     break;
+  //   case WGPUDeviceLostReason_Force32:
+  //     reason_str = "Force32";
+  //     break;
+  //   default:
+  //     reason_str = "Unknown reason code: " + std::to_string(static_cast<int>(reason));
+  //   }
+  //
+  //   std::cerr << "Reason: " << reason_str << std::endl;
+  // };
+  // device_lost_callback_info.userdata = this;
+
+  // // Uncaptured error callback
+  // wgpu::UncapturedErrorCallbackInfo uncaptured_error_callback_info{};
+  // uncaptured_error_callback_info.callback = [](WGPUErrorType type, const char *message, void *userdata) {
+  //   auto *self = static_cast<application *>(userdata);
+  //   std::cerr << "Uncaptured error: " << message << std::endl;
+  //   if (type == WGPUErrorType_DeviceLost) {
+  //     self->m_quit = true;
+  //   }
+  // };
+  // uncaptured_error_callback_info.userdata = this;
+
+  // Set up the device descriptor with the callbacks
+  // device_desc.deviceLostCallbackInfo = device_lost_callback_info;
+  // device_desc.uncapturedErrorCallbackInfo = uncaptured_error_callback_info;
+#else
   // Device lost callback
   device_desc.SetDeviceLostCallback(
       wgpu::CallbackMode::WaitAnyOnly,
@@ -129,9 +195,43 @@ void application::setup_webgpu_callbacks(wgpu::DeviceDescriptor &device_desc) {
         }
       },
       this);
+#endif
 }
 
 void application::init_webgpu() {
+#ifdef __EMSCRIPTEN__
+  m_instance = wgpu::CreateInstance();
+
+  m_instance.RequestAdapter(
+      nullptr,
+      [](WGPURequestAdapterStatus status, WGPUAdapter c_adapter, const char * /*message*/, void *userdata) {
+        auto *self = static_cast<application *>(userdata);
+        if (status != WGPURequestAdapterStatus_Success) {
+          throw std::runtime_error("Failed to request adapter");
+        }
+        wgpu::Adapter adapter = wgpu::Adapter::Acquire(c_adapter);
+
+        // Create device descriptor with device lost callback info
+        wgpu::DeviceDescriptor device_desc{};
+        self->setup_webgpu_callbacks(device_desc);
+
+        adapter.RequestDevice(
+            &device_desc,
+            [](WGPURequestDeviceStatus status, WGPUDevice c_device, const char * /*message*/, void *userdata) {
+              auto *self = static_cast<application *>(userdata);
+              if (status != WGPURequestDeviceStatus_Success) {
+                throw std::runtime_error("Failed to request device");
+              }
+              self->m_device = wgpu::Device::Acquire(c_device);
+            },
+            self);
+      },
+      this);
+  // Wait for the device to be created
+  while (m_device.Get() == nullptr) {
+    emscripten_sleep(100);
+  }
+#else
   m_instance = wgpu::CreateInstance();
 
   wgpu::Future adapter_future = m_instance.RequestAdapter(
@@ -194,6 +294,7 @@ void application::init_webgpu() {
     }
     throw std::runtime_error("Failed to wait for adapter creation");
   }
+#endif
 }
 
 void application::handle_events() {
@@ -343,6 +444,10 @@ auto application::create_surface(SDL_Window *window) -> wgpu::Surface {
 #else
   throw std::runtime_error("Unsupported window system on Linux");
 #endif
+#elif defined(SDL_VIDEO_DRIVER_EMSCRIPTEN)
+  wgpu::SurfaceDescriptorFromCanvasHTMLSelector window_desc{};
+  window_desc.selector = "#canvas";
+  surface_descriptor.nextInChain = &window_desc;
 #else
   throw std::runtime_error("Unsupported platform");
 #endif

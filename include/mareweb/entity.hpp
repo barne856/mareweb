@@ -11,7 +11,7 @@ using namespace squint;
 
 template <typename derived> class entity : public object {
 public:
-  void update(const squint::time &dt) override {
+  void update(const squint::duration &dt) override {
     if (!is_disabled()) {
       for (auto &system : m_physics_systems) {
         system->update(dt, static_cast<derived &>(*this));
@@ -20,7 +20,7 @@ public:
     }
   }
 
-  void render(const squint::time &dt) override {
+  void render(const squint::duration &dt) override {
     if (!is_disabled()) {
       for (auto &system : m_render_systems) {
         system->render(dt, static_cast<derived &>(*this));

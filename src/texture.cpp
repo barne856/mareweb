@@ -1,4 +1,3 @@
-// texture.cpp
 #include "mareweb/texture.hpp"
 #include <SDL_image.h>
 #include <stdexcept>
@@ -74,7 +73,25 @@ void texture::create_texture_from_surface() {
 
   m_texture = m_device.CreateTexture(&texture_desc);
 
-  // Convert surface to RGBA if necessary
+#ifdef __EMSCRIPTEN__
+  // Direct approach for Emscripten
+  wgpu::ImageCopyTexture destination = {};
+  destination.texture = m_texture;
+
+  wgpu::TextureDataLayout data_layout = {};
+  data_layout.offset = 0;
+  data_layout.bytesPerRow = m_surface->pitch;
+  data_layout.rowsPerImage = m_surface->h;
+
+  wgpu::Extent3D write_size = {};
+  write_size.width = m_surface->w;
+  write_size.height = m_surface->h;
+  write_size.depthOrArrayLayers = 1;
+
+  m_device.GetQueue().WriteTexture(&destination, m_surface->pixels, m_surface->pitch * m_surface->h, &data_layout,
+                                   &write_size);
+#else
+  // Native approach with conversion
   SDL_Surface *rgba_surface = SDL_ConvertSurfaceFormat(m_surface, SDL_PIXELFORMAT_RGBA32, 0);
   if (!rgba_surface) {
     throw std::runtime_error("Failed to convert texture to RGBA format");
@@ -98,6 +115,7 @@ void texture::create_texture_from_surface() {
                                    &data_layout, &write_size);
 
   SDL_FreeSurface(rgba_surface);
+#endif
 
   // Create texture view
   wgpu::TextureViewDescriptor view_desc = {};

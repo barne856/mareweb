@@ -10,8 +10,8 @@ namespace mareweb {
 renderer::renderer(wgpu::Device &device, wgpu::Surface surface, SDL_Window *window, renderer_properties properties)
     : m_device(device), m_surface(std::move(surface)), m_window(window), m_properties(std::move(properties)),
       m_clear_color({0.0F, 0.0F, 0.0F, 1.0F}) {
-  wgpu::SurfaceCapabilities capabilities{};
-  m_surface.GetCapabilities(m_device.GetAdapter(), &capabilities);
+  // wgpu::SurfaceCapabilities capabilities{};
+  // m_surface.GetCapabilities(m_device.GetAdapter(), &capabilities);
   // m_surface_format = *capabilities.formats;
   m_surface_format = wgpu::TextureFormat::BGRA8Unorm;
 
@@ -46,7 +46,11 @@ void renderer::resize(uint32_t new_width, uint32_t new_height) {
   }
 }
 
-void renderer::present() { m_surface.Present(); }
+void renderer::present() {
+#ifndef __EMSCRIPTEN__
+  m_surface.Present();
+#endif
+}
 
 void renderer::set_fullscreen(bool fullscreen) {
   if (fullscreen != m_properties.fullscreen) {
@@ -145,7 +149,9 @@ void renderer::end_frame() {
   m_render_pass.End();
   wgpu::CommandBuffer commands = m_command_encoder.Finish();
   m_device.GetQueue().Submit(1, &commands);
+#ifndef __EMSCRIPTEN__
   m_surface.Present();
+#endif
 }
 
 void renderer::draw_mesh(const mesh &mesh, material &material) {

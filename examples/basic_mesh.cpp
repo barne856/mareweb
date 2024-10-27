@@ -23,7 +23,7 @@ template <typename T>
   requires renderable_mesh<T>
 class render_mesh : public mareweb::render_system<T> {
 public:
-  void render(const squint::time &dt, T &ent) override {
+  void render(const squint::duration &dt, T &ent) override {
     ent.update_mvp(dt);
     ent.scene->draw_mesh(*ent.mesh.get(), *ent.material.get());
   }
@@ -73,7 +73,7 @@ public:
     attach_system<render_mesh>();
   }
 
-  void update_mvp(const squint::time &dt) {
+  void update_mvp(const squint::duration &dt) {
     // Get the updated MVP matrix from the renderer
     mat4 mvp = scene->get_mvp_matrix(*this);
 

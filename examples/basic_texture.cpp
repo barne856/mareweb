@@ -24,7 +24,7 @@ template <typename T>
   requires renderable_mesh<T>
 class render_mesh : public mareweb::render_system<T> {
 public:
-  void render(const squint::time &dt, T &ent) override {
+  void render(const squint::duration &dt, T &ent) override {
     ent.update_transforms(dt);
     ent.scene->draw_mesh(*ent.mesh.get(), *ent.material.get());
   }
@@ -70,7 +70,7 @@ public:
     attach_system<render_mesh>();
   }
 
-  void update_transforms(const squint::time &dt) {
+  void update_transforms(const squint::duration &dt) {
     // Rotate the entity
     auto freq = frequency(1);
     rotate(vec3{0, 1, 0}, units::degrees(90) * dt * freq);

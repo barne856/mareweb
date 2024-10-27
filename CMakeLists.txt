@@ -117,17 +117,21 @@ target_include_directories(mareweb PUBLIC include)
 if (NOT EMSCRIPTEN)
   target_link_libraries(mareweb PUBLIC webgpu_cpp webgpu_dawn SDL2::SDL2 SDL2_image SQUINT::SQUINT)
 else()
-    # Add Emscripten-specific link options
-    target_link_options(mareweb PRIVATE
-        -sUSE_SDL=3 # Use Emscripten-provided SDL2
-        -sUSE_SDL_IMAGE=2 # Use Emscripten-provided SDL2_image
-        -sSDL2_IMAGE_FORMATS='["png", "jpg"]' # Specify image formats to load
-        -sUSE_WEBGPU # Handle WebGPU symbols
-        -sASYNCIFY # Required by WebGPU-C++
-        -sALLOW_MEMORY_GROWTH # Allow memory to grow dynamically
-        --preload-file "${CMAKE_CURRENT_SOURCE_DIR}/assets" # Preload assets
-    )
-    target_link_libraries(mareweb PUBLIC SQUINT::SQUINT)
+  # Add Emscripten-specific compile options
+  target_compile_options(mareweb PRIVATE
+      -sUSE_SDL=2 # Use Emscripten-provided SDL2
+      -sUSE_SDL_IMAGE=2 # Use Emscripten-provided SDL2_image
+  )
+  # Add Emscripten-specific link options
+  target_link_options(mareweb PRIVATE
+      -sSDL2_IMAGE_FORMATS='["png", "jpg"]' # Specify image formats to load
+      -sUSE_WEBGPU # Handle WebGPU symbols
+      -sASYNCIFY # Required by WebGPU-C++
+      -sALLOW_MEMORY_GROWTH # Allow memory to grow dynamically
+      --use-preload-plugins # Use preload plugins
+      --preload-file "${CMAKE_CURRENT_SOURCE_DIR}/assets@assets" # Preload assets
+  )
+  target_link_libraries(mareweb PUBLIC webgpu_cpp SDL2 SQUINT::SQUINT)
 endif()
 
 # Function to add an example executable
@@ -148,6 +152,20 @@ function(add_example NAME)
               $<TARGET_FILE_DIR:${NAME}>
       )
     else()
+      # Add Emscripten-specific compile options
+      target_compile_options(${NAME} PRIVATE
+        -sUSE_SDL=2 # Use Emscripten-provided SDL2
+        -sUSE_SDL_IMAGE=2 # Use Emscripten-provided SDL2_image
+      )
+      # Add Emscripten-specific link options
+      target_link_options(${NAME} PRIVATE
+        -sSDL2_IMAGE_FORMATS='["png", "jpg"]' # Specify image formats to load
+        -sUSE_WEBGPU # Handle WebGPU symbols
+        -sASYNCIFY # Required by WebGPU-C++
+        -sALLOW_MEMORY_GROWTH # Allow memory to grow dynamically
+        --use-preload-plugins # Use preload plugins
+        --preload-file "${CMAKE_CURRENT_SOURCE_DIR}/assets@assets" # Preload assets
+      )
       # Generate a full web page rather than a simple WebAssembly module
       set_target_properties(${NAME} PROPERTIES SUFFIX ".html")
     endif()
