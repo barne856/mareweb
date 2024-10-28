@@ -36,7 +36,7 @@ public:
              const mareweb::renderer_properties &properties,
              mareweb::projection_type type = mareweb::projection_type::perspective)
       : scene(device, surface, window, properties, type) {
-    set_clear_color({0.05F, 0.05F, 0.05F, 1.0F});
+    set_clear_color({0.0F, 0.0F, 0.0F, 1.0F});
     set_position(vec3_t<length>{length(0.0F), length(-2.0F), length(0.0F)});
     face_towards(vec3_t<length>{length(0.0F), length(0.0F), length(0.0F)}, vec3{0.0F, 0.0F, -1.0F});
     m_basic_entity = create_object<basic_entity>(this);
