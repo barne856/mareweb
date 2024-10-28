@@ -55,7 +55,7 @@ jobs:
         working-directory: ${{ github.workspace }}/iac
         run: npm ci
 
-      - name: Run Tests Backend
+      - name: Run Tests IaC
         working-directory: ${{ github.workspace }}/iac
         run: npm test
 
@@ -71,7 +71,7 @@ jobs:
           commentOnPr: false
 
       - name: Get CloudFront Distribution ID
-        working-directory: ${{ github.workspace }}/backend/cdktf.out/stacks/computable-coffee
+        working-directory: ${{ github.workspace }}/iac/cdktf.out/stacks/computable-coffee
         run: |
           echo "DISTRIBUTION=$(terraform output -raw distribution_id)" >> $GITHUB_ENV
 
