@@ -6,3 +6,4 @@ combined_files.txt
 .aider*
 build-web/
 dist/
+node_modules/
