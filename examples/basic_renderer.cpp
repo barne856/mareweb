@@ -9,7 +9,7 @@ class basic_renderer : public mareweb::renderer {
 public:
   using mareweb::renderer::renderer; // Inherit constructor
 
-  void render(const squint::duration& dt) override {
+  void render(const squint::duration &dt) override {
     begin_frame();
     // set clear color based on time
     m_time += dt;
@@ -43,7 +43,10 @@ int main() {
                                            .sample_count = 1};
 
     app.create_renderer<basic_renderer>(props1);
+#ifndef __EMSCRIPTEN__
+    // multiple renderers are not supported in emscripten
     app.create_renderer<basic_renderer>(props2);
+#endif
 
     app.run();
   } catch (const std::exception &e) {

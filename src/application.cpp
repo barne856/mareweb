@@ -347,8 +347,9 @@ void application::handle_window_resize(const SDL_Event &event) {
       rend->resize(event.window.data1, event.window.data2);
       window_resize_event resize_evt{static_cast<uint64_t>(event.window.data1),
                                      static_cast<uint64_t>(event.window.data2)};
-      rend->on_resize(resize_evt);
-      break;
+      if (rend->on_resize(resize_evt)) {
+        break;
+      }
     }
   }
 }

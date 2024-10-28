@@ -165,6 +165,7 @@ function(add_example NAME)
         -sALLOW_MEMORY_GROWTH # Allow memory to grow dynamically
         --use-preload-plugins # Use preload plugins
         --preload-file "${CMAKE_CURRENT_SOURCE_DIR}/assets@assets" # Preload assets
+        --shell-file "${CMAKE_CURRENT_SOURCE_DIR}/shell.html"  # Add this line
       )
       # Generate a full web page rather than a simple WebAssembly module
       set_target_properties(${NAME} PROPERTIES SUFFIX ".html")

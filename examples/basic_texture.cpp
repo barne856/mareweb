@@ -65,7 +65,7 @@ public:
   basic_entity(main_scene *scene) : scene(scene) {
     // Create a square mesh with proper texture coordinates
     // mesh = scene->create_mesh<mareweb::square_mesh>(length(1.0));
-    mesh = scene->create_mesh<mareweb::sphere_mesh>(length(0.5), 32, 32);
+    mesh = scene->create_mesh<mareweb::sphere_mesh>(length(0.4), 32, 32);
     // mesh = scene->create_mesh<mareweb::cube_mesh>(length(0.5));
 
     // Create a textured material (provide path to your texture)
