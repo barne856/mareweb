@@ -66,6 +66,7 @@ public:
     // Create a square mesh with proper texture coordinates
     // mesh = scene->create_mesh<mareweb::square_mesh>(length(1.0));
     mesh = scene->create_mesh<mareweb::sphere_mesh>(length(0.5), 32, 32);
+    // mesh = scene->create_mesh<mareweb::cube_mesh>(length(0.5));
 
     // Create a textured material (provide path to your texture)
     material = scene->create_material<mareweb::textured_material>("assets/2k_earth_daymap.jpg");
@@ -100,8 +101,8 @@ int main() {
   mareweb::application &app = mareweb::application::get_instance();
   app.initialize();
 
-  mareweb::renderer_properties props = {.width = 1920,
-                                        .height = 1080,
+  mareweb::renderer_properties props = {.width = 800,
+                                        .height = 600,
                                         .title = "Basic Texture",
                                         .fullscreen = false,
                                         .resizable = true,
