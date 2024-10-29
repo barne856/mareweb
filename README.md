@@ -29,3 +29,13 @@ Run samples:
 ./build/basic_texture
 ./build/basic_renderer
 ```
+
+
+# TODO, mesh system like square
+# TODO, vertex input assembly? Need to make meshes with different inputs possible, pos3, pos3norm3, pos3norm3tex2, vertex colors, etc.
+# pairity with SQAURE
+# imlement PBR materials
+# normal matrix bug? lighting is glitchy when rotating object
+
+
+
