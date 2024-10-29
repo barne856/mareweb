@@ -566,5 +566,536 @@ private:
   }
 };
 
+class cylinder_mesh : public mesh {
+public:
+  cylinder_mesh(wgpu::Device &device, length radius, length height, float start_angle, float end_angle,
+                std::size_t sides)
+      : mesh(device, get_primitive_state(), generate_vertices(radius, height, start_angle, end_angle, sides),
+             vertex_layouts::pos3_norm3_tex2(), generate_indices(sides)) {}
+
+private:
+  static auto get_primitive_state() -> wgpu::PrimitiveState {
+    wgpu::PrimitiveState state;
+    state.topology = wgpu::PrimitiveTopology::TriangleList;
+    state.stripIndexFormat = wgpu::IndexFormat::Undefined;
+    state.frontFace = wgpu::FrontFace::CCW;
+    state.cullMode = wgpu::CullMode::None;
+    return state;
+  }
+
+  static auto generate_vertices(length radius, length height, float start_angle, float end_angle,
+                                std::size_t sides) -> std::vector<vertex> {
+    std::vector<vertex> vertices;
+    float r = radius.value();
+    float h = height.value();
+
+    float theta = end_angle - start_angle;
+    float dtheta = theta / float(sides);
+
+    // First generate bottom rim vertices
+    float angle = start_angle;
+    for (std::size_t i = 0; i <= sides; ++i) {
+      vertex vert;
+      vert.position[0] = r * std::cos(angle);
+      vert.position[1] = r * std::sin(angle);
+      vert.position[2] = 0.0f;
+      vert.normal[0] = std::cos(angle);
+      vert.normal[1] = std::sin(angle);
+      vert.normal[2] = 0.0f;
+      vert.texcoord[0] = float(i) / float(sides);
+      vert.texcoord[1] = 0.0f;
+      vertices.push_back(vert);
+      angle += dtheta;
+    }
+
+    // Then generate top rim vertices
+    angle = start_angle;
+    for (std::size_t i = 0; i <= sides; ++i) {
+      vertex vert;
+      vert.position[0] = r * std::cos(angle);
+      vert.position[1] = r * std::sin(angle);
+      vert.position[2] = h;
+      vert.normal[0] = std::cos(angle);
+      vert.normal[1] = std::sin(angle);
+      vert.normal[2] = 0.0f;
+      vert.texcoord[0] = float(i) / float(sides);
+      vert.texcoord[1] = 1.0f;
+      vertices.push_back(vert);
+      angle += dtheta;
+    }
+
+    // Bottom cap center
+    vertex bottom_center;
+    bottom_center.position[0] = 0.0f;
+    bottom_center.position[1] = 0.0f;
+    bottom_center.position[2] = 0.0f;
+    bottom_center.normal[0] = 0.0f;
+    bottom_center.normal[1] = 0.0f;
+    bottom_center.normal[2] = -1.0f;
+    bottom_center.texcoord[0] = 0.5f;
+    bottom_center.texcoord[1] = 0.5f;
+    vertices.push_back(bottom_center);
+
+    // Bottom cap rim vertices
+    angle = start_angle;
+    for (std::size_t i = 0; i <= sides; ++i) {
+      vertex vert;
+      vert.position[0] = r * std::cos(-angle); // Note the negative angle
+      vert.position[1] = r * std::sin(-angle);
+      vert.position[2] = 0.0f;
+      vert.normal[0] = 0.0f;
+      vert.normal[1] = 0.0f;
+      vert.normal[2] = -1.0f;
+      vert.texcoord[0] = 0.5f + 0.5f * std::cos(-angle);
+      vert.texcoord[1] = 0.5f + 0.5f * std::sin(-angle);
+      vertices.push_back(vert);
+      angle += dtheta;
+    }
+
+    // Top cap center
+    vertex top_center;
+    top_center.position[0] = 0.0f;
+    top_center.position[1] = 0.0f;
+    top_center.position[2] = h;
+    top_center.normal[0] = 0.0f;
+    top_center.normal[1] = 0.0f;
+    top_center.normal[2] = 1.0f;
+    top_center.texcoord[0] = 0.5f;
+    top_center.texcoord[1] = 0.5f;
+    vertices.push_back(top_center);
+
+    // Top cap rim vertices
+    angle = start_angle;
+    for (std::size_t i = 0; i <= sides; ++i) {
+      vertex vert;
+      vert.position[0] = r * std::cos(angle);
+      vert.position[1] = r * std::sin(angle);
+      vert.position[2] = h;
+      vert.normal[0] = 0.0f;
+      vert.normal[1] = 0.0f;
+      vert.normal[2] = 1.0f;
+      vert.texcoord[0] = 0.5f + 0.5f * std::cos(angle);
+      vert.texcoord[1] = 0.5f + 0.5f * std::sin(angle);
+      vertices.push_back(vert);
+      angle += dtheta;
+    }
+
+    return vertices;
+  }
+
+  static auto generate_indices(std::size_t sides) -> std::vector<uint32_t> {
+    std::vector<uint32_t> indices;
+
+    // Wall indices
+    for (std::size_t i = 0; i < sides; ++i) {
+      indices.push_back(i + 1);         // i+1
+      indices.push_back(sides + i + 1); // sides+i+1
+      indices.push_back(i);             // i
+      indices.push_back(sides + i + 2); // sides+i+2
+      indices.push_back(sides + i + 1); // sides+i+1
+      indices.push_back(i + 1);         // i+1
+    }
+
+    // Bottom cap indices
+    uint32_t bottom_center = 2 * (sides + 1);
+    uint32_t bottom_start = bottom_center + 1;
+    for (std::size_t i = 0; i < sides + 1; ++i) {
+      indices.push_back(bottom_center);        // center
+      indices.push_back(bottom_start + i + 1); // i+1
+      indices.push_back(bottom_start + i);     // i
+    }
+
+    // Top cap indices
+    uint32_t top_center = bottom_start + sides + 1;
+    uint32_t top_start = top_center + 1;
+    for (std::size_t i = 0; i < sides + 1; ++i) {
+      indices.push_back(top_center);        // center
+      indices.push_back(top_start + i + 1); // i+1
+      indices.push_back(top_start + i);     // i
+    }
+
+    return indices;
+  }
+};
+
+class line_mesh : public mesh {
+public:
+  // Single-pixel-width line constructor
+  line_mesh(wgpu::Device &device)
+      : mesh(device, get_line_primitive_state(), generate_line_vertices(), vertex_layouts::pos3_norm3_tex2()) {}
+
+  // Thick line constructor
+  line_mesh(wgpu::Device &device, float thickness)
+      : mesh(device, get_triangle_primitive_state(), generate_thick_line_vertices(thickness),
+             vertex_layouts::pos3_norm3_tex2()) {}
+
+private:
+  static auto get_line_primitive_state() -> wgpu::PrimitiveState {
+    wgpu::PrimitiveState state;
+    state.topology = wgpu::PrimitiveTopology::LineList;
+    state.stripIndexFormat = wgpu::IndexFormat::Undefined;
+    state.frontFace = wgpu::FrontFace::CCW;
+    state.cullMode = wgpu::CullMode::None;
+    return state;
+  }
+
+  static auto get_triangle_primitive_state() -> wgpu::PrimitiveState {
+    wgpu::PrimitiveState state;
+    state.topology = wgpu::PrimitiveTopology::TriangleList;
+    state.stripIndexFormat = wgpu::IndexFormat::Undefined;
+    state.frontFace = wgpu::FrontFace::CCW;
+    state.cullMode = wgpu::CullMode::None;
+    return state;
+  }
+
+  // Generate vertices for single-pixel-width line
+  static auto generate_line_vertices() -> std::vector<vertex> {
+    std::vector<vertex> vertices(2);
+
+    // Start point (-0.5, 0.0)
+    vertices[0].position[0] = -0.5f;
+    vertices[0].position[1] = 0.0f;
+    vertices[0].position[2] = 0.0f;
+    vertices[0].normal[0] = 0.0f;
+    vertices[0].normal[1] = 0.0f;
+    vertices[0].normal[2] = 1.0f;
+    vertices[0].texcoord[0] = 0.0f;
+    vertices[0].texcoord[1] = 0.0f;
+
+    // End point (0.5, 0.0)
+    vertices[1].position[0] = 0.5f;
+    vertices[1].position[1] = 0.0f;
+    vertices[1].position[2] = 0.0f;
+    vertices[1].normal[0] = 0.0f;
+    vertices[1].normal[1] = 0.0f;
+    vertices[1].normal[2] = 1.0f;
+    vertices[1].texcoord[0] = 1.0f;
+    vertices[1].texcoord[1] = 0.0f;
+
+    return vertices;
+  }
+
+  // Generate vertices for thick line
+  static auto generate_thick_line_vertices(float thickness) -> std::vector<vertex> {
+    std::vector<vertex> vertices(6);
+    float half_thickness = thickness * 0.5f;
+
+    // First triangle
+    vertices[0].position[0] = -0.5f; // Bottom-left
+    vertices[0].position[1] = -half_thickness;
+    vertices[0].position[2] = 0.0f;
+
+    vertices[1].position[0] = 0.5f; // Bottom-right
+    vertices[1].position[1] = -half_thickness;
+    vertices[1].position[2] = 0.0f;
+
+    vertices[2].position[0] = 0.5f; // Top-right
+    vertices[2].position[1] = half_thickness;
+    vertices[2].position[2] = 0.0f;
+
+    // Second triangle
+    vertices[3].position[0] = 0.5f; // Top-right (duplicated)
+    vertices[3].position[1] = half_thickness;
+    vertices[3].position[2] = 0.0f;
+
+    vertices[4].position[0] = -0.5f; // Top-left
+    vertices[4].position[1] = half_thickness;
+    vertices[4].position[2] = 0.0f;
+
+    vertices[5].position[0] = -0.5f; // Bottom-left (duplicated)
+    vertices[5].position[1] = -half_thickness;
+    vertices[5].position[2] = 0.0f;
+
+    // Set normals and texture coordinates for all vertices
+    for (auto &v : vertices) {
+      v.normal[0] = 0.0f;
+      v.normal[1] = 0.0f;
+      v.normal[2] = 1.0f;
+      // Texture coordinates could be added if needed
+      v.texcoord[0] = 0.0f;
+      v.texcoord[1] = 0.0f;
+    }
+
+    return vertices;
+  }
+};
+
+class char_mesh : public mesh {
+public:
+  char_mesh(wgpu::Device &device, const std::string &text, float thickness = 0.0f)
+      : mesh(device, get_primitive_state(), generate_vertices(text, thickness), vertex_layouts::pos3_norm3_tex2(),
+             generate_indices(text)) {
+    update_text_metrics(text);
+  }
+
+  // Getters for text metrics
+  auto get_width() const -> uint32_t { return m_width; }
+  auto get_lines() const -> uint32_t { return m_lines; }
+  auto get_text() const -> const std::string & { return m_text; }
+
+private:
+  static auto get_primitive_state() -> wgpu::PrimitiveState {
+    wgpu::PrimitiveState state;
+    state.topology = wgpu::PrimitiveTopology::TriangleList;
+    state.stripIndexFormat = wgpu::IndexFormat::Undefined;
+    state.frontFace = wgpu::FrontFace::CCW;
+    state.cullMode = wgpu::CullMode::Back;
+    return state;
+  }
+
+  void update_text_metrics(const std::string &text) {
+    m_text = text;
+    m_width = 0;
+    m_lines = 1;
+    uint32_t current_width = 0;
+
+    for (char c : text) {
+      if (c == '\n') {
+        m_lines++;
+        m_width = std::max(m_width, current_width);
+        current_width = 0;
+      } else {
+        current_width++;
+      }
+    }
+    m_width = std::max(m_width, current_width);
+  }
+
+  static const float GRID_POINTS[17];
+  static const std::unordered_map<char, std::vector<uint32_t>> ASCII_FONT;
+
+  struct CharacterStroke {
+    vec3 start;
+    vec3 end;
+    vec3 normal;
+  };
+
+  static auto generate_stroke(const vec3 &p1, const vec3 &p2, float thickness) -> std::vector<vertex> {
+    std::vector<vertex> vertices;
+    vertices.reserve(6); // 2 triangles = 6 vertices
+
+    vec3 direction = normalize(p2 - p1);
+    vec3 normal = vec3{-direction[1], direction[0], 0.0f}; // perpendicular in 2D
+    vec3 offset = normal * (thickness * 0.5f);
+
+    // Bottom left
+    vertex v1;
+    v1.position[0] = p1[0] - offset[0];
+    v1.position[1] = p1[1] - offset[1];
+    v1.position[2] = p1[2];
+    v1.normal[0] = 0.0f;
+    v1.normal[1] = 0.0f;
+    v1.normal[2] = 1.0f;
+    v1.texcoord[0] = 0.0f;
+    v1.texcoord[1] = 0.0f;
+
+    // Top left
+    vertex v2;
+    v2.position[0] = p1[0] + offset[0];
+    v2.position[1] = p1[1] + offset[1];
+    v2.position[2] = p1[2];
+    v2.normal[0] = 0.0f;
+    v2.normal[1] = 0.0f;
+    v2.normal[2] = 1.0f;
+    v2.texcoord[0] = 0.0f;
+    v2.texcoord[1] = 1.0f;
+
+    // Bottom right
+    vertex v3;
+    v3.position[0] = p2[0] - offset[0];
+    v3.position[1] = p2[1] - offset[1];
+    v3.position[2] = p2[2];
+    v3.normal[0] = 0.0f;
+    v3.normal[1] = 0.0f;
+    v3.normal[2] = 1.0f;
+    v3.texcoord[0] = 1.0f;
+    v3.texcoord[1] = 0.0f;
+
+    // Top right
+    vertex v4;
+    v4.position[0] = p2[0] + offset[0];
+    v4.position[1] = p2[1] + offset[1];
+    v4.position[2] = p2[2];
+    v4.normal[0] = 0.0f;
+    v4.normal[1] = 0.0f;
+    v4.normal[2] = 1.0f;
+    v4.texcoord[0] = 1.0f;
+    v4.texcoord[1] = 1.0f;
+
+    // First triangle
+    vertices.push_back(v1);
+    vertices.push_back(v2);
+    vertices.push_back(v3);
+
+    // Second triangle
+    vertices.push_back(v2);
+    vertices.push_back(v4);
+    vertices.push_back(v3);
+
+    return vertices;
+  }
+
+  static auto get_character_strokes(char c, vec3 offset) -> std::vector<CharacterStroke> {
+    std::vector<CharacterStroke> strokes;
+    auto it = ASCII_FONT.find(c);
+    if (it == ASCII_FONT.end())
+      return strokes;
+
+    const auto &indices = it->second;
+    for (size_t i = 0; i < indices.size(); i += 4) {
+      vec3 p1 = {0.5f * GRID_POINTS[indices[i]] + offset[0], -GRID_POINTS[indices[i + 1]] + offset[1], offset[2]};
+      vec3 p2 = {0.5f * GRID_POINTS[indices[i + 2]] + offset[0], -GRID_POINTS[indices[i + 3]] + offset[1], offset[2]};
+      vec3 normal = {0.0f, 0.0f, 1.0f};
+      strokes.push_back({p1, p2, normal});
+    }
+    return strokes;
+  }
+
+  static auto generate_vertices(const std::string &text, float thickness) -> std::vector<vertex> {
+    std::vector<vertex> vertices;
+    uint32_t column = 0;
+    uint32_t row = 0;
+
+    for (char c : text) {
+      if (c == '\n') {
+        column = 0;
+        row++;
+        continue;
+      }
+
+      vec3 char_offset = {0.5f * static_cast<float>(column), -static_cast<float>(row), 0.0f};
+
+      auto strokes = get_character_strokes(c, char_offset);
+      for (const auto &stroke : strokes) {
+        auto stroke_vertices = generate_stroke(stroke.start, stroke.end, thickness);
+        vertices.insert(vertices.end(), stroke_vertices.begin(), stroke_vertices.end());
+      }
+
+      column++;
+    }
+
+    return vertices;
+  }
+
+  static auto generate_indices(const std::string &text) -> std::vector<uint32_t> {
+    // Since we're generating triangles directly in generate_vertices,
+    // we don't need separate indices
+    return std::vector<uint32_t>();
+  }
+
+  std::string m_text;
+  uint32_t m_width = 0;
+  uint32_t m_lines = 1;
+};
+
+// Define the static grid points
+const float char_mesh::GRID_POINTS[17] = {0.0f,    0.0625f, 0.125f,  0.1875f, 0.25f,   0.3125f, 0.375f,  0.4375f, 0.5f,
+                                          0.5625f, 0.625f,  0.6875f, 0.75f,   0.8125f, 0.875f,  0.9375f, 1.0f};
+
+// Initialize the ASCII font map
+const std::unordered_map<char, std::vector<uint32_t>> char_mesh::ASCII_FONT = {
+    {'!', std::vector<unsigned int>{8, 2, 8, 11, 8, 13, 8, 14}},
+    {'"', std::vector<unsigned int>{5, 2, 5, 4, 11, 2, 11, 4}},
+    {'#', std::vector<unsigned int>{7, 2, 3, 14, 13, 2, 9, 14, 2, 5, 14, 5, 2, 11, 14, 11}},
+    {'$', std::vector<unsigned int>{2, 12, 14, 12, 14, 12, 14, 8, 14, 8, 2, 8, 2, 8, 2, 4, 2, 4, 14, 4, 8, 2, 8, 14}},
+    {'%', std::vector<unsigned int>{2,  2, 2,  6,  2,  6,  6,  6,  6,  6,  6,  2,  6,  2,  2,  2,  2,  14,
+                                    14, 2, 10, 10, 10, 14, 10, 14, 14, 14, 14, 14, 14, 10, 14, 10, 10, 10}},
+    {'&', std::vector<unsigned int>{12, 14, 6,  6, 6, 6,  6, 4,  6, 4,  7, 2,  7, 2,  9, 2,  9,  2,  10, 4,  10, 4,
+                                    10, 6,  10, 6, 4, 10, 4, 10, 4, 13, 4, 13, 6, 14, 6, 14, 10, 14, 10, 14, 12, 11}},
+    {'\'', std::vector<unsigned int>{8, 2, 8, 4}},
+    {'(', std::vector<unsigned int>{8, 2, 6, 6, 6, 6, 6, 10, 6, 10, 8, 14}},
+    {')', std::vector<unsigned int>{8, 2, 10, 6, 10, 6, 10, 10, 10, 10, 8, 14}},
+    {'*', std::vector<unsigned int>{8, 5, 8, 11, 6, 6, 10, 10, 6, 10, 10, 6}},
+    {'+', std::vector<unsigned int>{8, 5, 8, 11, 5, 8, 11, 8}},
+    {',', std::vector<unsigned int>{7, 14, 9, 14, 9, 14, 9, 12}},
+    {'-', std::vector<unsigned int>{5, 8, 11, 8}},
+    {'.', std::vector<unsigned int>{8, 13, 8, 14}},
+    {'/', std::vector<unsigned int>{11, 2, 5, 14}},
+    {'0', std::vector<unsigned int>{2, 2, 14, 2, 14, 2, 14, 14, 14, 14, 2, 14, 2, 14, 2, 2, 2, 14, 14, 2}},
+    {'1', std::vector<unsigned int>{6, 4, 8, 2, 8, 2, 8, 14, 6, 14, 10, 14}},
+    {'2', std::vector<unsigned int>{2, 4, 2, 2, 2, 2, 14, 2, 14, 2, 14, 8, 14, 8, 2, 8, 2, 8, 2, 14, 2, 14, 14, 14}},
+    {'3', std::vector<unsigned int>{2, 2, 14, 2, 2, 8, 14, 8, 2, 14, 14, 14, 14, 2, 14, 14}},
+    {'4', std::vector<unsigned int>{2, 2, 2, 8, 14, 2, 14, 14, 2, 8, 14, 8}},
+    {'5', std::vector<unsigned int>{14, 2, 2, 2, 2, 2, 2, 8, 2, 8, 14, 8, 14, 8, 14, 14, 14, 14, 2, 14, 2, 14, 2, 12}},
+    {'6', std::vector<unsigned int>{14, 4, 14, 2, 14, 2, 2, 2, 2, 2, 2, 14, 2, 14, 14, 14, 14, 14, 14, 8, 14, 8, 2, 8}},
+    {'7', std::vector<unsigned int>{2, 2, 14, 2, 14, 2, 2, 14}},
+    {'8', std::vector<unsigned int>{2, 2, 14, 2, 14, 2, 14, 14, 14, 14, 2, 14, 2, 14, 2, 2, 2, 8, 14, 8}},
+    {'9', std::vector<unsigned int>{14, 8, 2, 8, 2, 8, 2, 2, 2, 2, 14, 2, 14, 2, 14, 14, 14, 14, 2, 14, 2, 14, 2, 12}},
+    {':', std::vector<unsigned int>{8, 3, 8, 5, 8, 13, 8, 11}},
+    {';', std::vector<unsigned int>{8, 3, 8, 5, 7, 14, 9, 14, 9, 14, 9, 12}},
+    {'<', std::vector<unsigned int>{14, 2, 2, 8, 2, 8, 14, 14}},
+    {'=', std::vector<unsigned int>{2, 5, 14, 5, 2, 11, 14, 11}},
+    {'>', std::vector<unsigned int>{2, 2, 14, 8, 14, 8, 2, 14}},
+    {'?', std::vector<unsigned int>{2, 4, 2, 2, 2, 2, 14, 2, 14, 2, 14, 8, 14, 8, 8, 8, 8, 8, 8, 11, 8, 13, 8, 14}},
+    {'@', std::vector<unsigned int>{10, 10, 6,  10, 6,  10, 6,  6,  6,  6,  10, 6,  10, 6,  10, 12, 10, 12,
+                                    12, 12, 12, 12, 14, 10, 14, 10, 14, 6,  14, 6,  10, 2,  10, 2,  6,  2,
+                                    6,  2,  2,  6,  2,  6,  2,  10, 2,  10, 6,  14, 6,  14, 10, 14}},
+    {'A', std::vector<unsigned int>{2, 14, 8, 2, 8, 2, 14, 14, 4, 10, 12, 10}},
+    {'B', std::vector<unsigned int>{2, 2, 2, 14, 2, 2, 11, 2, 11, 2, 11, 7, 2, 7, 14, 7, 2, 14, 14, 14, 14, 14, 14, 7}},
+    {'C', std::vector<unsigned int>{14, 4, 14, 2, 14, 2, 2, 2, 2, 2, 2, 14, 2, 14, 14, 14, 14, 14, 14, 12}},
+    {'D', std::vector<unsigned int>{2, 2, 8, 2, 8, 2, 14, 5, 14, 5, 14, 11, 14, 11, 8, 14, 8, 14, 2, 14, 2, 14, 2, 2}},
+    {'E', std::vector<unsigned int>{2, 14, 2, 2, 2, 2, 14, 2, 2, 8, 8, 8, 2, 14, 14, 14}},
+    {'F', std::vector<unsigned int>{2, 14, 2, 2, 2, 2, 14, 2, 2, 8, 8, 8}},
+    {'G', std::vector<unsigned int>{12, 4, 12, 2, 12, 2, 2, 2, 2, 2, 2, 14, 2, 14, 12, 14, 12, 14, 12, 8, 14, 8, 8, 8}},
+    {'H', std::vector<unsigned int>{2, 2, 2, 14, 14, 2, 14, 14, 2, 8, 14, 8}},
+    {'I', std::vector<unsigned int>{2, 2, 14, 2, 2, 14, 14, 14, 8, 2, 8, 14}},
+    {'J', std::vector<unsigned int>{2, 2, 14, 2, 11, 2, 11, 11, 11, 11, 8, 14, 8, 14, 5, 14, 5, 14, 2, 11}},
+    {'K', std::vector<unsigned int>{2, 2, 2, 14, 2, 8, 14, 2, 2, 8, 14, 14}},
+    {'L', std::vector<unsigned int>{2, 2, 2, 14, 2, 14, 14, 14}},
+    {'M', std::vector<unsigned int>{2, 14, 2, 2, 2, 2, 8, 11, 8, 11, 14, 2, 14, 2, 14, 14}},
+    {'N', std::vector<unsigned int>{2, 14, 2, 2, 2, 2, 14, 14, 14, 14, 14, 2}},
+    {'O', std::vector<unsigned int>{2, 2, 14, 2, 14, 2, 14, 14, 14, 14, 2, 14, 2, 14, 2, 2}},
+    {'P', std::vector<unsigned int>{2, 14, 2, 2, 2, 2, 14, 2, 14, 2, 14, 8, 14, 8, 2, 8}},
+    {'Q', std::vector<unsigned int>{2, 2, 14, 2, 14, 2, 14, 14, 14, 14, 2, 14, 2, 14, 2, 2, 11, 11, 16, 16}},
+    {'R', std::vector<unsigned int>{2, 14, 2, 2, 2, 2, 14, 2, 14, 2, 14, 8, 14, 8, 2, 8, 8, 8, 14, 14}},
+    {'S', std::vector<unsigned int>{14, 5, 14, 2, 14, 2,  2,  2,  2, 2,  2, 8,  2, 8,
+                                    14, 8, 14, 8, 14, 14, 14, 14, 2, 14, 2, 14, 2, 11}},
+    {'T', std::vector<unsigned int>{2, 2, 14, 2, 8, 2, 8, 14}},
+    {'U', std::vector<unsigned int>{2, 2, 2, 14, 2, 14, 14, 14, 14, 14, 14, 2}},
+    {'V', std::vector<unsigned int>{2, 2, 8, 14, 8, 14, 14, 2}},
+    {'W', std::vector<unsigned int>{2, 2, 2, 14, 2, 14, 8, 5, 8, 5, 14, 14, 14, 14, 14, 2}},
+    {'X', std::vector<unsigned int>{2, 2, 14, 14, 14, 2, 2, 14}},
+    {'Y', std::vector<unsigned int>{2, 2, 8, 8, 8, 8, 14, 2, 8, 8, 8, 14}},
+    {'Z', std::vector<unsigned int>{2, 2, 14, 2, 14, 2, 2, 14, 2, 14, 14, 14}},
+    {'[', std::vector<unsigned int>{8, 0, 2, 0, 2, 0, 2, 16, 2, 16, 8, 16}},
+    {'\\', std::vector<unsigned int>{5, 2, 11, 14}},
+    {']', std::vector<unsigned int>{8, 0, 14, 0, 14, 0, 14, 16, 14, 16, 8, 16}},
+    {'^', std::vector<unsigned int>{5, 5, 8, 2, 8, 2, 11, 5}},
+    {'_', std::vector<unsigned int>{0, 16, 16, 16}},
+    {'`', std::vector<unsigned int>{7, 2, 9, 5}},
+    {'a', std::vector<unsigned int>{2, 10, 2, 14, 2, 14, 14, 14, 14, 14, 14, 8, 14, 10, 2, 10, 14, 8, 2, 8}},
+    {'b', std::vector<unsigned int>{2, 2, 2, 14, 2, 14, 14, 14, 14, 14, 14, 8, 14, 8, 2, 8}},
+    {'c', std::vector<unsigned int>{2, 8, 2, 14, 2, 14, 14, 14, 14, 8, 2, 8}},
+    {'d', std::vector<unsigned int>{2, 8, 2, 14, 2, 14, 14, 14, 14, 14, 14, 2, 14, 8, 2, 8}},
+    {'e', std::vector<unsigned int>{2, 8, 2, 14, 2, 14, 14, 14, 14, 11, 14, 8, 14, 8, 2, 8, 2, 11, 14, 11}},
+    {'f', std::vector<unsigned int>{8, 14, 8, 2, 8, 2, 14, 2, 14, 2, 14, 5, 2, 8, 14, 8}},
+    {'g', std::vector<unsigned int>{2, 8, 2, 14, 2, 14, 14, 14, 14, 16, 14, 8, 14, 8, 2, 8, 14, 16, 2, 16}},
+    {'h', std::vector<unsigned int>{2, 14, 2, 2, 2, 8, 14, 8, 14, 8, 14, 14}},
+    {'i', std::vector<unsigned int>{8, 5, 8, 14, 8, 2, 8, 3}},
+    {'j', std::vector<unsigned int>{8, 5, 8, 16, 8, 16, 2, 16, 8, 2, 8, 3}},
+    {'k', std::vector<unsigned int>{2, 2, 2, 14, 2, 11, 14, 8, 2, 11, 14, 14}},
+    {'l', std::vector<unsigned int>{8, 2, 8, 14, 8, 14, 10, 14, 8, 2, 6, 2}},
+    {'m', std::vector<unsigned int>{2, 8, 2, 14, 8, 8, 8, 14, 14, 8, 14, 14, 2, 8, 14, 8}},
+    {'n', std::vector<unsigned int>{2, 8, 2, 14, 14, 8, 14, 14, 2, 8, 14, 8}},
+    {'o', std::vector<unsigned int>{2, 8, 2, 14, 14, 8, 14, 14, 2, 8, 14, 8, 2, 14, 14, 14}},
+    {'p', std::vector<unsigned int>{2, 8, 2, 16, 14, 8, 14, 14, 2, 8, 14, 8, 2, 14, 14, 14}},
+    {'q', std::vector<unsigned int>{2, 8, 2, 14, 14, 8, 14, 16, 2, 8, 14, 8, 2, 14, 14, 14}},
+    {'r', std::vector<unsigned int>{2, 8, 2, 14, 14, 8, 14, 11, 2, 8, 14, 8}},
+    {'s', std::vector<unsigned int>{2, 8, 2, 11, 14, 11, 14, 14, 2, 8, 14, 8, 2, 14, 14, 14, 2, 11, 14, 11}},
+    {'t', std::vector<unsigned int>{8, 2, 8, 14, 2, 5, 14, 5, 8, 14, 14, 14}},
+    {'u', std::vector<unsigned int>{2, 8, 2, 14, 14, 8, 14, 14, 2, 14, 14, 14}},
+    {'v', std::vector<unsigned int>{2, 8, 8, 14, 8, 14, 14, 8}},
+    {'w', std::vector<unsigned int>{2, 8, 5, 14, 5, 14, 8, 8, 8, 8, 11, 14, 11, 14, 14, 8}},
+    {'x', std::vector<unsigned int>{2, 8, 14, 14, 14, 8, 2, 14}},
+    {'y', std::vector<unsigned int>{2, 8, 8, 14, 6, 16, 14, 8}},
+    {'z', std::vector<unsigned int>{2, 8, 14, 8, 14, 8, 2, 14, 2, 14, 14, 14}},
+    {'{', std::vector<unsigned int>{10, 2, 8, 2, 8, 2, 7, 4,  7, 4,  7, 7,  7, 7,  5,  8,
+                                    5,  8, 7, 9, 7, 9, 7, 12, 7, 12, 8, 14, 8, 14, 10, 14}},
+    {'|', std::vector<unsigned int>{8, 0, 8, 16}},
+    {'}', std::vector<unsigned int>{6,  2, 8, 2, 8, 2, 9, 4,  9, 4,  9, 7,  9, 7,  11, 8,
+                                    11, 8, 9, 9, 9, 9, 9, 12, 9, 12, 8, 14, 8, 14, 6,  14}},
+    {'~', std::vector<unsigned int>{2,  10, 2,  8,  2,  8,  4,  6,  4,  6, 6,  6, 6,  6,
+                                    10, 10, 10, 10, 12, 10, 12, 10, 14, 8, 14, 8, 14, 6}}};
+
 } // namespace mareweb
 #endif // MAREWEB_PRIMITIVE_MESH_HPP
