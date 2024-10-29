@@ -16,6 +16,7 @@ renderer::renderer(wgpu::Device &device, wgpu::Surface surface, SDL_Window *wind
   m_surface_format = wgpu::TextureFormat::BGRA8Unorm;
 
   configure_surface();
+  create_depth_texture();
 
   if (m_properties.sample_count > 1) {
     try {
