@@ -41,6 +41,7 @@ void renderer::resize(uint32_t new_width, uint32_t new_height) {
   m_properties.width = new_width;
   m_properties.height = new_height;
   configure_surface();
+  create_depth_texture();
   if (m_properties.sample_count > 1) {
     create_msaa_texture(); // Recreate MSAA texture with new size
   }
@@ -130,9 +131,19 @@ void renderer::begin_frame() {
   color_attachment.loadOp = wgpu::LoadOp::Clear;
   color_attachment.clearValue = m_clear_color;
 
+  // Setup depth attachment
+  wgpu::RenderPassDepthStencilAttachment depth_attachment{};
+  depth_attachment.view = m_depth_texture_view;
+  depth_attachment.depthClearValue = 1.0f;
+  depth_attachment.depthLoadOp = wgpu::LoadOp::Clear;
+  depth_attachment.depthStoreOp = wgpu::StoreOp::Store;
+  depth_attachment.stencilLoadOp = wgpu::LoadOp::Undefined;
+  depth_attachment.stencilStoreOp = wgpu::StoreOp::Undefined;
+
   wgpu::RenderPassDescriptor render_pass_descriptor{};
   render_pass_descriptor.colorAttachmentCount = 1;
   render_pass_descriptor.colorAttachments = &color_attachment;
+  render_pass_descriptor.depthStencilAttachment = &depth_attachment;
 
   m_render_pass = m_command_encoder.BeginRenderPass(&render_pass_descriptor);
   if (!m_render_pass) {
@@ -209,6 +220,21 @@ void renderer::create_msaa_texture() {
   if (!m_msaa_texture_view) {
     throw std::runtime_error("Failed to create MSAA texture view");
   }
+}
+
+void renderer::create_depth_texture() {
+  wgpu::TextureDescriptor depth_tex_desc{};
+  depth_tex_desc.dimension = wgpu::TextureDimension::e2D;
+  depth_tex_desc.format = wgpu::TextureFormat::Depth24Plus;
+  depth_tex_desc.mipLevelCount = 1;
+  depth_tex_desc.sampleCount = m_properties.sample_count;
+  depth_tex_desc.size = {m_properties.width, m_properties.height, 1};
+  depth_tex_desc.usage = wgpu::TextureUsage::RenderAttachment;
+  depth_tex_desc.viewFormats = nullptr;
+  depth_tex_desc.viewFormatCount = 0;
+
+  m_depth_texture = m_device.CreateTexture(&depth_tex_desc);
+  m_depth_texture_view = m_depth_texture.CreateView();
 }
 
 } // namespace mareweb

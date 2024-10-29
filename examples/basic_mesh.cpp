@@ -69,6 +69,7 @@ public:
     // );
     // mesh = scene->create_mesh<mareweb::circle_mesh>(length(0.5), 50);
     mesh = scene->create_mesh<mareweb::sphere_mesh>(length(0.4), 3);
+    // mesh = scene->create_mesh<mareweb::torus_mesh>(length(0.4), length(0.2), 32, 32);
     // mesh = scene->create_mesh<mareweb::sphere_mesh>(length(0.5), 10, 10);
     // mesh = scene->create_mesh<mareweb::cube_mesh>(length(0.5));
     // mesh = scene->create_mesh<mareweb::square_mesh>(length(0.5));

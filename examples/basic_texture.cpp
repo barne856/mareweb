@@ -67,12 +67,13 @@ public:
     // mesh = scene->create_mesh<mareweb::square_mesh>(length(1.0));
     mesh = scene->create_mesh<mareweb::sphere_mesh>(length(0.4), 32, 32);
     // mesh = scene->create_mesh<mareweb::cube_mesh>(length(0.5));
+    // mesh = scene->create_mesh<mareweb::torus_mesh>(length(0.4), length(0.2), 32, 32);
 
     // Create a textured material (provide path to your texture)
-    material = scene->create_material<mareweb::textured_material>("assets/2k_earth_daymap.jpg");
+    material = scene->create_material<mareweb::textured_material>("assets/hdri009.jpg");
 
     // Set initial light direction
-    vec3 light_direction{1.f, -1.f, 0.f};
+    vec3 light_direction{-1.f, -2.f, -1.f};
     material->update_light_direction(light_direction);
 
     attach_system<render_mesh>();

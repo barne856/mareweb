@@ -166,9 +166,12 @@ private:
   wgpu::Color m_clear_color;
   wgpu::Texture m_msaa_texture;
   wgpu::TextureView m_msaa_texture_view;
+  wgpu::Texture m_depth_texture;
+  wgpu::TextureView m_depth_texture_view;
 
   void configure_surface();
   void create_msaa_texture();
+  void create_depth_texture();
 
   std::shared_ptr<uniform_buffer> m_mvp_buffer;
 };

@@ -47,6 +47,12 @@ pipeline::pipeline(wgpu::Device &device, const shader &vertex_shader, const shad
   fragment_state.targetCount = 1;
   fragment_state.targets = &color_target;
 
+  // Create depth stencil state
+  wgpu::DepthStencilState depth_stencil{};
+  depth_stencil.format = wgpu::TextureFormat::Depth24Plus;
+  depth_stencil.depthWriteEnabled = true;
+  depth_stencil.depthCompare = wgpu::CompareFunction::Less;
+
   // Create render pipeline
   wgpu::RenderPipelineDescriptor pipeline_desc{};
   pipeline_desc.layout = pipeline_layout;
@@ -58,7 +64,7 @@ pipeline::pipeline(wgpu::Device &device, const shader &vertex_shader, const shad
 
   pipeline_desc.primitive = primitive_state;
   pipeline_desc.fragment = &fragment_state;
-  pipeline_desc.depthStencil = nullptr; // No depth or stencil for now
+  pipeline_desc.depthStencil = &depth_stencil;
 
   pipeline_desc.multisample.count = sample_count;
   pipeline_desc.multisample.mask = kAllSamplesMask;
