@@ -309,7 +309,7 @@ public:
   // Icosahedron-based sphere constructor (no texture coordinates)
   sphere_mesh(wgpu::Device &device, length radius, unsigned int recursion_level)
       : mesh(device, get_primitive_state(), generate_icosphere_vertices(radius, recursion_level),
-             vertex_layouts::pos3_norm3_tex2()) {}
+             vertex_layouts::pos3_norm3()) {}
 
   // Latitude-longitude based sphere constructor (with texture coordinates)
   sphere_mesh(wgpu::Device &device, length radius, std::size_t n_lats, std::size_t n_lngs)
@@ -375,9 +375,6 @@ private:
       vert.normal[0] = normal[0];
       vert.normal[1] = normal[1];
       vert.normal[2] = normal[2];
-      // Texture coordinates
-      vert.texcoord[0] = 0.0F;
-      vert.texcoord[1] = 0.0F;
 
       vertices.push_back(vert);
     }

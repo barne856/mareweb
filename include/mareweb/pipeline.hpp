@@ -12,6 +12,7 @@ namespace mareweb {
 struct vertex_state {
   bool has_normals = false;
   bool has_texcoords = false;
+  bool has_colors = false;
 };
 
 class pipeline {

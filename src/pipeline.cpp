@@ -80,48 +80,31 @@ pipeline::pipeline(wgpu::Device &device, const shader &vertex_shader, const shad
 auto pipeline::create_vertex_buffer_layout(const vertex_state &vert_state)
     -> std::pair<std::vector<wgpu::VertexAttribute>, wgpu::VertexBufferLayout> {
 
-  std::vector<wgpu::VertexAttribute> attributes;
-  uint64_t stride = 3 * sizeof(float); // Start with position
-  uint64_t current_offset = 0;
+  // Create the basic layout with position
+  auto layout = vertex_layouts::create_layout();
 
-  // Position attribute (always present)
-  wgpu::VertexAttribute pos_attr{};
-  pos_attr.format = wgpu::VertexFormat::Float32x3;
-  pos_attr.offset = current_offset;
-  pos_attr.shaderLocation = 0;
-  attributes.push_back(pos_attr);
-  current_offset += 3 * sizeof(float);
-
-  // Normal attribute (optional)
+  // Add optional attributes based on vertex_state
   if (vert_state.has_normals) {
-    wgpu::VertexAttribute normal_attr{};
-    normal_attr.format = wgpu::VertexFormat::Float32x3;
-    normal_attr.offset = current_offset;
-    normal_attr.shaderLocation = 1;
-    attributes.push_back(normal_attr);
-    current_offset += 3 * sizeof(float);
-    stride += 3 * sizeof(float);
+    layout = vertex_layouts::with_normals(std::move(layout));
+  }
+  if (vert_state.has_texcoords) {
+    layout = vertex_layouts::with_texcoords(std::move(layout));
+  }
+  if (vert_state.has_colors) {
+    layout = vertex_layouts::with_colors(std::move(layout));
   }
 
-  // Texture coordinate attribute (optional)
-  if (vert_state.has_texcoords) {
-    wgpu::VertexAttribute texcoord_attr{};
-    texcoord_attr.format = wgpu::VertexFormat::Float32x2;
-    texcoord_attr.offset = current_offset;
-    texcoord_attr.shaderLocation = 2;
-    attributes.push_back(texcoord_attr);
-    stride += 2 * sizeof(float);
-  }
+  // Get the WebGPU attributes
+  auto attributes = layout.get_wgpu_attributes();
 
   // Create the vertex buffer layout
-  wgpu::VertexBufferLayout layout{};
-  layout.arrayStride = stride;
-  layout.stepMode = wgpu::VertexStepMode::Vertex;
-  layout.attributeCount = static_cast<uint32_t>(attributes.size());
-  // Note: attributes vector must outlive this function call
-  layout.attributes = attributes.data();
+  wgpu::VertexBufferLayout buffer_layout{};
+  buffer_layout.arrayStride = layout.get_stride();
+  buffer_layout.stepMode = wgpu::VertexStepMode::Vertex;
+  buffer_layout.attributeCount = static_cast<uint32_t>(attributes.size());
+  buffer_layout.attributes = attributes.data();
 
-  return {std::move(attributes), layout};
+  return {std::move(attributes), buffer_layout};
 }
 
 } // namespace mareweb

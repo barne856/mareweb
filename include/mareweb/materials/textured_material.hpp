@@ -15,7 +15,7 @@ public:
   textured_material(wgpu::Device &device, wgpu::TextureFormat surface_format, uint32_t sample_count,
                     const char *texture_path)
       : material(device, get_vertex_shader(), get_fragment_shader(), surface_format, sample_count, get_bindings(),
-                 vertex_state{true, true}),
+                 vertex_requirements::with_normals_and_texcoords()),
         m_texture(device, texture_path) {
     // Initialize MVP matrix with identity
     auto eye = mat4::eye();

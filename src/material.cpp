@@ -5,17 +5,21 @@ namespace mareweb {
 
 material::material(wgpu::Device &device, const std::string &vertex_shader_source,
                    const std::string &fragment_shader_source, wgpu::TextureFormat surface_format, uint32_t sample_count,
-                   const std::vector<binding_resource> &bindings,
-                   const vertex_state &vert_state) // Added vertex_state parameter
+                   const std::vector<binding_resource> &bindings, const vertex_requirements &requirements)
     : m_device(device), m_vertex_shader_source(vertex_shader_source), m_fragment_shader_source(fragment_shader_source),
       m_surface_format(surface_format), m_sample_count(sample_count), m_bindings(bindings),
-      m_vertex_state(vert_state) { // Initialize vertex state
+      m_requirements(requirements) { // Initialize vertex state
   create_shaders();
   create_buffers();
 }
 
-void material::bind(wgpu::RenderPassEncoder &pass_encoder, const wgpu::PrimitiveState &primitive_state) {
-  auto &pipeline = get_or_create_pipeline(primitive_state);
+void material::bind(wgpu::RenderPassEncoder &pass_encoder, const wgpu::PrimitiveState &primitive_state,
+                    const vertex_state &mesh_vertex_state) {
+  if (!m_requirements.is_satisfied_by(mesh_vertex_state)) {
+    throw std::runtime_error("Mesh does not satisfy material vertex requirements");
+  }
+  // Use the mesh's vertex state instead of our own
+  auto &pipeline = get_or_create_pipeline(primitive_state, mesh_vertex_state);
   pass_encoder.SetPipeline(pipeline.get_pipeline());
   pass_encoder.SetBindGroup(0, pipeline.get_bind_group());
 }
@@ -136,7 +140,8 @@ auto material::create_bind_group_entries() const -> std::vector<wgpu::BindGroupE
   return entries;
 }
 
-pipeline &material::get_or_create_pipeline(const wgpu::PrimitiveState &primitive_state) {
+auto material::get_or_create_pipeline(const wgpu::PrimitiveState &primitive_state,
+                                      const vertex_state &mesh_vertex_state) -> pipeline & {
   pipeline_key key{primitive_state.topology, primitive_state.stripIndexFormat, primitive_state.frontFace,
                    primitive_state.cullMode};
 
@@ -145,7 +150,7 @@ pipeline &material::get_or_create_pipeline(const wgpu::PrimitiveState &primitive
     // Pass vertex state to pipeline constructor
     auto new_pipeline = std::make_unique<pipeline>(m_device, *m_vertex_shader, *m_fragment_shader, m_surface_format,
                                                    m_sample_count, create_bind_group_layout_entries(), primitive_state,
-                                                   m_vertex_state); // Pass vertex state
+                                                   mesh_vertex_state); // Pass vertex state
 
     // Rest of the pipeline creation code...
     auto bind_group_entries = create_bind_group_entries();

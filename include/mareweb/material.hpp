@@ -58,20 +58,46 @@ struct pipeline_key_hash {
   }
 };
 
+struct vertex_requirements {
+  bool needs_position = true; // Always required
+  bool needs_normal = false;
+  bool needs_texcoord = false;
+  bool needs_color = false;
+
+  // Check if a vertex state satisfies these requirements
+  bool is_satisfied_by(const vertex_state &state) const {
+    // Position is always required and always present
+    return (!needs_normal || state.has_normals) && (!needs_texcoord || state.has_texcoords) &&
+           (!needs_color || state.has_colors);
+  }
+
+  // Helper to create common requirement sets
+  static vertex_requirements positions_only() { return vertex_requirements{}; }
+
+  static vertex_requirements with_normals() { return vertex_requirements{true, true, false, false}; }
+
+  static vertex_requirements with_texcoords() { return vertex_requirements{true, false, true, false}; }
+
+  static vertex_requirements with_normals_and_texcoords() { return vertex_requirements{true, true, true, false}; }
+};
+
 class material {
 public:
   material(wgpu::Device &device, const std::string &vertex_shader_source, const std::string &fragment_shader_source,
            wgpu::TextureFormat surface_format, uint32_t sample_count, const std::vector<binding_resource> &bindings,
-           const vertex_state &vert_state); // Added vertex_state parameter
+           const vertex_requirements &requirements);
 
-  virtual void bind(wgpu::RenderPassEncoder &pass_encoder, const wgpu::PrimitiveState &primitive_state);
+  virtual void bind(wgpu::RenderPassEncoder &pass_encoder, const wgpu::PrimitiveState &primitive_state,
+                    const vertex_state &mesh_vertex_state);
   void update_uniform(uint32_t binding, const void *data);
   void update_texture(uint32_t binding, wgpu::TextureView texture_view);
   void update_sampler(uint32_t binding, wgpu::Sampler sampler);
+  [[nodiscard]] const vertex_requirements &get_requirements() const { return m_requirements; }
 
 protected:
   wgpu::Device &get_device() { return m_device; }
-  auto get_or_create_pipeline(const wgpu::PrimitiveState &primitive_state) -> pipeline &;
+  auto get_or_create_pipeline(const wgpu::PrimitiveState &primitive_state,
+                              const vertex_state &mesh_vertex_state) -> pipeline &;
 
 private:
   wgpu::Device m_device;
@@ -80,7 +106,7 @@ private:
   wgpu::TextureFormat m_surface_format;
   uint32_t m_sample_count;
   std::vector<binding_resource> m_bindings;
-  vertex_state m_vertex_state; // Added vertex state member
+  vertex_requirements m_requirements;
 
   std::unique_ptr<shader> m_vertex_shader;
   std::unique_ptr<shader> m_fragment_shader;

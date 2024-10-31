@@ -167,7 +167,20 @@ void renderer::end_frame() {
 }
 
 void renderer::draw_mesh(const mesh &mesh, material &material) {
-  material.bind(m_render_pass, mesh.get_primitive_state());
+  auto mesh_state = mesh.get_vertex_state();
+  auto &requirements = material.get_requirements();
+
+  // Validate compatibility
+  if (!requirements.is_satisfied_by(mesh_state)) {
+    std::stringstream err;
+    err << "Mesh incompatible with material requirements:\n"
+        << "Material needs: " << (requirements.needs_normal ? "normals " : "")
+        << (requirements.needs_texcoord ? "texcoords " : "") << (requirements.needs_color ? "colors " : "")
+        << "\nMesh provides: " << (mesh_state.has_normals ? "normals " : "")
+        << (mesh_state.has_texcoords ? "texcoords " : "") << (mesh_state.has_colors ? "colors " : "");
+    throw std::runtime_error(err.str());
+  }
+  material.bind(m_render_pass, mesh.get_primitive_state(), mesh.get_vertex_state());
   mesh.draw(m_render_pass);
 }
 

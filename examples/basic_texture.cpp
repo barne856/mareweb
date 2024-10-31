@@ -74,7 +74,7 @@ public:
     // mesh = scene->create_mesh<mareweb::char_mesh>("Hello, World!", 0.02F);
 
     // Create a textured material (provide path to your texture)
-    material = scene->create_material<mareweb::textured_material>("assets/circuit.jpg");
+    material = scene->create_material<mareweb::textured_material>("assets/2k_earth_daymap.jpg");
 
     // Set initial light direction
     vec3 light_direction{-1.f, -2.f, -1.f};
