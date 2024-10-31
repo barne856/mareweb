@@ -74,7 +74,7 @@ private:
             fn main(in: VertexInput) -> VertexOutput {
                 var out: VertexOutput;
                 out.position = mvp * vec4<f32>(in.position, 1.0);
-                out.world_normal = in.normal;
+                out.world_normal = normalize(normal_matrix * in.normal);
                 out.texcoord = in.texcoord;
                 return out;
             }
