@@ -31,6 +31,8 @@ Run samples:
 ```
 
 # TODO
+# instanced meshes
+# composite meshes
 # imlement PBR materials
 
 
