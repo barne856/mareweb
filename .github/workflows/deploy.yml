@@ -40,10 +40,10 @@ jobs:
           emcmake cmake -B build-web
           cmake --build build-web
           mkdir dist
-          cp build-web/basic_texture.js dist/
-          cp build-web/basic_texture.data dist/
-          cp build-web/basic_texture.wasm dist/
-          cp build-web/basic_texture.html dist/index.html
+          cp build-web/basic_mesh.js dist/
+          cp build-web/basic_mesh.data dist/
+          cp build-web/basic_mesh.wasm dist/
+          cp build-web/basic_mesh.html dist/index.html
             
       - name: Use Node.js 20.x
         uses: actions/setup-node@v4

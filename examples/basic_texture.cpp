@@ -67,9 +67,9 @@ public:
     // Create a square mesh with proper texture coordinates
     // mesh = scene->create_mesh<mareweb::square_mesh>(length(1.0));
     // mesh = scene->create_mesh<mareweb::sphere_mesh>(length(0.4), 3);
-    // mesh = scene->create_mesh<mareweb::sphere_mesh>(length(0.4), 32, 32);
+    mesh = scene->create_mesh<mareweb::sphere_mesh>(length(0.4), 32, 32);
     // mesh = scene->create_mesh<mareweb::cube_mesh>(length(0.5));
-    mesh = scene->create_mesh<mareweb::torus_mesh>(length(0.4), length(0.2), 32, 32);
+    // mesh = scene->create_mesh<mareweb::torus_mesh>(length(0.4), length(0.2), 32, 32);
     // mesh = scene->create_mesh<mareweb::cylinder_mesh>(length(0.4), length(0.5), 0, units::degrees(360), 32);
     // mesh = scene->create_mesh<mareweb::line_mesh>(0.2F);
     // mesh = scene->create_mesh<mareweb::char_mesh>("Hello, World!", 0.02F);
@@ -87,7 +87,7 @@ public:
   void update_transforms(const squint::duration &dt) {
     // Rotate the entity
     auto freq = frequency(1);
-    rotate(vec3{0, 1, 1}, -units::degrees(25) * dt * freq);
+    rotate(vec3{0, 0, 1}, -units::degrees(25) * dt * freq);
 
     // Get the updated MVP matrix from the renderer
     mat4 mvp = scene->get_mvp_matrix(*this);

@@ -68,19 +68,22 @@ public:
     //     squint::vec3_t<length>{length(0.5), length(-0.5), length(0.0)}   // Bottom-right vertex
     // );
     // mesh = scene->create_mesh<mareweb::circle_mesh>(length(0.5), 50);
-    mesh = scene->create_mesh<mareweb::sphere_mesh>(length(0.4), 3);
-    // mesh = scene->create_mesh<mareweb::torus_mesh>(length(0.4), length(0.2), 32, 32);
+    // mesh = scene->create_mesh<mareweb::sphere_mesh>(length(0.4), 3);
+    mesh = scene->create_mesh<mareweb::torus_mesh>(length(0.4), length(0.2), 32, 32);
     // mesh = scene->create_mesh<mareweb::sphere_mesh>(length(0.5), 10, 10);
     // mesh = scene->create_mesh<mareweb::cube_mesh>(length(0.5));
     // mesh = scene->create_mesh<mareweb::square_mesh>(length(0.5));
     vec4 color{1.F, 1.F, 0.F, 0.F};
-    vec3 light_direction{1.f, 1.f, -1.f};
+    vec3 light_direction{1.f, 2.f, 0.f};
     material = scene->create_material<mareweb::flat_color_material>(color);
     material->update_light_direction(light_direction);
     attach_system<render_mesh>();
   }
 
   void update_mvp(const squint::duration &dt) {
+    auto freq = frequency(1);
+    rotate(vec3{0, 1, 1}, -units::degrees(25) * dt * freq);
+
     // Get the updated MVP matrix from the renderer
     mat4 mvp = scene->get_mvp_matrix(*this);
 
