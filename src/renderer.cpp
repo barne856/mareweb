@@ -184,6 +184,7 @@ void renderer::draw_mesh(const mesh &mesh, material &material) {
   mesh.draw(m_render_pass);
 }
 
+// TODO, unused
 void renderer::update_model_view_projection(const transform &model_transform, const camera &cam) {
   if (!m_mvp_buffer) {
     m_mvp_buffer = std::make_shared<uniform_buffer>(m_device, sizeof(mat4), wgpu::ShaderStage::Vertex);

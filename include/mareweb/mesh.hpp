@@ -2,8 +2,8 @@
 #define MAREWEB_MESH_HPP
 
 #include "mareweb/buffer.hpp"
-#include "mareweb/vertex_attributes.hpp"
 #include "mareweb/pipeline.hpp"
+#include "mareweb/vertex_attributes.hpp"
 #include "webgpu/webgpu_cpp.h"
 #include <memory>
 #include <vector>
@@ -22,11 +22,13 @@ public:
   [[nodiscard]] auto get_vertex_count() const -> uint32_t;
   [[nodiscard]] auto get_index_count() const -> uint32_t;
   [[nodiscard]] auto get_primitive_state() const -> const wgpu::PrimitiveState & { return m_primitive_state; }
-  [[nodiscard]] vertex_state get_vertex_state() const {
+  [[nodiscard]] auto get_vertex_state() const -> vertex_state {
     vertex_state state;
     state.has_normals = m_vertex_layout.has_normals();
     state.has_texcoords = m_vertex_layout.has_texcoords();
     state.has_colors = m_vertex_layout.has_colors();
+    state.is_indexed = m_index_buffer != nullptr;
+    state.is_instanced = false;
     return state;
   }
 
@@ -39,8 +41,8 @@ protected:
   wgpu::PrimitiveState m_primitive_state;
 
 private:
-  static std::vector<uint8_t> create_optimized_vertex_buffer(const std::vector<vertex> &vertices,
-                                                             const vertex_layout &layout);
+  static auto create_optimized_vertex_buffer(const std::vector<vertex> &vertices,
+                                             const vertex_layout &layout) -> std::vector<uint8_t>;
 };
 
 } // namespace mareweb

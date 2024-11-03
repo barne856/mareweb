@@ -90,7 +90,6 @@ void mesh::draw(wgpu::RenderPassEncoder &pass_encoder) const {
     pass_encoder.SetIndexBuffer(m_index_buffer->get_buffer(), wgpu::IndexFormat::Uint32);
     pass_encoder.DrawIndexed(get_index_count());
   } else {
-
     pass_encoder.Draw(vertex_count);
   }
 }

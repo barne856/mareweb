@@ -13,6 +13,8 @@ struct vertex_state {
   bool has_normals = false;
   bool has_texcoords = false;
   bool has_colors = false;
+  bool is_indexed = false;
+  bool is_instanced = false;
 };
 
 class pipeline {
