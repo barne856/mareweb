@@ -24,7 +24,8 @@
 				"ms-vscode.cmake-tools",
 				"matepek.vscode-catch2-test-adapter",
 				"dbaeumer.vscode-eslint",
-				"rvest.vs-code-prettier-eslint"
+				"rvest.vs-code-prettier-eslint",
+				"ms-azuretools.vscode-docker"
 			]
 		}
 	},
