@@ -2,6 +2,7 @@
 #include "mareweb/components/camera.hpp"
 #include "mareweb/components/transform.hpp"
 #include "mareweb/materials/flat_color_material.hpp"
+#include "mareweb/materials/textured_material.hpp"
 #include "mareweb/meshes/primitive_mesh.hpp"
 #include "mareweb/renderer.hpp"
 #include "mareweb/scene.hpp"
@@ -69,27 +70,21 @@ public:
     // );
     // mesh = scene->create_mesh<mareweb::circle_mesh>(length(0.5), 50);
     // mesh = scene->create_mesh<mareweb::sphere_mesh>(length(0.4), 3);
-    mesh = scene->create_mesh<mareweb::torus_mesh>(length(0.4), length(0.2), 32, 32);
+    mesh = scene->create_mesh<mareweb::torus_mesh>(length(0.4), length(0.2), 64, 64);
     // mesh = scene->create_mesh<mareweb::sphere_mesh>(length(0.5), 10, 10);
     // mesh = scene->create_mesh<mareweb::cube_mesh>(length(0.5));
     // mesh = scene->create_mesh<mareweb::square_mesh>(length(0.5));
     vec4 color{1.F, 1.F, 0.F, 0.F};
     vec3 light_direction{1.f, 2.f, 0.f};
     material = scene->create_material<mareweb::flat_color_material>(color);
+    // material = scene->create_material<mareweb::textured_material>("assets/2k_earth_daymap.jpg");
     material->update_light_direction(light_direction);
     attach_system<render_mesh>();
   }
 
   void update_mvp(const squint::duration &dt) {
     auto freq = frequency(1);
-    rotate(vec3{0, 1, 1}, -units::degrees(25) * dt * freq);
-
-    // Get the updated MVP matrix from the renderer
-    mat4 mvp = scene->get_mvp_matrix(*this);
-
-    // Update the uniform buffer
-    material->update_mvp(mvp);
-    material->update_normal_matrix(get_normal_matrix());
+    mesh->rotate(vec3{0, 1, 1}, -units::degrees(25) * dt * freq);
 
     // Update color for rainbow effect
     static float total_time = 0.0f;
@@ -134,7 +129,7 @@ public:
     vec4 color = {r + m, g + m, b + m, 1.0f};
 
     // Update the color uniform buffer
-    material->update_uniform(1, &color);
+    material->update_color(color);
   }
 
   std::unique_ptr<mareweb::mesh> mesh;

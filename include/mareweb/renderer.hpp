@@ -5,8 +5,8 @@
 #include <cstdint>
 #include <webgpu/webgpu_cpp.h>
 
-#include "mareweb/components/transform.hpp"
 #include "mareweb/components/camera.hpp"
+#include "mareweb/components/transform.hpp"
 #include "mareweb/entity.hpp"
 #include "mareweb/material.hpp"
 #include "mareweb/mesh.hpp"
@@ -147,7 +147,7 @@ public:
   [[nodiscard]] auto get_clear_color() const -> wgpu::Color { return m_clear_color; }
   void begin_frame();
   void end_frame();
-  void draw_mesh(const mesh &mesh, material &material);
+  void draw_mesh(const mesh &mesh, material &material, const camera &camera);
   void update_model_view_projection(const transform &model_transform, const camera &cam);
 
   [[nodiscard]] auto get_window() const -> SDL_Window * { return m_window; }
@@ -172,8 +172,6 @@ private:
   void configure_surface();
   void create_msaa_texture();
   void create_depth_texture();
-
-  std::shared_ptr<uniform_buffer> m_mvp_buffer;
 };
 
 } // namespace mareweb

@@ -81,14 +81,20 @@ struct vertex_requirements {
   static vertex_requirements with_normals_and_texcoords() { return vertex_requirements{true, true, true, false}; }
 };
 
+namespace uniform_locations {
+constexpr uint32_t MVP_MATRIX = 0;
+constexpr uint32_t NORMAL_MATRIX = 1;
+// Add more uniform locations as needed
+} // namespace uniform_locations
+
 class material {
 public:
   material(wgpu::Device &device, const std::string &vertex_shader_source, const std::string &fragment_shader_source,
            wgpu::TextureFormat surface_format, uint32_t sample_count, const std::vector<binding_resource> &bindings,
            const vertex_requirements &requirements);
 
-  virtual void bind(wgpu::RenderPassEncoder &pass_encoder, const wgpu::PrimitiveState &primitive_state,
-                    const vertex_state &mesh_vertex_state);
+  void bind(wgpu::RenderPassEncoder &pass_encoder, const wgpu::PrimitiveState &primitive_state,
+            const vertex_state &mesh_vertex_state);
   void update_uniform(uint32_t binding, const void *data);
   void update_texture(uint32_t binding, wgpu::TextureView texture_view);
   void update_sampler(uint32_t binding, wgpu::Sampler sampler);

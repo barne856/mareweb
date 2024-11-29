@@ -61,7 +61,7 @@ private:
   basic_entity *m_basic_entity;
 };
 
-class basic_entity : public mareweb::entity<basic_entity>, public mareweb::transform {
+class basic_entity : public mareweb::entity<basic_entity> {
 public:
   basic_entity(main_scene *scene) : scene(scene) {
     // Create a square mesh with proper texture coordinates
@@ -87,15 +87,7 @@ public:
   void update_transforms(const squint::duration &dt) {
     // Rotate the entity
     auto freq = frequency(1);
-    rotate(vec3{0, 0, 1}, -units::degrees(25) * dt * freq);
-
-    // Get the updated MVP matrix from the renderer
-    mat4 mvp = scene->get_mvp_matrix(*this);
-    mat3 normal_mat = get_normal_matrix();
-
-    // Update the transforms
-    material->update_mvp(mvp);
-    material->update_normal_matrix(normal_mat);
+    mesh->rotate(vec3{0, 0, 1}, -units::degrees(25) * dt * freq);
   }
 
   std::unique_ptr<mareweb::mesh> mesh;

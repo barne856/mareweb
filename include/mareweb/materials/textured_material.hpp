@@ -17,14 +17,6 @@ public:
       : material(device, get_vertex_shader(), get_fragment_shader(), surface_format, sample_count, get_bindings(),
                  vertex_requirements::with_normals_and_texcoords()),
         m_texture(device, texture_path) {
-    // Initialize MVP matrix with identity
-    auto eye = mat4::eye();
-    update_mvp(eye);
-
-    // Initialize normal matrix with identity
-    auto normal_eye = mat3::eye();
-    update_normal_matrix(normal_eye);
-
     // Initialize light direction
     vec3 light_dir{1.0f, 1.0f, 1.0f};
     light_dir = normalize(light_dir);
@@ -33,14 +25,6 @@ public:
     // Initialize texture and sampler bindings
     update_texture(3, m_texture.get_texture_view());
     update_sampler(4, m_texture.get_sampler());
-  }
-
-  void update_mvp(const mat4 &mvp) { update_uniform(0, &mvp); }
-
-  void update_normal_matrix(const mat3 &normal_matrix) {
-    mat4x3 padded_normal_matrix;
-    padded_normal_matrix.subview<3, 3>(0, 0) = normal_matrix;
-    update_uniform(1, &padded_normal_matrix);
   }
 
   void update_light_direction(const vec3 &light_dir) {

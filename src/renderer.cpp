@@ -1,4 +1,5 @@
 #include "mareweb/renderer.hpp"
+#include "mareweb/material.hpp"
 #include <SDL2/SDL_video.h>
 #include <iostream>
 #include <sstream>
@@ -166,36 +167,8 @@ void renderer::end_frame() {
 #endif
 }
 
-void renderer::draw_mesh(const mesh &mesh, material &material) {
-  auto mesh_state = mesh.get_vertex_state();
-  auto &requirements = material.get_requirements();
-
-  // Validate compatibility
-  if (!requirements.is_satisfied_by(mesh_state)) {
-    std::stringstream err;
-    err << "Mesh incompatible with material requirements:\n"
-        << "Material needs: " << (requirements.needs_normal ? "normals " : "")
-        << (requirements.needs_texcoord ? "texcoords " : "") << (requirements.needs_color ? "colors " : "")
-        << "\nMesh provides: " << (mesh_state.has_normals ? "normals " : "")
-        << (mesh_state.has_texcoords ? "texcoords " : "") << (mesh_state.has_colors ? "colors " : "");
-    throw std::runtime_error(err.str());
-  }
-  material.bind(m_render_pass, mesh.get_primitive_state(), mesh.get_vertex_state());
-  mesh.draw(m_render_pass);
-}
-
-// TODO, unused
-void renderer::update_model_view_projection(const transform &model_transform, const camera &cam) {
-  if (!m_mvp_buffer) {
-    m_mvp_buffer = std::make_shared<uniform_buffer>(m_device, sizeof(mat4), wgpu::ShaderStage::Vertex);
-  }
-
-  mat4 model_matrix = model_transform.get_transformation_matrix();
-  mat4 view_matrix = cam.get_view_matrix();
-  mat4 projection_matrix = cam.get_projection_matrix();
-  mat4 mvp = projection_matrix * view_matrix * model_matrix;
-
-  m_mvp_buffer->update(&mvp, sizeof(mat4));
+void renderer::draw_mesh(const mesh &mesh, material &material, const camera &camera) {
+  mesh.render(m_render_pass, material, camera);
 }
 
 void renderer::configure_surface() {
