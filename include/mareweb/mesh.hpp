@@ -49,6 +49,21 @@ private:
   void create_vertex_buffer(wgpu::Device &device, const std::vector<vertex> &vertices, const vertex_layout &layout);
 };
 
+// TODO, primative meshes inherit from base_mesh and implement
+// entities for renderable_mesh, renderable instanced mesh, renderable composite mesh
+// e.g.
+// template <material_like Material, mesh_like Mesh>
+// class renderable_mesh : public entity<renderable_mesh>, public transform, public Material, public Mesh
+// renderable_mesh(scene* s); // construct with scene
+//
+// template <material_like Material, mesh_like Mesh>
+// class renderable_instanced_mesh : public entity<renderable_instanced_mesh>, public transform, public Material, public Mesh
+// renderable_instanced_mesh(scene* s); // construct with scene
+//
+// template <material_like Material, mesh_like Mesh>
+// class renderable_composite_mesh : public entity<renderable_composite_mesh>, public transform, public Material, public Mesh
+// renderable_composite_mesh(scene* s); // construct with scene
+//
 class mesh : public base_mesh {
 public:
   mesh(wgpu::Device &device, const wgpu::PrimitiveState &primitive_state, const std::vector<vertex> &vertices,
