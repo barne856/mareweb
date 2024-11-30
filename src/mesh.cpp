@@ -1,5 +1,6 @@
 #include "mareweb/mesh.hpp"
 #include <cstring>
+#include <sstream>
 #include <stdexcept>
 
 namespace mareweb {
