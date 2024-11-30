@@ -4,8 +4,8 @@
 
 namespace mareweb {
 
-void base_mesh::create_vertex_buffer(wgpu::Device &device, const std::vector<vertex> &vertices,
-                                     const vertex_layout &layout) {
+void mesh::create_vertex_buffer(wgpu::Device &device, const std::vector<vertex> &vertices,
+                                const vertex_layout &layout) {
 
   const size_t vertex_count = vertices.size();
   const size_t stride = layout.get_stride();
@@ -47,9 +47,8 @@ void base_mesh::create_vertex_buffer(wgpu::Device &device, const std::vector<ver
   m_vertex_buffer = std::make_unique<vertex_buffer>(device, buffer_data.data(), buffer_data.size(), layout);
 }
 
-base_mesh::base_mesh(wgpu::Device &device, const wgpu::PrimitiveState &primitive_state,
-                     const std::vector<vertex> &vertices, const vertex_layout &layout,
-                     const std::vector<uint32_t> &indices)
+mesh::mesh(wgpu::Device &device, const wgpu::PrimitiveState &primitive_state, const std::vector<vertex> &vertices,
+           const vertex_layout &layout, const std::vector<uint32_t> &indices)
     : m_primitive_state(primitive_state), m_vertex_layout(layout) {
 
   if (vertices.empty()) {
@@ -69,7 +68,7 @@ base_mesh::base_mesh(wgpu::Device &device, const wgpu::PrimitiveState &primitive
   }
 }
 
-auto base_mesh::get_vertex_count() const -> uint32_t {
+auto mesh::get_vertex_count() const -> uint32_t {
   auto stride = m_vertex_layout.get_stride();
   if (stride == 0) {
     throw std::runtime_error("Invalid vertex layout stride");
@@ -77,11 +76,11 @@ auto base_mesh::get_vertex_count() const -> uint32_t {
   return static_cast<uint32_t>(m_vertex_buffer->get_size() / stride);
 }
 
-auto base_mesh::get_index_count() const -> uint32_t {
+auto mesh::get_index_count() const -> uint32_t {
   return m_index_buffer ? static_cast<uint32_t>(m_index_buffer->get_size() / sizeof(uint32_t)) : 0;
 }
 
-void base_mesh::bind_material(material &material, wgpu::RenderPassEncoder &pass_encoder) const {
+void mesh::bind_material(material &material, wgpu::RenderPassEncoder &pass_encoder) const {
   auto mesh_state = get_vertex_state();
   auto &requirements = material.get_requirements();
 
@@ -96,27 +95,6 @@ void base_mesh::bind_material(material &material, wgpu::RenderPassEncoder &pass_
     throw std::runtime_error(err.str());
   }
   material.bind(pass_encoder, get_primitive_state(), get_vertex_state());
-}
-
-void mesh::render(wgpu::RenderPassEncoder &pass_encoder, material &material, const camera &camera) const {
-  bind_material(material, pass_encoder);
-
-  // set MVP and Normal matrices
-  mat4 mvp = camera.get_view_projection_matrix() * get_transformation_matrix();
-  mat4x3 padded_normal_matrix;
-  padded_normal_matrix.subview<3, 3>(0, 0) = camera.get_normal_matrix();
-  material.update_uniform(uniform_locations::MVP_MATRIX, &mvp);
-  material.update_uniform(uniform_locations::NORMAL_MATRIX, &padded_normal_matrix);
-
-  const uint32_t vertex_count = get_vertex_count();
-  pass_encoder.SetVertexBuffer(0, m_vertex_buffer->get_buffer());
-
-  if (m_index_buffer) {
-    pass_encoder.SetIndexBuffer(m_index_buffer->get_buffer(), wgpu::IndexFormat::Uint32);
-    pass_encoder.DrawIndexed(get_index_count());
-  } else {
-    pass_encoder.Draw(vertex_count);
-  }
 }
 
 } // namespace mareweb

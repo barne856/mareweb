@@ -3,7 +3,6 @@
 
 #include "mareweb/buffer.hpp"
 #include "mareweb/components/camera.hpp"
-#include "mareweb/components/transform.hpp"
 #include "mareweb/material.hpp"
 #include "mareweb/pipeline.hpp"
 #include "mareweb/vertex_attributes.hpp"
@@ -13,11 +12,27 @@
 
 namespace mareweb {
 
-class base_mesh : public transform {
+class mesh {
 public:
   // Constructor for fully specified vertex data
-  base_mesh(wgpu::Device &device, const wgpu::PrimitiveState &primitive_state, const std::vector<vertex> &vertices,
-            const vertex_layout &layout, const std::vector<uint32_t> &indices = {});
+  mesh(wgpu::Device &device, const wgpu::PrimitiveState &primitive_state, const std::vector<vertex> &vertices,
+       const vertex_layout &layout, const std::vector<uint32_t> &indices = {});
+
+  mesh(const mesh &other) = delete;
+  auto operator=(const mesh &other) -> mesh & = delete;
+  mesh(mesh &&other) noexcept
+      : m_vertex_buffer(std::move(other.m_vertex_buffer)), m_index_buffer(std::move(other.m_index_buffer)),
+        m_vertex_layout(std::move(other.m_vertex_layout)), m_primitive_state(other.m_primitive_state) {}
+  auto operator=(mesh &&other) noexcept -> mesh & {
+    if (this != &other) {
+      m_vertex_buffer = std::move(other.m_vertex_buffer);
+      m_index_buffer = std::move(other.m_index_buffer);
+      m_vertex_layout = std::move(other.m_vertex_layout);
+      m_primitive_state = other.m_primitive_state;
+    }
+    return *this;
+  }
+  virtual ~mesh() = default;
 
   [[nodiscard]] auto get_vertex_buffer() const -> const vertex_buffer & { return *m_vertex_buffer; }
   [[nodiscard]] auto get_index_buffer() const -> const index_buffer * { return m_index_buffer.get(); }
@@ -31,21 +46,20 @@ public:
     state.has_texcoords = m_vertex_layout.has_texcoords();
     state.has_colors = m_vertex_layout.has_colors();
     state.is_indexed = m_index_buffer != nullptr;
-    state.is_instanced = false;
     return state;
   }
 
   void bind_material(material &material, wgpu::RenderPassEncoder &pass_encoder) const;
 
-  virtual void render(wgpu::RenderPassEncoder &pass_encoder, material &material, const camera &camera) const = 0;
+  auto get_vertex_buffer() -> wgpu::Buffer { return m_vertex_buffer->get_buffer(); }
+  auto get_index_buffer() -> wgpu::Buffer { return m_index_buffer->get_buffer(); }
 
-protected:
+private:
   std::unique_ptr<vertex_buffer> m_vertex_buffer;
   std::unique_ptr<index_buffer> m_index_buffer;
   vertex_layout m_vertex_layout;
   wgpu::PrimitiveState m_primitive_state;
 
-private:
   void create_vertex_buffer(wgpu::Device &device, const std::vector<vertex> &vertices, const vertex_layout &layout);
 };
 
@@ -57,21 +71,13 @@ private:
 // renderable_mesh(scene* s); // construct with scene
 //
 // template <material_like Material, mesh_like Mesh>
-// class renderable_instanced_mesh : public entity<renderable_instanced_mesh>, public transform, public Material, public Mesh
-// renderable_instanced_mesh(scene* s); // construct with scene
+// class renderable_instanced_mesh : public entity<renderable_instanced_mesh>, public transform, public Material, public
+// Mesh renderable_instanced_mesh(scene* s); // construct with scene
 //
 // template <material_like Material, mesh_like Mesh>
-// class renderable_composite_mesh : public entity<renderable_composite_mesh>, public transform, public Material, public Mesh
-// renderable_composite_mesh(scene* s); // construct with scene
+// class renderable_composite_mesh : public entity<renderable_composite_mesh>, public transform, public Material, public
+// Mesh renderable_composite_mesh(scene* s); // construct with scene
 //
-class mesh : public base_mesh {
-public:
-  mesh(wgpu::Device &device, const wgpu::PrimitiveState &primitive_state, const std::vector<vertex> &vertices,
-       const vertex_layout &layout, const std::vector<uint32_t> &indices = {})
-      : base_mesh(device, primitive_state, vertices, layout, indices) {}
-
-  void render(wgpu::RenderPassEncoder &pass_encoder, material &material, const camera &camera) const override;
-};
 
 // class instanced_mesh : public base_mesh {
 // public:

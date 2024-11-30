@@ -147,12 +147,21 @@ public:
   [[nodiscard]] auto get_clear_color() const -> wgpu::Color { return m_clear_color; }
   void begin_frame();
   void end_frame();
-  void draw_mesh(const mesh &mesh, material &material, const camera &camera);
   void update_model_view_projection(const transform &model_transform, const camera &cam);
 
   [[nodiscard]] auto get_window() const -> SDL_Window * { return m_window; }
   [[nodiscard]] auto get_title() const -> const std::string & { return m_properties.title; }
   [[nodiscard]] auto get_properties() const -> const renderer_properties & { return m_properties; }
+  [[nodiscard]] auto get_device() const -> wgpu::Device { return m_device; }
+  [[nodiscard]] auto get_surface() const -> wgpu::Surface { return m_surface; }
+  [[nodiscard]] auto get_surface_format() const -> wgpu::TextureFormat { return m_surface_format; }
+  [[nodiscard]] auto get_command_encoder() const -> wgpu::CommandEncoder { return m_command_encoder; }
+  [[nodiscard]] auto get_render_pass() const -> wgpu::RenderPassEncoder { return m_render_pass; }
+  [[nodiscard]] auto get_current_texture_view() const -> wgpu::TextureView { return m_current_texture_view; }
+  [[nodiscard]] auto get_msaa_texture() const -> wgpu::Texture { return m_msaa_texture; }
+  [[nodiscard]] auto get_msaa_texture_view() const -> wgpu::TextureView { return m_msaa_texture_view; }
+  [[nodiscard]] auto get_depth_texture() const -> wgpu::Texture { return m_depth_texture; }
+  [[nodiscard]] auto get_depth_texture_view() const -> wgpu::TextureView { return m_depth_texture_view; }
 
 private:
   renderer_properties m_properties;

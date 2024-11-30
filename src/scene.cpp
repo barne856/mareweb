@@ -7,6 +7,4 @@ scene::scene(wgpu::Device &device, wgpu::Surface surface, SDL_Window *window, co
              projection_type type)
     : renderer(device, surface, window, properties), camera(type) {}
 
-void scene::draw_mesh(const mesh &mesh, material &material) { renderer::draw_mesh(mesh, material, *this); }
-
 } // namespace mareweb

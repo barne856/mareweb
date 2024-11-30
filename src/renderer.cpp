@@ -167,10 +167,6 @@ void renderer::end_frame() {
 #endif
 }
 
-void renderer::draw_mesh(const mesh &mesh, material &material, const camera &camera) {
-  mesh.render(m_render_pass, material, camera);
-}
-
 void renderer::configure_surface() {
   wgpu::SurfaceConfiguration config{};
   config.device = m_device;

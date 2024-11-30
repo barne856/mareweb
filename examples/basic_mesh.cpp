@@ -1,34 +1,21 @@
 #include "mareweb/application.hpp"
 #include "mareweb/components/camera.hpp"
 #include "mareweb/components/transform.hpp"
+#include "mareweb/entities/renderable.hpp"
 #include "mareweb/materials/flat_color_material.hpp"
 #include "mareweb/materials/textured_material.hpp"
 #include "mareweb/meshes/primitive_mesh.hpp"
 #include "mareweb/renderer.hpp"
 #include "mareweb/scene.hpp"
 #include "squint/quantity.hpp"
+#include "squint/quantity/quantity_types.hpp"
 #include "webgpu/webgpu_cpp.h"
+#include <memory>
 #include <vector>
 
 using namespace squint;
 
 class basic_entity;
-
-template <typename T>
-concept renderable_mesh = requires(T t) {
-  { t.mesh.get() } -> std::convertible_to<mareweb::mesh *>;
-  { t.material.get() } -> std::convertible_to<mareweb::material *>;
-};
-
-template <typename T>
-  requires renderable_mesh<T>
-class render_mesh : public mareweb::render_system<T> {
-public:
-  void render(const squint::duration &dt, T &ent) override {
-    ent.update_mvp(dt);
-    ent.scene->draw_mesh(*ent.mesh.get(), *ent.material.get());
-  }
-};
 
 class main_scene : public mareweb::scene {
 public:
@@ -49,17 +36,11 @@ public:
     return true;
   }
 
-  mat4 get_mvp_matrix(const mareweb::transform &model_transform) {
-    mat4 model_matrix = model_transform.get_transformation_matrix();
-    mat4 view_projection_matrix = get_view_projection_matrix();
-    return view_projection_matrix * model_matrix;
-  }
-
 private:
   basic_entity *m_basic_entity;
 };
 
-class basic_entity : public mareweb::entity<basic_entity>, public mareweb::transform {
+class basic_entity : public mareweb::entity<basic_entity> {
 public:
   basic_entity(main_scene *scene) : scene(scene) {
     // -- try out different meshes --
@@ -79,13 +60,11 @@ public:
     material = scene->create_material<mareweb::flat_color_material>(color);
     // material = scene->create_material<mareweb::textured_material>("assets/2k_earth_daymap.jpg");
     material->update_light_direction(light_direction);
-    attach_system<render_mesh>();
+    obj = create_object<mareweb::renderable>(scene, mesh.get(), material.get());
   }
 
-  void update_mvp(const squint::duration &dt) {
-    auto freq = frequency(1);
-    mesh->rotate(vec3{0, 1, 1}, -units::degrees(25) * dt * freq);
-
+  void render(const squint::duration &dt) override {
+    entity::render(dt); // render attached systems
     // Update color for rainbow effect
     static float total_time = 0.0f;
     total_time += dt.value();
@@ -130,11 +109,19 @@ public:
 
     // Update the color uniform buffer
     material->update_color(color);
+
+    obj->render(dt); // render the object
+  }
+
+  void update(const squint::duration &dt) override {
+    entity::update(dt); // update attached systems
+    auto freq = frequency(1);
+    obj->rotate(vec3{0, 1, 1}, -units::degrees(25) * dt * freq);
   }
 
   std::unique_ptr<mareweb::mesh> mesh;
   std::unique_ptr<mareweb::flat_color_material> material;
-  std::shared_ptr<mareweb::uniform_buffer> mvp_buffer;
+  mareweb::renderable *obj;
   main_scene *scene;
 };
 
