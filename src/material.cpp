@@ -63,6 +63,16 @@ void material::update_sampler(uint32_t binding, wgpu::Sampler sampler) {
   throw std::runtime_error("Sampler binding not found: " + std::to_string(binding));
 }
 
+void material::update_instance_buffer(wgpu::Buffer buffer, size_t size) {
+  for (auto &binding : m_bindings) {
+    if (std::holds_alternative<storage_binding>(binding)) {
+      auto &instance_binding = std::get<storage_binding>(binding);
+      instance_binding.buffer = buffer;
+      instance_binding.size = size;
+    }
+  }
+}
+
 void material::create_shaders() {
   m_vertex_shader = std::make_unique<shader>(m_device, m_vertex_shader_source, wgpu::ShaderStage::Vertex);
   m_fragment_shader = std::make_unique<shader>(m_device, m_fragment_shader_source, wgpu::ShaderStage::Fragment);
@@ -92,6 +102,10 @@ auto material::create_bind_group_layout_entries() const -> std::vector<wgpu::Bin
           using T = std::decay_t<decltype(b)>;
           if constexpr (std::is_same_v<T, uniform_binding>) {
             entry.buffer.type = wgpu::BufferBindingType::Uniform;
+            entry.buffer.hasDynamicOffset = false;
+            entry.buffer.minBindingSize = b.size;
+          } else if constexpr (std::is_same_v<T, storage_binding>) {
+            entry.buffer.type = b.type;
             entry.buffer.hasDynamicOffset = false;
             entry.buffer.minBindingSize = b.size;
           } else if constexpr (std::is_same_v<T, texture_binding>) {
@@ -124,6 +138,12 @@ auto material::create_bind_group_entries() const -> std::vector<wgpu::BindGroupE
             auto it = m_uniform_buffers.find(b.binding);
             if (it != m_uniform_buffers.end()) {
               entry.buffer = it->second->get_buffer();
+              entry.offset = 0;
+              entry.size = b.size;
+            }
+          } else if constexpr (std::is_same_v<T, storage_binding>) {
+            if (b.buffer) {
+              entry.buffer = b.buffer;
               entry.offset = 0;
               entry.size = b.size;
             }

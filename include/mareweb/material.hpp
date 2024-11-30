@@ -33,8 +33,14 @@ struct sampler_binding : binding_info {
   wgpu::SamplerBindingType type;
 };
 
+struct storage_binding : binding_info {
+  wgpu::Buffer buffer;
+  size_t size;
+  wgpu::BufferBindingType type;
+};
+
 // Use variant to store different binding types
-using binding_resource = std::variant<uniform_binding, texture_binding, sampler_binding>;
+using binding_resource = std::variant<uniform_binding, texture_binding, sampler_binding, storage_binding>;
 
 struct pipeline_key {
   wgpu::PrimitiveTopology topology;
@@ -98,6 +104,7 @@ public:
   void update_uniform(uint32_t binding, const void *data);
   void update_texture(uint32_t binding, wgpu::TextureView texture_view);
   void update_sampler(uint32_t binding, wgpu::Sampler sampler);
+  void update_instance_buffer(wgpu::Buffer buffer, size_t size);
   [[nodiscard]] const vertex_requirements &get_requirements() const { return m_requirements; }
 
 protected:

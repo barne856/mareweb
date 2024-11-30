@@ -3,6 +3,7 @@
 #include "mareweb/components/transform.hpp"
 #include "mareweb/entities/renderable.hpp"
 #include "mareweb/materials/flat_color_material.hpp"
+#include "mareweb/materials/instanced_flat_color_material.hpp"
 #include "mareweb/materials/textured_material.hpp"
 #include "mareweb/meshes/primitive_mesh.hpp"
 #include "mareweb/renderer.hpp"
@@ -57,10 +58,15 @@ public:
     // mesh = scene->create_mesh<mareweb::square_mesh>(length(0.5));
     vec4 color{1.F, 1.F, 0.F, 0.F};
     vec3 light_direction{1.f, 2.f, 0.f};
-    material = scene->create_material<mareweb::flat_color_material>(color);
+    material = scene->create_material<mareweb::instanced_flat_color_material>(color);
     // material = scene->create_material<mareweb::textured_material>("assets/2k_earth_daymap.jpg");
     material->update_light_direction(light_direction);
-    obj = create_object<mareweb::renderable>(scene, mesh.get(), material.get());
+    std::vector<mareweb::transform> instances{};
+    instances.push_back(mareweb::transform{});
+    instances[0].translate(vec3_t<length>{length(0.65), length(0.0), length(0.0)});
+    instances.push_back(mareweb::transform{});
+    instances[1].translate(vec3_t<length>{length(-0.65), length(0.0), length(0.0)});
+    obj = create_object<mareweb::instanced_renderable>(scene, mesh.get(), material.get(), instances);
   }
 
   void render(const squint::duration &dt) override {
@@ -120,8 +126,8 @@ public:
   }
 
   std::unique_ptr<mareweb::mesh> mesh;
-  std::unique_ptr<mareweb::flat_color_material> material;
-  mareweb::renderable *obj;
+  std::unique_ptr<mareweb::instanced_flat_color_material> material;
+  mareweb::instanced_renderable *obj;
   main_scene *scene;
 };
 
