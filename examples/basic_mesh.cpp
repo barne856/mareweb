@@ -5,7 +5,8 @@
 #include "mareweb/materials/flat_color_material.hpp"
 #include "mareweb/materials/instanced_flat_color_material.hpp"
 #include "mareweb/materials/textured_material.hpp"
-#include "mareweb/meshes/primitive_mesh.hpp"
+#include "mareweb/meshes/cone_mesh.hpp"
+#include "mareweb/meshes/sphere_mesh.hpp"
 #include "mareweb/renderer.hpp"
 #include "mareweb/scene.hpp"
 #include "squint/quantity.hpp"
@@ -51,7 +52,7 @@ public:
     //     squint::vec3_t<length>{length(0.5), length(-0.5), length(0.0)}   // Bottom-right vertex
     // );
     // mesh = scene->create_mesh<mareweb::circle_mesh>(length(0.5), 50);
-    mesh = scene->create_mesh<mareweb::sphere_mesh>(length(1), 2);
+    mesh = scene->create_mesh<mareweb::cone_mesh>(length(1), 64);
     // mesh = scene->create_mesh<mareweb::torus_mesh>(length(0.1), length(0.02), 64, 64);
     // mesh = scene->create_mesh<mareweb::sphere_mesh>(length(1), 10, 10);
     // mesh = scene->create_mesh<mareweb::cube_mesh>(length(0.5));
@@ -62,7 +63,7 @@ public:
     // material = scene->create_material<mareweb::textured_material>("assets/2k_earth_daymap.jpg");
     material->update_light_direction(light_direction);
     std::vector<mareweb::transform> instances{};
-    for(int i = 0; i < 100; i++) {
+    for (int i = 0; i < 100; i++) {
       mareweb::transform t;
       vec3 translation = vec3::random(-0.75, 0.75);
       t.translate(translation.as<length>());

@@ -3,7 +3,7 @@
 #include "mareweb/components/transform.hpp"
 #include "mareweb/entities/renderable.hpp"
 #include "mareweb/materials/textured_material.hpp"
-#include "mareweb/meshes/primitive_mesh.hpp"
+#include "mareweb/meshes/sphere_mesh.hpp"
 #include "mareweb/renderer.hpp"
 #include "mareweb/scene.hpp"
 #include "squint/quantity.hpp"

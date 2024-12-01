@@ -2,7 +2,6 @@
 #define MAREWEB_MESH_HPP
 
 #include "mareweb/buffer.hpp"
-#include "mareweb/components/camera.hpp"
 #include "mareweb/material.hpp"
 #include "mareweb/pipeline.hpp"
 #include "mareweb/vertex_attributes.hpp"
@@ -62,36 +61,6 @@ private:
 
   void create_vertex_buffer(wgpu::Device &device, const std::vector<vertex> &vertices, const vertex_layout &layout);
 };
-
-// TODO, primative meshes inherit from base_mesh and implement
-// entities for renderable_mesh, renderable instanced mesh, renderable composite mesh
-// e.g.
-// template <material_like Material, mesh_like Mesh>
-// class renderable_mesh : public entity<renderable_mesh>, public transform, public Material, public Mesh
-// renderable_mesh(scene* s); // construct with scene
-//
-// template <material_like Material, mesh_like Mesh>
-// class renderable_instanced_mesh : public entity<renderable_instanced_mesh>, public transform, public Material, public
-// Mesh renderable_instanced_mesh(scene* s); // construct with scene
-//
-// template <material_like Material, mesh_like Mesh>
-// class renderable_composite_mesh : public entity<renderable_composite_mesh>, public transform, public Material, public
-// Mesh renderable_composite_mesh(scene* s); // construct with scene
-//
-
-// class instanced_mesh : public base_mesh {
-// public:
-//   instanced_mesh(wgpu::Device &device, const wgpu::PrimitiveState &primitive_state, const std::vector<vertex>
-//   &vertices,
-//                  const vertex_layout &layout, const std::vector<uint32_t> &indices = {})
-//       : base_mesh(device, primitive_state, vertices, layout, indices) {}
-//
-//   void render(wgpu::RenderPassEncoder &pass_encoder, material &material, const camera &camera) const override;
-//
-// private:
-//   void create_instance_buffer(wgpu::Device &device, const std::vector<transform> &instances);
-//   std::unique_ptr<storage_buffer> m_instance_buffer;
-// };
 
 } // namespace mareweb
 #endif // MAREWEB_MESH_HPP
