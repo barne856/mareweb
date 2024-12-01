@@ -337,10 +337,13 @@ private:
     const ndarr_t<float, 36> verts = {-X, N,  Z, X, N,  Z,  -X, N, -Z, X,  N, -Z, N, Z,  X, N,  Z,  -X,
                                       N,  -Z, X, N, -Z, -X, Z,  X, N,  -Z, X, N,  Z, -X, N, -Z, -X, N};
 
-    // Initial icosahedron indices
-    const ndarr_t<unsigned int, 60> indes = {0,  4, 1, 0, 9, 4, 9, 5,  4, 4, 5,  8,  4,  8, 1, 8,  10, 1,  8, 3,
-                                             10, 5, 3, 8, 5, 2, 3, 2,  7, 3, 7,  10, 3,  7, 6, 10, 7,  11, 6, 11,
-                                             0,  6, 0, 1, 6, 6, 1, 10, 9, 0, 11, 9,  11, 2, 9, 2,  5,  7,  2, 11};
+    // Initial icosahedron indices - Fixed winding order
+    const ndarr_t<unsigned int, 60> indes = {
+        0, 4, 1,  0, 9, 4,  9, 5, 4,  4, 5, 8,  4, 8, 1,  8, 10, 1,
+        8, 3, 10, 5, 3, 8,  5, 2, 3,  2, 7, 3,  7, 10, 3, 7, 6, 10,
+        7, 11, 6, 11, 0, 6, 0, 1, 6,  6, 1, 10, 9, 0, 11, 9, 11, 2,
+        9, 2, 5,  7, 2, 11
+    };
 
     // Calculate final vertex count
     const std::size_t count = 60 * static_cast<std::size_t>(std::pow(4, recursion_level));
@@ -355,6 +358,13 @@ private:
                         length{verts[3 * indes[3 * i + 1] + 2]}};
       vec3_t<length> v3{length{verts[3 * indes[3 * i + 2]]}, length{verts[3 * indes[3 * i + 2] + 1]},
                         length{verts[3 * indes[3 * i + 2] + 2]}};
+      
+      // Check if we need to flip the winding order based on the normal direction
+      vec3 normal = cross(v2 - v1, v3 - v1).values();
+      if (dot(normal, v1).value() < 0) {
+        std::swap(v2, v3);
+      }
+
       subdivide(v1, v2, v3, recursion_level, temp_vertices);
     }
 
@@ -458,9 +468,17 @@ private:
   static void subdivide(const vec3_t<length> &v1, const vec3_t<length> &v2, const vec3_t<length> &v3, int depth,
                         std::vector<vec3_t<length>> &vertices) {
     if (depth == 0) {
-      vertices.push_back(v1);
-      vertices.push_back(v2);
-      vertices.push_back(v3);
+      // Ensure consistent winding order
+      vec3 normal = cross(v2 - v1, v3 - v1).values();
+      if (dot(normal, v1).value() >= 0) {
+        vertices.push_back(v1);
+        vertices.push_back(v2);
+        vertices.push_back(v3);
+      } else {
+        vertices.push_back(v1);
+        vertices.push_back(v3);
+        vertices.push_back(v2);
+      }
       return;
     }
 
@@ -469,8 +487,8 @@ private:
     auto v31 = normalize((v3 + v1) * 0.5F) * length(1);
 
     subdivide(v1, v12, v31, depth - 1, vertices);
-    subdivide(v2, v23, v12, depth - 1, vertices);
-    subdivide(v3, v31, v23, depth - 1, vertices);
+    subdivide(v12, v2, v23, depth - 1, vertices);
+    subdivide(v31, v23, v3, depth - 1, vertices);
     subdivide(v12, v23, v31, depth - 1, vertices);
   }
 };

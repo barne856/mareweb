@@ -51,21 +51,25 @@ public:
     //     squint::vec3_t<length>{length(0.5), length(-0.5), length(0.0)}   // Bottom-right vertex
     // );
     // mesh = scene->create_mesh<mareweb::circle_mesh>(length(0.5), 50);
-    // mesh = scene->create_mesh<mareweb::sphere_mesh>(length(0.4), 3);
-    mesh = scene->create_mesh<mareweb::torus_mesh>(length(0.4), length(0.2), 64, 64);
-    // mesh = scene->create_mesh<mareweb::sphere_mesh>(length(0.5), 10, 10);
+    mesh = scene->create_mesh<mareweb::sphere_mesh>(length(1), 2);
+    // mesh = scene->create_mesh<mareweb::torus_mesh>(length(0.1), length(0.02), 64, 64);
+    // mesh = scene->create_mesh<mareweb::sphere_mesh>(length(1), 10, 10);
     // mesh = scene->create_mesh<mareweb::cube_mesh>(length(0.5));
     // mesh = scene->create_mesh<mareweb::square_mesh>(length(0.5));
-    vec4 color{1.F, 1.F, 0.F, 0.F};
+    vec4 color{1.F, 1.F, 0.F, 1.F};
     vec3 light_direction{1.f, 2.f, 0.f};
     material = scene->create_material<mareweb::instanced_flat_color_material>(color);
     // material = scene->create_material<mareweb::textured_material>("assets/2k_earth_daymap.jpg");
     material->update_light_direction(light_direction);
     std::vector<mareweb::transform> instances{};
-    instances.push_back(mareweb::transform{});
-    instances[0].translate(vec3_t<length>{length(0.65), length(0.0), length(0.0)});
-    instances.push_back(mareweb::transform{});
-    instances[1].translate(vec3_t<length>{length(-0.65), length(0.0), length(0.0)});
+    for(int i = 0; i < 100; i++) {
+      mareweb::transform t;
+      vec3 translation = vec3::random(-0.75, 0.75);
+      t.translate(translation.as<length>());
+      float s = 0.2F;
+      t.set_scale(vec3{s, s, s});
+      instances.push_back(t);
+    }
     obj = create_object<mareweb::instanced_renderable>(scene, mesh.get(), material.get(), instances);
   }
 
@@ -114,7 +118,7 @@ public:
     vec4 color = {r + m, g + m, b + m, 1.0f};
 
     // Update the color uniform buffer
-    material->update_color(color);
+    // material->update_color(color);
 
     obj->render(dt); // render the object
   }
@@ -122,7 +126,7 @@ public:
   void update(const squint::duration &dt) override {
     entity::update(dt); // update attached systems
     auto freq = frequency(1);
-    obj->rotate(vec3{0, 1, 1}, -units::degrees(25) * dt * freq);
+    obj->rotate(vec3{0, 1, 1}, -units::degrees(5) * dt * freq);
   }
 
   std::unique_ptr<mareweb::mesh> mesh;

@@ -52,6 +52,11 @@ pipeline::pipeline(wgpu::Device &device, const shader &vertex_shader, const shad
   depth_stencil.format = wgpu::TextureFormat::Depth24Plus;
   depth_stencil.depthWriteEnabled = true;
   depth_stencil.depthCompare = wgpu::CompareFunction::Less;
+  // Make sure stencil is properly initialized even if not used
+  depth_stencil.stencilFront = {};
+  depth_stencil.stencilBack = {};
+  depth_stencil.stencilReadMask = 0xFFFFFFFF;
+  depth_stencil.stencilWriteMask = 0xFFFFFFFF;
 
   // Create render pipeline
   wgpu::RenderPipelineDescriptor pipeline_desc{};

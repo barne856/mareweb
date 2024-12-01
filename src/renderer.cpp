@@ -141,6 +141,7 @@ void renderer::begin_frame() {
   depth_attachment.depthStoreOp = wgpu::StoreOp::Store;
   depth_attachment.stencilLoadOp = wgpu::LoadOp::Undefined;
   depth_attachment.stencilStoreOp = wgpu::StoreOp::Undefined;
+  depth_attachment.depthReadOnly = false;
 
   wgpu::RenderPassDescriptor render_pass_descriptor{};
   render_pass_descriptor.colorAttachmentCount = 1;
