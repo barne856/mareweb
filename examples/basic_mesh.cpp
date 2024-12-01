@@ -66,7 +66,7 @@ public:
       mareweb::transform t;
       vec3 translation = vec3::random(-0.75, 0.75);
       t.translate(translation.as<length>());
-      float s = 0.2F;
+      float s = ndarr<1>::random(0.01, 0.05)[0];
       t.set_scale(vec3{s, s, s});
       instances.push_back(t);
     }
@@ -118,7 +118,7 @@ public:
     vec4 color = {r + m, g + m, b + m, 1.0f};
 
     // Update the color uniform buffer
-    // material->update_color(color);
+    material->update_color(color);
 
     obj->render(dt); // render the object
   }
