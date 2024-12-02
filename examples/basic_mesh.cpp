@@ -23,7 +23,7 @@ public:
       : scene(device, surface, window, properties, type) {
     set_clear_color({0.05F, 0.05F, 0.05F, 1.0F});
     set_position(vec3_t<length>{length(0.0F), length(0.0F), length(2.0F)});
-    m_text = create_object<mareweb::text>(this, "HELLO,\nWORLD", 0.05F);
+    m_text = create_object<mareweb::text>(this, "HELLO,\nWORLD", 0.05F, 0.1F);
     // m_text->set_scale(vec3{0.7F, 0.7F, 0.7F});
     m_text->set_center({0.0F, 0.0F});
     float aspect_ratio = static_cast<float>(properties.width) / static_cast<float>(properties.height);
@@ -39,6 +39,17 @@ public:
   void render(const squint::duration &dt) override {
     scene::render(dt);
     // m_text->rotate(vec3{0.0F, 1.0F, 1.0F}, units::degrees(1.0F));
+    // blinking exclamation point
+    static squint::duration elapsed_time;
+    elapsed_time += dt;
+    if (elapsed_time >= squint::duration(0.75F)) {
+      elapsed_time = squint::duration(0.0F);
+      if (m_text->get_text().back() == '!') {
+        m_text->set_text("HELLO,\nWORLD");
+      } else {
+        m_text->set_text("HELLO,\nWORLD!");
+      }
+    }
   }
 
 private:
