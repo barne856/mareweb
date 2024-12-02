@@ -94,15 +94,32 @@ storage_buffer::storage_buffer(wgpu::Device &device, const void *data, size_t si
     : buffer(device, data, size, wgpu::BufferUsage::Storage) {}
 
 instance_buffer::instance_buffer(wgpu::Device &device, const std::vector<transform> &instances)
-    : storage_buffer(device, nullptr, instances.size() * sizeof(squint::mat4)), m_transforms(instances) {
-  update_transforms(instances);
-}
-
-void instance_buffer::update_transforms(const std::vector<transform> &instances) {
-  m_transforms = instances;
+    : storage_buffer(device, nullptr, instances.size() * sizeof(squint::mat4)), 
+      m_transforms(instances), 
+      m_active_count(0) {
+  // Initialize buffer with transforms but set active count to 0
   std::vector<squint::mat4> transforms;
   transforms.reserve(instances.size());
   for (const auto &t : instances) {
+    transforms.push_back(t.get_transformation_matrix());
+  }
+  buffer::update(transforms.data(), transforms.size() * sizeof(squint::mat4));
+}
+
+void instance_buffer::update_transforms(const std::vector<transform> &instances) {
+  if (instances.size() > m_transforms.size()) {
+    throw std::runtime_error("Update size exceeds buffer capacity");
+  }
+  
+  // Update active instances
+  for (size_t i = 0; i < instances.size(); ++i) {
+    m_transforms[i] = instances[i];
+  }
+  m_active_count = instances.size();
+
+  std::vector<squint::mat4> transforms;
+  transforms.reserve(m_transforms.size());
+  for (const auto &t : m_transforms) {
     transforms.push_back(t.get_transformation_matrix());
   }
   buffer::update(transforms.data(), transforms.size() * sizeof(squint::mat4));
@@ -115,12 +132,18 @@ void instance_buffer::update_transform(size_t index, const transform &t) {
   m_transforms[index] = t;
   auto t_matrix = t.get_transformation_matrix();
   buffer::update(&t_matrix, sizeof(squint::mat4), index * sizeof(squint::mat4));
+  
+  if (index >= m_active_count) {
+    m_active_count = index + 1;
+  }
 }
 
 void instance_buffer::update_transforms(const std::vector<std::pair<size_t, transform>> &updates) {
   std::vector<std::tuple<const void *, size_t, size_t>> regions;
   regions.reserve(updates.size());
 
+  size_t max_index = m_active_count;
+  
   for (const auto &[index, t] : updates) {
     if (index >= m_transforms.size()) {
       throw std::runtime_error("Instance index out of bounds");
@@ -128,14 +151,29 @@ void instance_buffer::update_transforms(const std::vector<std::pair<size_t, tran
     m_transforms[index] = t;
     auto t_matrix = t.get_transformation_matrix();
     regions.emplace_back(&t_matrix, sizeof(squint::mat4), index * sizeof(squint::mat4));
+    
+    max_index = std::max(max_index, index + 1);
   }
 
+  m_active_count = max_index;
   buffer::update_regions(regions);
 }
 
-auto instance_buffer::get_instance_count() const -> uint32_t { return static_cast<uint32_t>(m_transforms.size()); }
+void instance_buffer::clear_instances() {
+  m_active_count = 0;
+}
 
-auto instance_buffer::get_transforms() const -> const std::vector<transform> & { return m_transforms; }
+auto instance_buffer::get_capacity() const -> uint32_t { 
+  return static_cast<uint32_t>(m_transforms.size()); 
+}
+
+auto instance_buffer::get_active_count() const -> uint32_t { 
+  return static_cast<uint32_t>(m_active_count); 
+}
+
+auto instance_buffer::get_transforms() const -> const std::vector<transform> & { 
+  return m_transforms; 
+}
 
 auto instance_buffer::get_transform(size_t index) const -> const transform & {
   if (index >= m_transforms.size()) {

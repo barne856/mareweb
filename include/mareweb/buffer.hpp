@@ -88,13 +88,16 @@ public:
   void update_transforms(const std::vector<transform> &instances);
   void update_transform(size_t index, const transform &t);
   void update_transforms(const std::vector<std::pair<size_t, transform>> &updates);
-
-  [[nodiscard]] auto get_instance_count() const -> uint32_t;
+  
+  [[nodiscard]] auto get_capacity() const -> uint32_t;
+  [[nodiscard]] auto get_active_count() const -> uint32_t;
   [[nodiscard]] auto get_transforms() const -> const std::vector<transform> &;
   [[nodiscard]] auto get_transform(size_t index) const -> const transform &;
+  void clear_instances();
 
 private:
   std::vector<transform> m_transforms;
+  size_t m_active_count = 0;
 };
 
 } // namespace mareweb

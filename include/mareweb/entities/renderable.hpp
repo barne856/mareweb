@@ -85,23 +85,25 @@ public:
   // Default constructor
   instanced_renderable() : m_scene(nullptr), m_mesh(nullptr), m_material(nullptr), transform(mat4::eye()) {}
 
-  // Constructor with scene, mesh, material, and optional instances
-  instanced_renderable(scene *scene, mesh *mesh = nullptr, material *material = nullptr,
-                       const std::vector<transform> &instances = {})
+  // Constructor with scene, mesh, material, and capacity
+  instanced_renderable(scene *scene, mesh *mesh = nullptr, material *material = nullptr, size_t capacity = 0)
       : m_scene(scene), m_mesh(mesh), m_material(material), transform(mat4::eye()) {
-    if (!instances.empty()) {
-      set_instances(instances);
+    if (capacity > 0) {
+      std::vector<transform> empty_instances(capacity);
+      auto device = m_scene->get_device();
+      m_instance_buffer = std::make_unique<instance_buffer>(device, empty_instances);
     }
   }
 
   // Set multiple instances at once
   void set_instances(const std::vector<transform> &instances) {
     if (!m_instance_buffer) {
-      auto device = m_scene->get_device();
-      m_instance_buffer = std::make_unique<instance_buffer>(device, instances);
-    } else {
-      m_instance_buffer->update_transforms(instances);
+      throw std::runtime_error("Instance buffer not initialized");
     }
+    if (instances.size() > m_instance_buffer->get_capacity()) {
+      throw std::runtime_error("Too many instances for buffer capacity");
+    }
+    m_instance_buffer->update_transforms(instances);
     if (m_material) {
       m_material->update_instance_buffer(m_instance_buffer->get_buffer(), m_instance_buffer->get_size());
     }
@@ -110,7 +112,10 @@ public:
   // Update a single instance transform
   void update_instance(size_t index, const transform &t) {
     if (!m_instance_buffer) {
-      throw std::runtime_error("No instances have been set");
+      throw std::runtime_error("Instance buffer not initialized");
+    }
+    if (index >= m_instance_buffer->get_capacity()) {
+      throw std::runtime_error("Instance index exceeds buffer capacity");
     }
     m_instance_buffer->update_transform(index, t);
   }
@@ -118,20 +123,35 @@ public:
   // Update multiple instance transforms efficiently
   void update_instances(const std::vector<std::pair<size_t, transform>> &updates) {
     if (!m_instance_buffer) {
-      throw std::runtime_error("No instances have been set");
+      throw std::runtime_error("Instance buffer not initialized");
     }
     m_instance_buffer->update_transforms(updates);
   }
 
-  // Get the number of instances
+  // Clear all active instances
+  void clear_instances() {
+    if (m_instance_buffer) {
+      m_instance_buffer->clear_instances();
+    }
+  }
+
+  // Get the buffer capacity
+  [[nodiscard]] auto get_capacity() const -> uint32_t {
+    return m_instance_buffer ? m_instance_buffer->get_capacity() : 0;
+  }
+
+  // Get number of active instances
   [[nodiscard]] auto get_instance_count() const -> uint32_t {
-    return m_instance_buffer ? m_instance_buffer->get_instance_count() : 0;
+    return m_instance_buffer ? m_instance_buffer->get_active_count() : 0;
   }
 
   // Get a specific instance transform
   [[nodiscard]] auto get_instance(size_t index) const -> const transform & {
     if (!m_instance_buffer) {
-      throw std::runtime_error("No instances have been set");
+      throw std::runtime_error("Instance buffer not initialized");
+    }
+    if (index >= m_instance_buffer->get_capacity()) {
+      throw std::runtime_error("Instance index exceeds buffer capacity");
     }
     return m_instance_buffer->get_transform(index);
   }
@@ -139,7 +159,7 @@ public:
   // Get all instance transforms
   [[nodiscard]] auto get_instances() const -> const std::vector<transform> & {
     if (!m_instance_buffer) {
-      throw std::runtime_error("No instances have been set");
+      throw std::runtime_error("Instance buffer not initialized");
     }
     return m_instance_buffer->get_transforms();
   }
@@ -151,7 +171,7 @@ public:
   void render(const squint::duration &dt, const transform *parent_transform) override {
     entity<instanced_renderable>::render(dt);
 
-    if (!m_scene || !m_mesh || !m_material || !m_instance_buffer) {
+    if (!m_scene || !m_mesh || !m_material || !m_instance_buffer || m_instance_buffer->get_active_count() == 0) {
       return;
     }
 
@@ -179,9 +199,9 @@ public:
 
     if (m_mesh->get_vertex_state().is_indexed) {
       pass_encoder.SetIndexBuffer(m_mesh->get_index_buffer(), wgpu::IndexFormat::Uint32);
-      pass_encoder.DrawIndexed(m_mesh->get_index_count(), get_instance_count());
+      pass_encoder.DrawIndexed(m_mesh->get_index_count(), m_instance_buffer->get_active_count());
     } else {
-      pass_encoder.Draw(vertex_count, get_instance_count());
+      pass_encoder.Draw(vertex_count, m_instance_buffer->get_active_count());
     }
   }
 
