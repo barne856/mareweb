@@ -30,11 +30,6 @@ Run samples:
 ./build/basic_renderer
 ```
 
-# TODO
-# instanced meshes
-# composite meshes
-# imlement PBR materials
-
 
 
 
